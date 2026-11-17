@@ -443,6 +443,10 @@ const rid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const slug=s=>(String(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24)||"subject")+"-"+Math.random().toString(36).slice(2,6);
 const byOrder=(a,b)=>(a.order??0)-(b.order??0)||String(a.title||a.name||"").localeCompare(String(b.title||b.name||""));
 const subj=id=>S.subjects.find(s=>s.id===id);
+/* Subjects that only appear in the schedule and share form (no notes page). Add more here. */
+const EXTRA_SUBJECTS=[["genetics","Genetics"],["tl2","Teaching & Learning 2"],["nhw","Nutrition, Health & Wellness"],["human-dev","Human Development"],["ethics","Ethics"],["pe104","PE 104"],["histopath","Histopathology"],["psychiatry","Psychiatry"]].map(([id,name],i)=>({id,name,order:100+i}));
+const anySubj=id=>subj(id)||EXTRA_SUBJECTS.find(s=>s.id===id);
+const pickSubjects=()=>[...S.subjects.slice().sort(byOrder),...EXTRA_SUBJECTS.filter(x=>!subj(x.id))];
 const notesOf=id=>S.notes.filter(n=>n.subject===id).sort(byOrder);
 const qsOf=id=>S.questions.filter(q=>q.subject===id).sort(byOrder);
 const plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
@@ -793,7 +797,7 @@ const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const weekStart=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());return addDays(x,-((x.getDay()+6)%7))};
 const fmtTime=t=>{if(!t)return"";let[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";h=h%12||12;return `${h}:${pad2(m)} ${ap}`};
 const evSort=(a,b)=>a.date.localeCompare(b.date)||(a.time||"99").localeCompare(b.time||"99")||a.title.localeCompare(b.title);
-function evChip(e,withDay){const s=e.subject?subj(e.subject):null;
+function evChip(e,withDay){const s=e.subject?anySubj(e.subject):null;
   return `<button class="ev ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}</span><span class="ti">${esc(e.title)}</span>${withDay?`<span class="when">${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span>`:""}${s?`<span class="su">${esc(s.name)}</span>`:""}</button>`}
 function comingUp(){if(!LIVE.on||!LIVE.user)return"";
   const now=new Date(),today=ymd(now),tmr=ymd(addDays(now,1)),end=ymd(addDays(now,7));
@@ -801,7 +805,7 @@ function comingUp(){if(!LIVE.on||!LIVE.user)return"";
   const dayLabel=k=>k===today?"Today":k===tmr?"Tomorrow":parseYmd(k).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
   const soon=e=>{if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d===0?"today":d===1?"tomorrow":`in ${d} days`};
   const groups=[];list.forEach(e=>{let g=groups.find(x=>x[0]===e.date);if(!g)groups.push(g=[e.date,[]]);g[1].push(e)});
-  const body=groups.length?groups.map(([k,es])=>`<div class="un-group"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?subj(e.subject):null,sn=soon(e);
+  const body=groups.length?groups.map(([k,es])=>`<div class="un-group"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?anySubj(e.subject):null,sn=soon(e);
     return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
     :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>Nothing due in the next 7 days.</div>`;
   return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Up next</h3><span class="mono">next 7 days</span></div><div class="un-groups">${body}</div>
@@ -825,17 +829,17 @@ function renderSchedule(startKey){
 function gcalLink(e){const d=e.date.replace(/-/g,"");let dates;
   if(e.time){const t=e.time.replace(":","")+"00";const[h,m]=e.time.split(":").map(Number);const end=new Date(2000,0,1,h+1,m);dates=`${d}T${t}/${(h+1>=24?ymd(addDays(parseYmd(e.date),1)).replace(/-/g,""):d)}T${pad2(end.getHours())}${pad2(end.getMinutes())}00`}
   else dates=`${d}/${ymd(addDays(parseYmd(e.date),1)).replace(/-/g,"")}`;
-  const s=e.subject?subj(e.subject):null;
+  const s=e.subject?anySubj(e.subject):null;
   const q=new URLSearchParams({action:"TEMPLATE",text:`${evLabel(e.type)}: ${e.title}`,dates,details:[s?s.name:"",e.notes||"","From Study Atlas"].filter(Boolean).join("\n\n"),ctz:"Asia/Manila"});
   return "https://calendar.google.com/calendar/render?"+q}
-function openEvent(e){if(!e)return;const s=e.subject?subj(e.subject):null;
+function openEvent(e){if(!e)return;const s=e.subject?anySubj(e.subject):null;
   openSheet(`<div class="ev-detail"><span class="ev-t t-${esc(e.type)}" style="display:block;font:700 12px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t)">${esc(evLabel(e.type))}</span><h2>${esc(e.title)}</h2>
     <div class="meta"><span>📅 ${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}))}</span>${e.time?`<span>🕒 ${esc(fmtTime(e.time))}</span>`:""}${s?`<span>📚 ${esc(s.name)}</span>`:""}</div>
     ${e.notes?`<div class="nt">${esc(e.notes)}</div>`:""}${e.byName?`<span class="mono">Added by ${esc(e.byName)}</span>`:""}
     <div class="acts">${canSchedule()?`<button class="btn" data-act="ev-edit" data-id="${esc(e.id)}">Edit</button>`:""}<a class="btn primary" href="${esc(gcalLink(e))}" target="_blank" rel="noopener">Add to Google Calendar</a><button class="btn ghost" data-act="close">Close</button></div></div>`)}
 function editEvent(e,date){if(!canSchedule())return;
   delHandler=e?async()=>{closeSheet();try{await LIVE.fs.collection("events").doc(e.id).delete();toast("Removed from the schedule")}catch(x){toast("Couldn't delete. Check your connection.")}}:null;
-  const subs=S.subjects.slice().sort(byOrder);
+  const subs=pickSubjects();
   openSheet(`<form id="f"><h2>${e?"Edit":"Add to schedule"}</h2>
     <div class="field-row"><div class="field"><label for="f-type">Type</label><select id="f-type">${EV_TYPES.map(([k,l])=>`<option value="${k}"${(e?.type||"quiz")===k?" selected":""}>${l}</option>`).join("")}</select></div>
     <div class="field"><label for="f-subj">Subject</label><select id="f-subj"><option value="">None</option>${subs.map(x=>`<option value="${esc(x.id)}"${e?.subject===x.id?" selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
@@ -873,7 +877,7 @@ function openSuggest(){if(!LIVE.on||!LIVE.user)return;document.querySelectorAll(
   setTimeout(()=>document.getElementById("f-text")?.focus(),50)}
 /* ---------- share your notes ---------- */
 function openShare(){if(!LIVE.on||!LIVE.user)return;document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
-  const subs=S.subjects.slice().sort(byOrder);
+  const subs=pickSubjects();
   openSheet(`<form id="f"><h2>Share your notes</h2><p class="muted">Upload your file to Google Drive (or anywhere), set it to <b>Anyone with the link can view</b>, then paste the link here. Only the site owner sees what you send.</p>
     <div class="field"><label for="f-link">Link to your notes</label><input type="url" id="f-link" required placeholder="https://drive.google.com/…"></div>
     <div class="field-row"><div class="field"><label for="f-title">Title</label><input type="text" id="f-title" required maxlength="120" placeholder="e.g. Brainstem reviewer"></div>
@@ -1031,7 +1035,7 @@ function renderAdmin(){
   app.innerHTML=topbar(back)+`<section class="hero"><span class="mono eyebrow">Only you can see this page</span><h1>Who's visiting</h1></section>
    <p class="notice">Tap <b>Let them edit</b> next to a friend to let them add quizzes, exams and reminders to the Schedule. Only you can change who's an editor.</p>
    <div class="stats"><div><span class="big-n">${LIVE.users.length}</span><span class="mono">people signed in</span></div><div><span class="big-n">${LIVE.users.reduce((a,u)=>a+(u.visits||0),0)}</span><span class="mono">total visits</span></div><div><span class="big-n">${totalDl}</span><span class="mono">downloads</span></div><div><span class="big-n">${LIVE.attempts.length}</span><span class="mono">quiz attempts</span></div></div>
-   <h2 class="sec">Shared notes${LIVE.shares.length?` <span class="mono">(${LIVE.shares.length})</span>`:""}</h2>${LIVE.shares.length?`<ul class="sugg-list">${LIVE.shares.map(x=>`<li><div class="hd"><span><span class="sugg-cat">${esc(subj(x.subject)?.name||"Other")}</span> <b>${esc(x.title)}</b> <span class="muted">from ${esc(x.name||"Anonymous")}</span></span><span class="mono">${fmt(x.at)} <button class="btn small ghost" data-act="share-done" data-id="${esc(x.id)}">Done ✓</button></span></div>${x.message?`<div class="tx">${esc(x.message)}</div>`:""}<div><a class="btn small primary" href="${esc(x.link)}" target="_blank" rel="noopener noreferrer">Open link ↗</a> <span class="mono">${esc(x.link.replace(/^https?:\/\//,"").slice(0,60))}</span></div></li>`).join("")}</ul>`:`<p class="muted">No shared notes yet.</p>`}
+   <h2 class="sec">Shared notes${LIVE.shares.length?` <span class="mono">(${LIVE.shares.length})</span>`:""}</h2>${LIVE.shares.length?`<ul class="sugg-list">${LIVE.shares.map(x=>`<li><div class="hd"><span><span class="sugg-cat">${esc(anySubj(x.subject)?.name||"Other")}</span> <b>${esc(x.title)}</b> <span class="muted">from ${esc(x.name||"Anonymous")}</span></span><span class="mono">${fmt(x.at)} <button class="btn small ghost" data-act="share-done" data-id="${esc(x.id)}">Done ✓</button></span></div>${x.message?`<div class="tx">${esc(x.message)}</div>`:""}<div><a class="btn small primary" href="${esc(x.link)}" target="_blank" rel="noopener noreferrer">Open link ↗</a> <span class="mono">${esc(x.link.replace(/^https?:\/\//,"").slice(0,60))}</span></div></li>`).join("")}</ul>`:`<p class="muted">No shared notes yet.</p>`}
    <h2 class="sec">Suggestions${LIVE.suggestions.length?` <span class="mono">(${LIVE.suggestions.length})</span>`:""}</h2>${LIVE.suggestions.length?`<ul class="sugg-list">${LIVE.suggestions.map(x=>`<li><div class="hd"><span><span class="sugg-cat">${esc(SUGG_CATS.find(c=>c[0]===x.category)?.[1]||"Other")}</span> <b>${esc(x.name||"Anonymous")}</b></span><span class="mono">${fmt(x.at)} <button class="btn small ghost" data-act="sugg-done" data-id="${esc(x.id)}">Done ✓</button></span></div><div class="tx">${esc(x.text)}</div></li>`).join("")}</ul>`:`<p class="muted">No suggestions yet.</p>`}
    <h2 class="sec">People</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th class="n">Visits</th><th class="n">Downloads</th><th class="n">Quizzes</th><th>First visit</th><th>Last seen</th><th>Schedule</th></tr></thead><tbody>
    ${LIVE.users.map(u=>`<tr><td><span class="person">${u.photo?`<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">`:""}${esc(u.name||"—")}</span></td><td>${esc(u.email||"")}</td><td class="n">${u.visits||0}</td><td class="n">${LIVE.dlog.filter(d=>d.uid===u.id).length}</td><td class="n">${LIVE.attempts.filter(a=>a.player===u.id).length}</td><td>${fmt(u.firstSeen)}</td><td>${fmt(u.lastSeen)}</td><td>${LIVE.editors.includes(u.id)?`<span class="editor-tag">Editor</span> <button class="btn small ghost" data-act="editor-off" data-id="${esc(u.id)}">Remove</button>`:`<button class="btn small" data-act="editor-on" data-id="${esc(u.id)}">Let them edit</button>`}</td></tr>`).join("")||`<tr><td colspan="7" class="muted">Nobody has signed in yet.</td></tr>`}
