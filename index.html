@@ -17,6 +17,13 @@
 <meta property="og:image:alt" content="Study Atlas: Neuroanatomy, Neurophysiology and Gross Anatomy notes">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#3f3796">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Study Atlas">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
@@ -500,6 +507,15 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
+#a2hs{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:80;max-width:460px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 50px -12px rgba(0,0,0,.45);transform:translateY(140%);opacity:0;transition:transform .35s cubic-bezier(.2,.9,.3,1),opacity .25s}
+#a2hs.in{transform:none;opacity:1}
+#a2hs img{border-radius:11px;flex:none}
+#a2hs .t{display:grid;gap:2px;flex:1;min-width:0;font-size:14px}
+#a2hs .t span{color:var(--muted);font-size:13px}
+#a2hs .t span svg{vertical-align:-3px;color:var(--accent)}
+#a2hs .x{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:var(--soft);color:var(--muted);cursor:pointer;font-size:14px}
+@media (prefers-reduced-motion: reduce){#a2hs{transition:opacity .2s}}
+@media (display-mode: standalone){body{padding-top:env(safe-area-inset-top,0px)}}
 /* expanding search pill, styled like the button group */
 .sa-search{--sa-bg:var(--surface);--sa-text:#5d6270;--sa-text-hi:var(--ink);position:relative;display:inline-flex;align-items:center;height:42px;padding:0 12px;border:0;border-radius:999px;background:var(--sa-bg);color:var(--sa-text);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap;transition:color .2s,padding .3s cubic-bezier(.3,.7,.2,1)}
 :root[data-theme="dark"] .sa-search{--sa-bg:#151a23;--sa-text:#9aa0ae;--sa-text-hi:#e8e8ef}
@@ -1311,7 +1327,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
   firebase.auth().onAuthStateChanged(async u=>{
     LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
-    recordVisit(u);startPresence(u);
+    recordVisit(u);startPresence(u);setTimeout(maybeA2HS,6000);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
@@ -1403,6 +1419,25 @@ async function postAttempt(sid,score,total){if(!LIVE.on||!LIVE.user)return;
   try{await LIVE.fs.collection("attempts").add({subject:sid,subjectName:(subj(sid)?.name||"").slice(0,80),name:playerName(),player:playerId(),score,total,at:firebase.firestore.FieldValue.serverTimestamp()})}
   catch(e){toast("Your score couldn't be shared. Check your connection.")}}
 /* Messenger, Facebook, Instagram etc. open links in their own browser, where Google sign-in fails. */
+/* ---------- Home Screen app ---------- */
+if("serviceWorker" in navigator&&location.protocol==="https:")addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+let A2HS_EVT=null;
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();A2HS_EVT=e;maybeA2HS()});
+addEventListener("appinstalled",()=>{store("a2hs","done");document.getElementById("a2hs")?.remove()});
+function maybeA2HS(){try{
+  if(IS_STANDALONE||IN_APP||!LIVE.user||store("a2hs")||document.getElementById("a2hs"))return;
+  const iosSafari=IS_IOS&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  if(!A2HS_EVT&&!iosSafari)return;
+  const share=`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`;
+  const el=document.createElement("div");el.id="a2hs";el.setAttribute("role","dialog");el.setAttribute("aria-label","Add Study Atlas to your Home Screen");
+  el.innerHTML=`<img src="icons/icon-192.png" alt="" width="44" height="44"><div class="t"><b>Get the Study Atlas app</b><span>${A2HS_EVT?"Install it to open your notes in one tap.":`Tap ${share} Share, then <b>Add to Home Screen</b>.`}</span></div>${A2HS_EVT?`<button type="button" class="btn small primary" data-a2hs="install">Install</button>`:""}<button type="button" class="x" data-a2hs="close" aria-label="Not now">✕</button>`;
+  document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add("in"));
+  el.addEventListener("click",async e=>{const b=e.target.closest("[data-a2hs]");if(!b)return;
+    if(b.dataset.a2hs==="install"&&A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted")store("a2hs","done")}
+    else store("a2hs","dismissed");
+    el.classList.remove("in");setTimeout(()=>el.remove(),300)})}catch(e){}}
 const IN_APP=/FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|Line\/|MicroMessenger|TikTok|musical_ly|Snapchat|Twitter|; wv\)/i.test(navigator.userAgent||"");
 const IS_ANDROID=/Android/i.test(navigator.userAgent||"");
 function inAppNotice(){const url=location.href.split("#")[0];
