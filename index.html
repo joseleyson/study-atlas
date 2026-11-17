@@ -534,7 +534,8 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="retry-missed"){startQuiz(r.id,shuffle(S.quiz.items.filter(q=>q.picked!==q.answer).map(q=>q.src)),false,true)}
   else if(a==="quit"){S.quiz=null;render()}
   else if(a==="export")exportData();
-  else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")toast("Sign-in didn't work. Try again.")})}
+  else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request"){const c=e.code||"";
+    toast(c==="auth/unauthorized-domain"?"Sign-in isn't allowed on this web address yet. The site owner needs to add it in Firebase.":(c==="auth/configuration-not-found"||c==="auth/operation-not-allowed")?"Google sign-in isn't switched on yet. The site owner needs to enable it in Firebase.":c==="auth/network-request-failed"?"No connection. Check your internet and try again.":"Sign-in didn't work ("+c.replace("auth/","")+"). Try again.")}})}
   else if(a==="download")downloadNote(S.notes.find(n=>n.id===id));
   else if(a==="sign-out"){firebase.auth().signOut();location.hash=""}
   else if(a==="toggle-edit"){store("edit-mode",canEdit()?"0":"1");render()}
