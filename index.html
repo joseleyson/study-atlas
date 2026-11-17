@@ -326,7 +326,7 @@ textarea.short{min-height:90px!important;font-family:var(--f-body)!important}
 .home-split{display:grid;grid-template-columns:290px minmax(0,1fr);gap:22px;align-items:start}
 .home-split.solo{grid-template-columns:1fr}
 .home-split .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
-.upnext{position:sticky;top:16px;background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--r) + 4px);padding:16px 14px 12px;display:grid;gap:4px;
+.upnext{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--r) + 4px);padding:16px 14px 12px;display:grid;gap:4px;
   background-image:radial-gradient(120% 60% at 0% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%)}
 .upnext-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px 8px}
 .upnext-h h3{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}
@@ -354,7 +354,9 @@ textarea.short{min-height:90px!important;font-family:var(--f-body)!important}
 .upnext-foot{display:flex;gap:6px;padding:10px 4px 2px;border-top:1px solid var(--line);margin-top:8px}
 .upnext-foot a,.upnext-foot button{flex:1;justify-content:center}
 @media (prefers-reduced-motion: reduce){.un,.un .un-dot{transition:none}.un:hover{transform:none}.upnext-h .pulse{animation:none}}
-@media (max-width:860px){.home-split{grid-template-columns:1fr}.upnext{position:static}}
+.un-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 18px;align-items:start}
+.un-groups:has(.upnext-empty){grid-template-columns:1fr}
+.upnext-foot{justify-content:flex-end}.upnext-foot a,.upnext-foot button{flex:0 0 auto}
 .shelf-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 12px}
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:26px}
 .pdf-card{--c:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:border-color .2s,transform .2s,box-shadow .2s}
@@ -534,9 +536,9 @@ function renderHome(){
         ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1>What are we reviewing today?</h1>
     <p>Pick a subject to flip through your notes, or jump straight into its quiz.</p></section>
-    ${(()=>{const side=comingUp();return `<div class="home-split${side?"":" solo"}">${side?`<aside aria-label="Up next">${side}</aside>`:""}<div>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
-      :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}</div></div>`})()}
+      :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
+    ${comingUp()}
     ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
 `;
 }
@@ -768,10 +770,10 @@ function comingUp(){if(!LIVE.on||!LIVE.user)return"";
   const dayLabel=k=>k===today?"Today":k===tmr?"Tomorrow":parseYmd(k).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
   const soon=e=>{if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d===0?"today":d===1?"tomorrow":`in ${d} days`};
   const groups=[];list.forEach(e=>{let g=groups.find(x=>x[0]===e.date);if(!g)groups.push(g=[e.date,[]]);g[1].push(e)});
-  const body=groups.length?groups.map(([k,es])=>`<div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?subj(e.subject):null,sn=soon(e);
-    return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div>`).join("")
+  const body=groups.length?groups.map(([k,es])=>`<div class="un-group"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?subj(e.subject):null,sn=soon(e);
+    return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
     :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>Nothing due in the next 7 days.</div>`;
-  return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Up next</h3><span class="mono">next 7 days</span></div>${body}
+  return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Up next</h3><span class="mono">next 7 days</span></div><div class="un-groups">${body}</div>
     <div class="upnext-foot"><a class="btn small" href="#schedule">Full schedule →</a>${canSchedule()?`<button class="btn small primary" data-act="ev-new">+ Add</button>`:""}</div></section>`}
 function renderSchedule(startKey){
   const start=/^\d{4}-\d{2}-\d{2}$/.test(startKey||"")?weekStart(parseYmd(startKey)):weekStart(new Date());
