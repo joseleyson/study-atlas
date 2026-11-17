@@ -430,6 +430,7 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 <script>/* always fetch the newest notes list, never a cached copy */document.write('<script src="data.js?v='+Date.now()+'"><\/script>')</script>
 <script>
 (function(){
+const SELF_JS=document.currentScript?document.currentScript.textContent:"",SELF_CSS=document.querySelector("style")?.textContent||"";
 const STAINS=[
   ["hema","Hematoxylin"],["eosin","Eosin"],["lfb","Luxol blue"],["silver","Silver"],["cresyl","Cresyl violet"],["safranin","Safranin"],["fast","Fast green"]];
 const S={subjects:[],notes:[],questions:[],got:{subjects:0,notes:0,questions:0},db:null,mode:"loading",writable:true,
@@ -1063,6 +1064,15 @@ setInterval(renderLive,60000);
 
 (()=>{const b=document.createElement("button");b.className="suggest-fab";b.hidden=true;b.innerHTML='<span class="ic" aria-hidden="true">💡</span><span class="lbl">Suggestions</span>';b.setAttribute("aria-label","Send a suggestion");b.onclick=()=>openSuggest();document.body.appendChild(b);
   setInterval(()=>{b.hidden=!(LIVE.on&&LIVE.user)||!sheet.hidden},500)})();
+/* Self-update: if the published page differs from the one this browser is showing (stale cache), reload once to get it. */
+async function checkForUpdate(){try{
+  const fresh=await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"");
+  if(!fresh||!SELF_JS||(fresh.includes(SELF_JS)&&fresh.includes(SELF_CSS)))return;
+  const k="sa-upd-"+fresh.length;let done=null;try{done=sessionStorage.getItem(k)}catch(e){}
+  if(done)return;try{sessionStorage.setItem(k,"1")}catch(e){}
+  const u=new URL(location.href);u.searchParams.set("v",Date.now());location.replace(u.toString());
+}catch(e){}}
+if(location.protocol.startsWith("http")){setTimeout(checkForUpdate,1500);setInterval(checkForUpdate,10*60*1000)}
 initLive();render();init();
 })();
 </script>
