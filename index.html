@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Study Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: an atlas of stained slides. Home is a grid of subject "slides"; a subject opens a two-pane reader (note index | note plate); quizzes run one question per screen. Subject colors are histology stains. */
+:root{
+  --bg:#f1f3f6; --surface:#ffffff; --ink:#141c25; --muted:#586574; --line:#d6dce4; --soft:#e7e9f3;
+  --accent:#3f3796; --accent-ink:#ffffff; --good:#1d7a4c; --bad:#b3324c;
+  --s-hema:#4b3a9c; --s-eosin:#c03f77; --s-lfb:#1f6db0; --s-silver:#98681c; --s-cresyl:#7c3a97; --s-safranin:#bd3a2b; --s-fast:#24876a;
+  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1319; --surface:#161d25; --ink:#e5eaf0; --muted:#98a4b2; --line:#29333f; --soft:#20263a;
+  --accent:#a8a1ff; --accent-ink:#15122f; --good:#56c58d; --bad:#f07c91;
+  --s-hema:#9c8fff; --s-eosin:#f07fae; --s-lfb:#6ab2f0; --s-silver:#dba653; --s-cresyl:#c78ce2; --s-safranin:#f08470; --s-fast:#5ccfaa;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1319; --surface:#161d25; --ink:#e5eaf0; --muted:#98a4b2; --line:#29333f; --soft:#20263a;
+  --accent:#a8a1ff; --accent-ink:#15122f; --good:#56c58d; --bad:#f07c91;
+  --s-hema:#9c8fff; --s-eosin:#f07fae; --s-lfb:#6ab2f0; --s-silver:#dba653; --s-cresyl:#c78ce2; --s-safranin:#f08470; --s-fast:#5ccfaa;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1120px;margin:0 auto}
+a{color:inherit}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+.mono{font-family:var(--f-mono);font-size:12.5px;letter-spacing:.04em;color:var(--muted)}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:11.5px}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;
+  padding:8px 16px;font-weight:500;font-size:14.5px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:var(--surface);border-color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.small{padding:5px 12px;font-size:13.5px}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:20px 8px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:19px;text-decoration:none}
+.mark{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--s-eosin) 0 30%,transparent 31%),radial-gradient(circle at 65% 60%,var(--s-hema) 0 38%,transparent 39%),var(--soft);border:1.5px solid var(--ink)}
+.back{text-decoration:none;color:var(--muted);font-weight:500}
+.back:hover{color:var(--ink)}
+
+/* home */
+.hero{padding-block:28px 24px;display:grid;gap:8px}
+.hero h1{font-size:clamp(30px,5vw,46px);font-weight:750;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.card{--c:var(--accent);position:relative;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s}
+.card:hover{transform:translateY(-4px);border-color:var(--c);box-shadow:0 14px 30px -18px var(--c)}
+.card-main{display:grid;gap:6px;text-decoration:none;padding:0 0 4px;flex:1}
+.slide{height:128px;position:relative;overflow:hidden;background:color-mix(in srgb,var(--c) 10%,var(--surface));border-bottom:1px solid var(--line)}
+.slide::before{content:"";position:absolute;inset:auto auto 10px 14px;width:60%;height:8px;border-radius:2px;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--c) 30%,transparent) 0 6px,transparent 6px 10px)}
+.blob{position:absolute;right:18px;top:16px;width:96px;height:96px;border-radius:46% 54% 50% 50%/55% 45% 55% 45%;
+  background:radial-gradient(circle at 30% 35%,color-mix(in srgb,var(--c) 85%,#000) 0 6%,transparent 7%),
+    radial-gradient(circle at 62% 58%,color-mix(in srgb,var(--c) 85%,#000) 0 5%,transparent 6%),
+    radial-gradient(circle at 45% 75%,color-mix(in srgb,var(--c) 85%,#000) 0 4%,transparent 5%),
+    radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--c) 55%,var(--surface)) 0 60%,color-mix(in srgb,var(--c) 30%,var(--surface)) 61% 100%);
+  transition:transform .4s ease}
+.card:hover .blob{transform:rotate(18deg) scale(1.08)}
+.card h2{font-size:22px;font-weight:700;padding:14px 18px 0}
+.card p{margin:0;padding:0 18px;color:var(--muted);font-size:14.5px}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 18px 16px}
+.card.add{align-items:center;justify-content:center;min-height:240px;border-style:dashed;background:transparent;cursor:pointer;color:var(--muted);font-weight:500;gap:8px}
+.card.add:hover{color:var(--ink);border-color:var(--ink);box-shadow:none}
+.plus{width:44px;height:44px;border-radius:50%;border:1.5px dashed currentColor;display:grid;place-items:center;font-size:24px;line-height:1}
+
+/* subject */
+.subj-head{--c:var(--accent);display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding-block:18px 18px;border-bottom:3px solid var(--c)}
+.subj-head h1{font-size:clamp(28px,4.5vw,40px);font-weight:750;letter-spacing:-.02em}
+.subj-head p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.subj-head .eyebrow{color:var(--c)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.tabs{display:flex;gap:4px;padding-block:14px;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:6px 14px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:500}
+.tab[aria-selected="true"]{background:var(--soft);color:var(--ink)}
+.tab .n{font-family:var(--f-mono);font-size:12px;margin-left:4px}
+.reader{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;align-items:start}
+.index{position:sticky;top:12px;display:grid;gap:10px;min-width:0}
+.search{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px}
+.index ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;max-height:min(60vh,560px);overflow:auto}
+.index li button{width:100%;text-align:left;border:0;background:transparent;border-radius:10px;padding:8px 10px;cursor:pointer;display:grid;grid-template-columns:28px 1fr;gap:6px;align-items:baseline}
+.index li button:hover{background:var(--soft)}
+.index li button[aria-current="true"]{background:var(--surface);box-shadow:inset 3px 0 0 var(--c,var(--accent));font-weight:600}
+.index .num{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.plate{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,3.5vw,36px);min-width:0}
+.plate-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
+.plate h2{font-size:clamp(24px,3.4vw,32px);font-weight:700;letter-spacing:-.01em}
+.prose{max-width:68ch;overflow-wrap:anywhere}
+.prose h3{font-size:20px;margin:26px 0 6px}
+.prose h4{font-family:var(--f-body);font-size:16px;font-weight:600;margin:20px 0 4px}
+.prose p{margin:0 0 12px}
+.prose ul,.prose ol{margin:0 0 12px;padding-left:22px}
+.prose li{margin:3px 0}
+.prose li::marker{color:var(--c,var(--accent))}
+.prose code{font-family:var(--f-mono);font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:5px}
+.prose blockquote{margin:14px 0;padding:10px 14px;border-left:3px solid var(--c,var(--accent));background:color-mix(in srgb,var(--c,var(--accent)) 9%,var(--surface));border-radius:0 10px 10px 0}
+.prose blockquote::before{content:"High-yield";display:block;font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--c,var(--accent));margin-bottom:2px}
+.prose blockquote p:last-child{margin:0}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:28px;padding-top:16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:32px 22px;text-align:center;color:var(--muted);display:grid;gap:12px;justify-items:center}
+.empty h3{color:var(--ink);font-size:20px}
+
+/* question bank */
+.qlist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.qitem{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:start}
+.qitem .qp{font-weight:500}
+.qitem .qa{font-size:14px;color:var(--muted)}
+.qitem .qa b{color:var(--good);font-weight:600}
+
+/* quiz */
+.quiz{max-width:760px;margin:0 auto;display:grid;gap:18px;padding-top:12px}
+.progress{height:6px;background:var(--soft);border-radius:99px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--c,var(--accent));transition:width .3s ease}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,3.5vw,32px);display:grid;gap:16px}
+.qcard h2{font-size:clamp(20px,3vw,25px);font-weight:650;letter-spacing:-.005em}
+.choices{display:grid;gap:8px}
+.choice{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+.choice:hover:not(:disabled){border-color:var(--ink)}
+.choice .k{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;background:var(--soft)}
+.choice:disabled{cursor:default}
+.choice.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+.choice.right .k{background:var(--good);color:var(--surface)}
+.choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.choice.wrong .k{background:var(--bad);color:var(--surface)}
+.verdict{border-radius:12px;padding:12px 16px;background:var(--soft)}
+.verdict strong{display:block;margin-bottom:2px}
+.verdict.ok strong{color:var(--good)} .verdict.no strong{color:var(--bad)}
+.qnav{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.score{display:grid;gap:4px;justify-items:center;text-align:center;padding-block:10px}
+.score .big{font-family:var(--f-display);font-size:clamp(52px,10vw,84px);font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.missed{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.missed li{border-left:3px solid var(--bad);padding:6px 12px;background:var(--surface);border-radius:0 10px 10px 0}
+.missed .ans{color:var(--good);font-weight:600}
+
+/* sheet (editor) */
+#sheet{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,var(--ink) 40%,transparent);display:grid;place-items:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#sheet[hidden]{display:none!important}
+.sheet-panel{width:min(720px,100%);max-height:100%;overflow:auto;background:var(--surface);border-radius:18px;border:1px solid var(--line);padding:22px;display:grid;gap:14px}
+.sheet-panel h2{font-size:22px}
+.field{display:grid;gap:5px}
+.field label,.field .lbl{font-weight:600;font-size:14px}
+.field .hint{font-size:13px;color:var(--muted)}
+.field input[type=text],.field textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
+.field textarea{min-height:260px;resize:vertical;font-family:var(--f-mono);font-size:14px;line-height:1.55}
+.field textarea.short{min-height:80px;font-family:var(--f-body);font-size:15px}
+.chrow{display:grid;grid-template-columns:auto 26px 1fr;gap:8px;align-items:center}
+.chrow .k{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches label{width:34px;height:34px;border-radius:50%;background:var(--c);cursor:pointer;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line)}
+.swatches input{position:absolute;opacity:0;pointer-events:none}
+.swatches input:checked+label{box-shadow:0 0 0 2px var(--ink)}
+.swatches input:focus-visible+label{outline:2px solid var(--accent);outline-offset:3px}
+.form-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:6px}
+.form-foot .right{display:flex;gap:8px;margin-left:auto}
+.err{color:var(--bad);font-size:14px;margin:0}
+
+.notice{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--soft);font-size:14px;color:var(--muted)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:30;max-width:calc(100% - 32px)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:36px;padding-top:16px;border-top:1px solid var(--line)}
+.tools .mono{margin-right:auto}
+.live{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:22px}
+.live.one{grid-template-columns:minmax(0,1fr)}
+.live-col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+.live-col h3{font-size:17px;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 var(--good);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.lb,.feed{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.lb li{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--line)}
+.lb li:last-child,.feed li:last-child{border-bottom:0}
+.lb .rank{font-family:var(--f-mono);color:var(--muted);font-size:13px}
+.lb li:first-child .rank{color:var(--c,var(--accent));font-weight:600}
+.lb .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.feed li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.feed li .mono{white-space:nowrap;font-size:12px}
+.muted{color:var(--muted);margin:0;font-size:14.5px}
+.qcard .field input{width:100%;max-width:340px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+
+@media (max-width:760px){
+  .reader{grid-template-columns:minmax(0,1fr)}
+  .index{position:static}
+  .index ol{max-height:220px}
+  .qitem{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
+</head>
+<body>
+
+<div class="wrap" id="app"><div class="loading">Opening your study atlas…</div></div>
+<div id="sheet" hidden><div class="sheet-panel" role="dialog" aria-modal="true" id="sheet-panel"></div></div>
+<div id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="data.js"></script>
+<script>
+(function(){
+const STAINS=[
+  ["hema","Hematoxylin"],["eosin","Eosin"],["lfb","Luxol blue"],["silver","Silver"],["cresyl","Cresyl violet"],["safranin","Safranin"],["fast","Fast green"]];
+const S={subjects:[],notes:[],questions:[],got:{subjects:0,notes:0,questions:0},db:null,mode:"loading",writable:true,
+  noteId:null,tab:"notes",quiz:null,slow:false};
+const app=document.getElementById("app"), sheet=document.getElementById("sheet"), panel=document.getElementById("sheet-panel"), toastEl=document.getElementById("toast");
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const stainVar=k=>`var(--s-${STAINS.some(s=>s[0]===k)?k:"hema"})`;
+const rid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const slug=s=>(String(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24)||"subject")+"-"+Math.random().toString(36).slice(2,6);
+const byOrder=(a,b)=>(a.order??0)-(b.order??0)||String(a.title||a.name||"").localeCompare(String(b.title||b.name||""));
+const subj=id=>S.subjects.find(s=>s.id===id);
+const notesOf=id=>S.notes.filter(n=>n.subject===id).sort(byOrder);
+const qsOf=id=>S.questions.filter(q=>q.subject===id).sort(byOrder);
+const plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
+const L="ABCDEF";
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+let toastT;function toast(m){toastEl.textContent=m;toastEl.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>toastEl.hidden=true,3200)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* tiny markdown: # ## ### headings, - bullets, 1. lists, > high-yield callouts, **bold**, *italic*, `code` */
+function inline(s){return esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/(^|[\s(])\*(\S(?:.*?\S)?)\*/g,"$1<em>$2</em>").replace(/`(.+?)`/g,"<code>$1</code>")}
+function md(src){
+  const lines=String(src||"").replace(/\r/g,"").split("\n");let out="",list=null,para=[],quote=[];
+  const flushP=()=>{if(para.length){out+=`<p>${inline(para.join(" "))}</p>`;para=[]}};
+  const flushL=()=>{if(list){out+=`</${list}>`;list=null}};
+  const flushQ=()=>{if(quote.length){out+=`<blockquote>${md(quote.join("\n"))}</blockquote>`;quote=[]}};
+  for(const raw of lines){const l=raw.trimEnd();let m;
+    if(/^>\s?/.test(l)){flushP();flushL();quote.push(l.replace(/^>\s?/,""));continue}else flushQ();
+    if(!l.trim()){flushP();flushL();continue}
+    if(m=l.match(/^(#{1,3})\s+(.*)/)){flushP();flushL();const t=["h3","h3","h4"][m[1].length-1];out+=`<${t}>${inline(m[2])}</${t}>`;continue}
+    if(m=l.match(/^\s*[-*•]\s+(.*)/)){flushP();if(list!=="ul"){flushL();out+="<ul>";list="ul"}out+=`<li>${inline(m[1])}</li>`;continue}
+    if(m=l.match(/^\s*\d+[.)]\s+(.*)/)){flushP();if(list!=="ol"){flushL();out+="<ol>";list="ol"}out+=`<li>${inline(m[1])}</li>`;continue}
+    flushL();para.push(l.trim());
+  }
+  flushP();flushL();flushQ();return out;
+}
+
+/* ---------- data ---------- */
+async function write(fn,okMsg){
+  try{await fn();if(okMsg)toast(okMsg);return true}
+  catch(e){const c=e&&e.code;
+    if(c==="quota_exceeded")toast("This browser's storage is full. Back up your notes, then delete a few old ones.");
+    else toast("Couldn't save. This browser may be blocking site storage (private mode?).");
+    return false}
+}
+/* Storage: site/data.js holds the main notes (window.STUDY_DATA). Edits made in the browser are kept
+   as an overlay in this browser's localStorage, so updates to data.js still show up. */
+const OVERLAY_KEY="study-atlas-edits-v1";
+function loadOverlay(){try{const o=JSON.parse(localStorage.getItem(OVERLAY_KEY)||"null");if(o&&o.up&&o.del)return o}catch(e){}return{up:{subjects:{},notes:{},questions:{}},del:{subjects:{},notes:{},questions:{}}}}
+let OV=loadOverlay();
+function saveOverlay(){localStorage.setItem(OVERLAY_KEY,JSON.stringify(OV))}
+function merged(){const base=window.STUDY_DATA||{};const out={};
+  ["subjects","notes","questions"].forEach(n=>{const m=new Map();(base[n]||[]).forEach(d=>m.set(d.id,d));
+    Object.entries(OV.up[n]||{}).forEach(([id,d])=>m.set(id,{...d,id}));Object.keys(OV.del[n]||{}).forEach(id=>m.delete(id));out[n]=[...m.values()]});return out}
+function refresh(){const m=merged();S.subjects=m.subjects;S.notes=m.notes;S.questions=m.questions;render()}
+const col=n=>({doc:id=>({
+  set:async data=>{OV.up[n][id]=data;delete OV.del[n][id];try{saveOverlay()}catch(e){delete OV.up[n][id];throw {code:"quota_exceeded"}}refresh()},
+  delete:async()=>{delete OV.up[n][id];OV.del[n][id]=1;saveOverlay();refresh()}})});
+function exportData(){const m=merged();const strip=a=>a.map(({...d})=>d);
+  const txt="window.STUDY_DATA = "+JSON.stringify({subjects:strip(m.subjects),notes:strip(m.notes),questions:strip(m.questions)},null,2)+";\n";
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/javascript"}));
+  a.download="data.js";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast("Saved data.js to your downloads")}
+function importData(file){const r=new FileReader();r.onload=()=>{try{
+    const t=String(r.result).replace(/^\s*window\.STUDY_DATA\s*=\s*/,"").replace(/;\s*$/,"");const d=JSON.parse(t);
+    if(!d||!Array.isArray(d.subjects))throw 0;
+    OV={up:{subjects:{},notes:{},questions:{}},del:{subjects:{},notes:{},questions:{}}};
+    const base=window.STUDY_DATA||{};["subjects","notes","questions"].forEach(n=>{(base[n]||[]).forEach(x=>OV.del[n][x.id]=1);(d[n]||[]).forEach(x=>{const{id,...rest}=x;if(id){OV.up[n][id]=rest;delete OV.del[n][id]}})});
+    saveOverlay();refresh();toast("Backup restored")}catch(e){toast("That file isn't a Study Atlas backup.")}};r.readAsText(file)}
+
+async function init(){
+  try{localStorage.setItem("study-atlas-probe","1");localStorage.removeItem("study-atlas-probe")}catch(e){S.writable=false}
+  S.mode="live";refresh();
+}
+
+/* ---------- routing ---------- */
+function route(){const h=decodeURIComponent(location.hash.slice(1));
+  if(h.startsWith("s-"))return{v:"subject",id:h.slice(2)};
+  if(h.startsWith("q-"))return{v:"quiz",id:h.slice(2)};
+  return{v:"home"}}
+addEventListener("hashchange",()=>{S.noteId=null;S.tab="notes";S.quiz=null;render();scrollTo(0,0)});
+
+/* ---------- views ---------- */
+function topbar(right=""){return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a>${right}</header>`}
+const canEdit=()=>S.writable&&S.mode==="live"&&store("edit-mode")==="1";
+
+function render(){
+  const r=route();
+  if(S.mode==="loading"){app.innerHTML=topbar()+`<div class="loading">${S.slow?"Your notes can't be reached yet. They'll appear here as soon as the connection catches up.":"Opening your study atlas…"}</div>`;return}
+  if(S.mode==="error"&&!S.subjects.length){app.innerHTML=topbar()+`<div class="empty" style="margin-top:40px"><h3>Your notes didn't load</h3><p>Reload the page to try again.</p></div>`;return}
+  if(r.v==="subject")return renderSubject(r.id);
+  if(r.v==="quiz")return renderQuiz(r.id);
+  renderHome();
+}
+
+function renderHome(){
+  const subs=S.subjects.slice().sort(byOrder);
+  const meta=`<span class="mono">${plural(subs.length,"subject")} · ${plural(S.notes.length,"note")} · ${plural(S.questions.length,"question")}</span>`;
+  const cards=subs.map(s=>{const n=notesOf(s.id).length,q=qsOf(s.id).length,best=store("best-"+s.id);
+    return `<article class="card" style="--c:${stainVar(s.stain)}">
+      <a class="card-main" href="#s-${esc(s.id)}"><div class="slide"><span class="blob"></span></div>
+        <h2>${esc(s.name)}</h2>${s.blurb?`<p>${esc(s.blurb)}</p>`:""}</a>
+      <div class="card-foot"><span class="mono">${plural(n,"note")} · ${q} Qs${best?` · best ${esc(best)}%`:""}</span>
+        ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
+  app.innerHTML=topbar(meta)+`<section class="hero"><h1>What are we reviewing today?</h1>
+    <p>Pick a subject to flip through your notes, or jump straight into its quiz.</p></section>
+    ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
+      :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
+    ${!S.writable?`<p class="notice">This browser is blocking site storage (private mode?), so changes can't be saved here.</p>`:""}
+    ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
+    <div class="tools">${canEdit()?`<span class="mono">Editing is on. Changes are saved in this browser only.</span><button class="btn small" data-act="export">Download backup (data.js)</button>
+    <label class="btn small" for="import-file">Restore a backup</label><input type="file" id="import-file" accept=".js,.json" hidden>`:`<span class="mono"></span>`}
+    <button class="btn small ghost" data-act="toggle-edit">${canEdit()?"Turn off editing":"Edit notes"}</button></div>`;
+}
+
+function renderSubject(id){
+  const s=subj(id);
+  if(!s){app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<div class="empty" style="margin-top:30px"><h3>This subject isn't here</h3><p>It may have been renamed or deleted.</p><a class="btn" href="#">Back to all subjects</a></div>`;return}
+  const notes=notesOf(id),qs=qsOf(id);
+  if(!notes.find(n=>n.id===S.noteId))S.noteId=notes[0]?.id||null;
+  const idx=notes.findIndex(n=>n.id===S.noteId),note=notes[idx];
+  const head=`<div class="subj-head" style="--c:${stainVar(s.stain)}"><div><span class="mono eyebrow">Subject</span><h1>${esc(s.name)}</h1>${s.blurb?`<p>${esc(s.blurb)}</p>`:""}</div>
+    <div class="actions">${canEdit()?`<button class="btn ghost" data-act="edit-subject" data-id="${esc(id)}">Edit subject</button>`:""}
+    ${qs.length?`<a class="btn primary" href="#q-${esc(id)}">Take the quiz · ${qs.length}</a>`:""}</div></div>
+    <div class="tabs" role="tablist"><button class="tab" role="tab" data-act="tab" data-tab="notes" aria-selected="${S.tab==="notes"}">Notes<span class="n">${notes.length}</span></button>
+    <button class="tab" role="tab" data-act="tab" data-tab="bank" aria-selected="${S.tab==="bank"}">Question bank<span class="n">${qs.length}</span></button></div>`;
+  let body;
+  if(S.tab==="bank"){
+    body=qs.length?`<ol class="qlist">${qs.map((q,i)=>`<li class="qitem"><div><div class="mono">Q${i+1}</div><div class="qp">${esc(q.prompt)}</div>
+      <div class="qa">Answer: <b>${esc((q.choices||[])[q.answer]??"")}</b></div></div>
+      ${canEdit()?`<button class="btn small" data-act="edit-q" data-id="${esc(q.id)}">Edit</button>`:""}</li>`).join("")}</ol>
+      ${canEdit()?`<p><button class="btn" data-act="new-q" data-id="${esc(id)}">+ Add a question</button></p>`:""}`
+      :`<div class="empty"><h3>No questions yet</h3><p>Add multiple-choice questions here and they'll show up in this subject's quiz.</p>${canEdit()?`<button class="btn primary" data-act="new-q" data-id="${esc(id)}">Add the first question</button>`:""}</div>`;
+  }else if(!notes.length){
+    body=`<div class="empty"><h3>No notes yet</h3><p>Write or paste your first note for ${esc(s.name)}. Headings, bullet points and bold text all work.</p>${canEdit()?`<button class="btn primary" data-act="new-note" data-id="${esc(id)}">Add the first note</button>`:""}</div>`;
+  }else{
+    body=`<div class="reader" style="--c:${stainVar(s.stain)}"><aside class="index">
+      <input class="search" id="note-search" type="search" placeholder="Search notes" aria-label="Search notes">
+      <ol id="note-list">${notes.map((n,i)=>`<li data-text="${esc((n.title+" "+n.body).toLowerCase())}"><button data-act="open-note" data-id="${esc(n.id)}" aria-current="${n.id===S.noteId}"><span class="num">${String(i+1).padStart(2,"0")}</span><span>${esc(n.title)}</span></button></li>`).join("")}</ol>
+      ${canEdit()?`<button class="btn small" data-act="new-note" data-id="${esc(id)}">+ New note</button>`:""}</aside>
+      <article class="plate"><div class="plate-head"><div><div class="mono">Note ${idx+1} of ${notes.length}${note.updated?` · updated ${new Date(note.updated).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}`:""}</div><h2>${esc(note.title)}</h2></div>
+      ${canEdit()?`<button class="btn small" data-act="edit-note" data-id="${esc(note.id)}">Edit</button>`:""}</div>
+      <div class="prose">${md(note.body)}</div>
+      <nav class="pager"><button class="btn" data-act="step" data-d="-1" ${idx<=0?"disabled":""}>← ${idx>0?esc(notes[idx-1].title):"Previous"}</button>
+      <button class="btn" data-act="step" data-d="1" ${idx>=notes.length-1?"disabled":""}>${idx<notes.length-1?esc(notes[idx+1].title):"Next"} →</button></nav></article></div>`;
+  }
+  const prevSearch=document.getElementById("note-search")?.value||"";
+  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+head+body;
+  const se=document.getElementById("note-search");if(se&&prevSearch){se.value=prevSearch;filterNotes(prevSearch)}
+}
+function filterNotes(q){q=q.trim().toLowerCase();document.querySelectorAll("#note-list li").forEach(li=>li.hidden=!!q&&!li.dataset.text.includes(q))}
+
+function renderQuiz(id){
+  const s=subj(id),back=topbar(`<a class="back" href="#s-${esc(id)}">← Back to notes</a>`);
+  if(!s){app.innerHTML=back+`<div class="empty"><h3>This subject isn't here</h3><a class="btn" href="#">All subjects</a></div>`;return}
+  const all=qsOf(id),c=stainVar(s.stain),Z=S.quiz;
+  if(!Z||Z.subject!==id){
+    const best=store("best-"+id);
+    app.innerHTML=back+`<div class="quiz" style="--c:${c}"><div class="qcard"><span class="mono eyebrow" style="color:${c}">Quiz</span><h2 style="font-size:clamp(26px,4vw,34px)">${esc(s.name)}</h2>
+      ${all.length?`<p style="margin:0;color:var(--muted)">${plural(all.length,"question")} in the bank, shuffled each time. Keys 1–5 pick an answer and Enter moves on.${best?` Your best so far is ${esc(best)}%.`:""}</p>
+      ${LIVE.on?`<div class="field"><label for="player-name">Your name on the leaderboard</label><input type="text" id="player-name" maxlength="30" value="${esc(playerName())}" placeholder="e.g. Jose" autocomplete="nickname"></div>`:""}
+      <div class="actions">${all.length>10?`<button class="btn primary" data-act="start" data-n="10">Start · 10 questions</button><button class="btn" data-act="start" data-n="all">All ${all.length}</button>`:`<button class="btn primary" data-act="start" data-n="all">Start · ${plural(all.length,"question")}</button>`}</div>`
+      :`<p style="margin:0;color:var(--muted)">There are no questions for this subject yet. Add some in the question bank.</p><div><a class="btn" href="#s-${esc(id)}">Go to ${esc(s.name)}</a></div>`}</div>${liveSlot(id)}</div>`;
+    return;
+  }
+  if(Z.i>=Z.items.length){
+    const right=Z.items.filter(q=>q.picked===q.answer).length,pct=Math.round(right/Z.items.length*100);
+    const prev=+store("best-"+id)||0;if(!Z.saved){Z.saved=1;Z.newBest=pct>prev&&Z.full;if(Z.newBest)store("best-"+id,String(pct));if(!Z.retry)postAttempt(id,right,Z.items.length)}
+    const missed=Z.items.filter(q=>q.picked!==q.answer);
+    app.innerHTML=back+`<div class="quiz" style="--c:${c}"><div class="qcard"><div class="score"><span class="mono eyebrow">${esc(s.name)} · result</span>
+      <span class="big">${right}/${Z.items.length}</span><span class="mono">${pct}% correct${Z.newBest?" · new best":""}</span></div>
+      ${missed.length?`<h3 style="font-size:18px">Review what you missed</h3><ul class="missed">${missed.map(q=>`<li><div>${esc(q.prompt)}</div><div class="ans">${esc(q.choices[q.answer])}</div>${q.explain?`<div class="mono" style="font-size:13px;letter-spacing:0">${esc(q.explain)}</div>`:""}</li>`).join("")}</ul>`:`<p style="text-align:center;margin:0">Perfect score. Nice work.</p>`}
+      <div class="qnav">${missed.length?`<button class="btn primary" data-act="retry-missed">Retry the ${missed.length} missed</button>`:""}<button class="btn" data-act="start" data-n="${Z.items.length>=all.length?"all":Z.items.length}">New quiz</button><a class="btn ghost" href="#s-${esc(id)}">Back to notes</a></div></div>${liveSlot(id)}</div>`;
+    return;
+  }
+  const q=Z.items[Z.i],done=q.picked!=null;
+  app.innerHTML=back+`<div class="quiz" style="--c:${c}"><div class="qnav"><span class="mono">${esc(s.name)} · question ${Z.i+1} of ${Z.items.length}</span><span class="mono">${Z.items.filter(x=>x.picked===x.answer).length} correct</span></div>
+    <div class="progress"><span style="width:${(Z.i+(done?1:0))/Z.items.length*100}%"></span></div>
+    <div class="qcard"><h2>${esc(q.prompt)}</h2><div class="choices">${q.choices.map((ch,i)=>{
+      let cls="";if(done){if(i===q.answer)cls="right";else if(i===q.picked)cls="wrong"}
+      return `<button class="choice ${cls}" data-act="pick" data-i="${i}" ${done?"disabled":""}><span class="k">${L[i]}</span><span>${esc(ch)}</span></button>`}).join("")}</div>
+    ${done?`<div class="verdict ${q.picked===q.answer?"ok":"no"}"><strong>${q.picked===q.answer?"Correct":"Not quite. The answer is "+L[q.answer]+"."}</strong>${q.explain?esc(q.explain):""}</div>`:""}
+    <div class="qnav"><button class="btn ghost" data-act="quit">End quiz</button>${done?`<button class="btn primary" data-act="next" id="next-btn">${Z.i+1<Z.items.length?"Next question →":"See results"}</button>`:""}</div></div></div>`;
+  if(done)document.getElementById("next-btn")?.focus();
+}
+function startQuiz(id,items,full,retry){
+  S.quiz={subject:id,i:0,full,retry:!!retry,items:items.map(q=>{
+    // shuffle choices but keep track of the right one
+    const order=shuffle(q.choices.map((_,i)=>i).filter(i=>String(q.choices[i]||"").trim()));
+    return{prompt:q.prompt,explain:q.explain,choices:order.map(i=>q.choices[i]),answer:order.indexOf(q.answer),picked:null,src:q}})};
+  render();scrollTo(0,0);
+}
+
+/* ---------- editors ---------- */
+let sheetSubmit=null;
+function openSheet(html,onSubmit){panel.innerHTML=html;sheetSubmit=onSubmit;sheet.hidden=false;const f=panel.querySelector("input[type=text],textarea");f&&f.focus()}
+function closeSheet(){sheet.hidden=true;panel.innerHTML="";sheetSubmit=null}
+function foot(delLabel){return `<p class="err" id="form-err" hidden></p><div class="form-foot">${delLabel?`<button type="button" class="btn danger" data-act="del">${delLabel}</button>`:""}
+  <div class="right"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></div>`}
+function formErr(m){const e=document.getElementById("form-err");e.textContent=m;e.hidden=false}
+let delHandler=null;
+
+function editSubject(s){
+  const st=s?.stain||STAINS[S.subjects.length%STAINS.length][0];
+  delHandler=s?async()=>{const n=notesOf(s.id),q=qsOf(s.id);
+    closeSheet();location.hash="";
+    await write(async()=>{for(const x of n)await col("notes").doc(x.id).delete();for(const x of q)await col("questions").doc(x.id).delete();await col("subjects").doc(s.id).delete()},`Deleted ${s.name}`)}:null;
+  openSheet(`<form id="f"><h2>${s?"Edit subject":"Add a subject"}</h2>
+    <div class="field"><label for="f-name">Name</label><input type="text" id="f-name" required maxlength="60" value="${esc(s?.name||"")}" placeholder="e.g. Histology"></div>
+    <div class="field"><label for="f-blurb">Short description</label><input type="text" id="f-blurb" maxlength="140" value="${esc(s?.blurb||"")}" placeholder="What this subject covers"></div>
+    <div class="field"><span class="lbl">Stain color</span><div class="swatches">${STAINS.map(([k,n])=>`<input type="radio" name="stain" id="st-${k}" value="${k}" ${k===st?"checked":""}><label for="st-${k}" title="${n}" style="--c:var(--s-${k})"><span hidden>${n}</span></label>`).join("")}</div></div>
+    ${foot(s?`Delete subject`:"")}</form>`,async f=>{
+      const name=f.querySelector("#f-name").value.trim();if(!name)return formErr("Give the subject a name.");
+      const data={name,blurb:f.querySelector("#f-blurb").value.trim(),stain:f.querySelector("input[name=stain]:checked").value,order:s?.order??Date.now()};
+      const id=s?.id||slug(name);closeSheet();
+      if(await write(()=>col("subjects").doc(id).set(data),s?"Saved":`Added ${name}`)&&!s)location.hash="s-"+id;
+    });
+  if(s){const b=panel.querySelector("[data-act=del]");b.title=`Also deletes its ${plural(notesOf(s.id).length,"note")} and ${plural(qsOf(s.id).length,"question")}`}
+}
+function editNote(n,subjectId){
+  delHandler=n?async()=>{closeSheet();S.noteId=null;await write(()=>col("notes").doc(n.id).delete(),"Note deleted")}:null;
+  openSheet(`<form id="f"><h2>${n?"Edit note":"New note"}</h2>
+    <div class="field"><label for="f-title">Title</label><input type="text" id="f-title" required maxlength="120" value="${esc(n?.title||"")}" placeholder="e.g. Cranial nerve nuclei"></div>
+    <div class="field"><label for="f-body">Note</label><textarea id="f-body" placeholder="Paste or type your notes here">${esc(n?.body||"")}</textarea>
+    <span class="hint"># Heading · - bullet point · 1. numbered · **bold** · *italic* · start a line with &gt; for a high-yield box</span></div>
+    ${foot(n?"Delete note":"")}</form>`,async f=>{
+      const title=f.querySelector("#f-title").value.trim();if(!title)return formErr("Give the note a title.");
+      const id=n?.id||rid("n");const data={subject:n?.subject||subjectId,title,body:f.querySelector("#f-body").value,order:n?.order??Date.now(),updated:Date.now()};
+      closeSheet();S.noteId=id;await write(()=>col("notes").doc(id).set(data),n?"Note saved":"Note added");
+    });
+}
+function editQuestion(q,subjectId){
+  delHandler=q?async()=>{closeSheet();await write(()=>col("questions").doc(q.id).delete(),"Question deleted")}:null;
+  const ch=q?.choices||[];
+  openSheet(`<form id="f"><h2>${q?"Edit question":"New question"}</h2>
+    <div class="field"><label for="f-prompt">Question</label><textarea class="short" id="f-prompt" required>${esc(q?.prompt||"")}</textarea></div>
+    <div class="field"><span class="lbl">Choices <span class="hint">· tick the correct one, leave extras blank</span></span>
+    ${[0,1,2,3,4].map(i=>`<div class="chrow"><input type="radio" name="ans" id="ans-${i}" value="${i}" ${(q?q.answer===i:i===0)?"checked":""} aria-label="Choice ${L[i]} is correct"><label class="k" for="ans-${i}">${L[i]}</label><input type="text" id="ch-${i}" value="${esc(ch[i]||"")}" aria-label="Choice ${L[i]}"></div>`).join("")}</div>
+    <div class="field"><label for="f-explain">Explanation <span class="hint">· shown after answering</span></label><textarea class="short" id="f-explain">${esc(q?.explain||"")}</textarea></div>
+    ${foot(q?"Delete question":"")}</form>`,async f=>{
+      const prompt=f.querySelector("#f-prompt").value.trim();if(!prompt)return formErr("Write the question first.");
+      const raw=[0,1,2,3,4].map(i=>f.querySelector("#ch-"+i).value.trim());const pick=+f.querySelector("input[name=ans]:checked").value;
+      if(!raw[pick])return formErr("The choice marked correct is blank.");
+      const choices=[],map={};raw.forEach((c,i)=>{if(c){map[i]=choices.length;choices.push(c)}});
+      if(choices.length<2)return formErr("Add at least two choices.");
+      const id=q?.id||rid("q");const data={subject:q?.subject||subjectId,prompt,choices,answer:map[pick],explain:f.querySelector("#f-explain").value.trim(),order:q?.order??Date.now()};
+      closeSheet();await write(()=>col("questions").doc(id).set(data),q?"Question saved":"Question added");
+    });
+}
+
+/* ---------- events ---------- */
+panel.addEventListener("submit",e=>{e.preventDefault();sheetSubmit&&sheetSubmit(e.target)});
+let armT;
+panel.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;
+  if(b.dataset.act==="close")closeSheet();
+  if(b.dataset.act==="del"){if(b.classList.contains("armed")){delHandler&&delHandler()}else{b.classList.add("armed");b.dataset.label=b.textContent;b.textContent="Click again to delete";clearTimeout(armT);armT=setTimeout(()=>{b.classList.remove("armed");b.textContent=b.dataset.label},3500)}}
+});
+sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet()});
+app.addEventListener("input",e=>{if(e.target.id==="note-search")filterNotes(e.target.value)});
+app.addEventListener("change",e=>{if(e.target.id==="import-file"&&e.target.files[0]){importData(e.target.files[0]);e.target.value=""}});
+app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act,id=b.dataset.id,r=route();
+  if(a==="new-subject")editSubject(null);
+  else if(a==="edit-subject")editSubject(subj(id));
+  else if(a==="tab"){S.tab=b.dataset.tab;render()}
+  else if(a==="open-note"){S.noteId=id;render();if(innerWidth<=760)document.querySelector(".plate")?.scrollIntoView({behavior:"smooth",block:"start"})}
+  else if(a==="step"){const ns=notesOf(r.id),i=ns.findIndex(n=>n.id===S.noteId)+(+b.dataset.d);if(ns[i]){S.noteId=ns[i].id;render();document.querySelector(".plate")?.scrollIntoView({block:"start"})}}
+  else if(a==="new-note")editNote(null,id);
+  else if(a==="edit-note")editNote(S.notes.find(n=>n.id===id));
+  else if(a==="new-q")editQuestion(null,id);
+  else if(a==="edit-q")editQuestion(S.questions.find(q=>q.id===id));
+  else if(a==="start"){const nm=document.getElementById("player-name");if(nm){const v=nm.value.trim().slice(0,30);if(LIVE.on&&!v){nm.focus();toast("Type your name first so your score shows on the leaderboard.");return}store("player-name",v)}const all=qsOf(r.id),n=b.dataset.n==="all"?all.length:+b.dataset.n;startQuiz(r.id,shuffle(all).slice(0,n),n>=all.length)}
+  else if(a==="pick"){const q=S.quiz.items[S.quiz.i];if(q.picked==null){q.picked=+b.dataset.i;render()}}
+  else if(a==="next"){S.quiz.i++;render();scrollTo(0,0)}
+  else if(a==="retry-missed"){startQuiz(r.id,shuffle(S.quiz.items.filter(q=>q.picked!==q.answer).map(q=>q.src)),false,true)}
+  else if(a==="quit"){S.quiz=null;render()}
+  else if(a==="export")exportData();
+  else if(a==="toggle-edit"){store("edit-mode",canEdit()?"0":"1");render()}
+});
+addEventListener("keydown",e=>{
+  if(!sheet.hidden){if(e.key==="Escape")closeSheet();return}
+  if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||""))return;
+  const r=route();
+  if(r.v==="quiz"&&S.quiz&&S.quiz.i<S.quiz.items.length){const q=S.quiz.items[S.quiz.i];
+    const k=parseInt(e.key,10);if(q.picked==null&&k>=1&&k<=q.choices.length){q.picked=k-1;render()}
+    else if(q.picked!=null&&e.key==="Enter"&&document.activeElement?.id!=="next-btn"){S.quiz.i++;render()}}
+  if(r.v==="subject"&&S.tab==="notes"&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){const ns=notesOf(r.id),i=ns.findIndex(n=>n.id===S.noteId)+(e.key==="ArrowRight"?1:-1);if(ns[i]){S.noteId=ns[i].id;render()}}
+});
+
+/* ---------- live scores (Firebase) ---------- */
+const LIVE={on:false,attempts:[],err:null,fs:null};
+function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase)return;
+  try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true;
+    LIVE.fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
+      LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
+      e=>{LIVE.err=e.code||"error";renderLive()});
+  }catch(e){LIVE.on=false;console.error(e)}}
+function playerName(){return store("player-name")||""}
+function playerId(){let id=store("player-id");if(!id){id=rid("p");store("player-id",id)}return id}
+async function postAttempt(sid,score,total){if(!LIVE.on||!playerName())return;
+  try{await LIVE.fs.collection("attempts").add({subject:sid,subjectName:(subj(sid)?.name||"").slice(0,80),name:playerName(),player:playerId(),score,total,at:firebase.firestore.FieldValue.serverTimestamp()})}
+  catch(e){toast("Your score couldn't be shared. Check your connection.")}}
+const tms=a=>a.at&&a.at.toMillis?a.at.toMillis():Date.now();
+function ago(ms){const x=Math.max(0,(Date.now()-ms)/1000);if(x<60)return"just now";if(x<3600)return Math.floor(x/60)+" min ago";if(x<86400)return Math.floor(x/3600)+" h ago";return Math.floor(x/86400)+" d ago"}
+function leaderboard(sid){const best=new Map();
+  LIVE.attempts.filter(a=>a.subject===sid).forEach(a=>{const k=a.player||a.name,p=a.score/a.total,b=best.get(k);
+    if(!b)best.set(k,{name:a.name,p,score:a.score,total:a.total,n:1});else{b.n++;if(p>b.p||(p===b.p&&a.total>b.total))Object.assign(b,{name:a.name,p,score:a.score,total:a.total})}});
+  return[...best.values()].sort((x,y)=>y.p-x.p||y.total-x.total).slice(0,10)}
+function feed(list,showSubj){return list.length?`<ul class="feed">${list.map(a=>`<li><span><b>${esc(a.name)}</b> scored ${a.score}/${a.total}${showSubj?` on ${esc(a.subjectName)}`:""}</span><span class="mono">${ago(tms(a))}</span></li>`).join("")}</ul>`:`<p class="muted">No attempts yet. Finish a quiz to be the first.</p>`}
+function livePanel(sid){
+  const err=LIVE.err?`<p class="muted">Live scores can't be reached right now.</p>`:"";
+  if(!sid)return `<section class="live one"><div class="live-col"><h3><span class="dot"></span>Live activity</h3>${err||feed(LIVE.attempts.slice(0,8),true)}</div></section>`;
+  const lb=leaderboard(sid),me=playerId();
+  return `<section class="live"><div class="live-col"><h3><span class="dot"></span>Leaderboard</h3>${err||(lb.length?`<ol class="lb">${lb.map((r,i)=>`<li><span class="rank">${i+1}</span><span class="who">${esc(r.name)}</span><span class="mono">${Math.round(r.p*100)}% · ${r.score}/${r.total}</span></li>`).join("")}</ol>`:`<p class="muted">No scores yet. Be the first.</p>`)}</div>
+    <div class="live-col"><h3>Recent attempts</h3>${err||feed(LIVE.attempts.filter(a=>a.subject===sid).slice(0,8),false)}</div></section>`}
+function liveSlot(sid){return LIVE.on?`<div id="live-slot" data-sid="${esc(sid)}">${livePanel(sid)}</div>`:""}
+function renderLive(){const el=document.getElementById("live-slot");if(el)el.innerHTML=livePanel(el.dataset.sid)}
+setInterval(renderLive,60000);
+
+initLive();render();init();
+})();
+</script>
+
+</body>
+</html>
