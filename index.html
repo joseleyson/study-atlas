@@ -283,7 +283,7 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 const STAINS=[
   ["hema","Hematoxylin"],["eosin","Eosin"],["lfb","Luxol blue"],["silver","Silver"],["cresyl","Cresyl violet"],["safranin","Safranin"],["fast","Fast green"]];
 const S={subjects:[],notes:[],questions:[],got:{subjects:0,notes:0,questions:0},db:null,mode:"loading",writable:true,
-  noteId:null,tab:"notes",quiz:null,slow:false};
+  noteId:null,tab:null,quiz:null,slow:false};
 const app=document.getElementById("app"), sheet=document.getElementById("sheet"), panel=document.getElementById("sheet-panel"), toastEl=document.getElementById("toast");
 
 /* ---------- helpers ---------- */
@@ -583,7 +583,7 @@ addEventListener("keydown",e=>{
   if(r.v==="quiz"&&S.quiz&&S.quiz.i<S.quiz.items.length){const q=S.quiz.items[S.quiz.i];
     const k=parseInt(e.key,10);if(q.picked==null&&k>=1&&k<=q.choices.length){q.picked=k-1;render()}
     else if(q.picked!=null&&e.key==="Enter"&&document.activeElement?.id!=="next-btn"){S.quiz.i++;render()}}
-  if(r.v==="subject"&&S.tab==="notes"&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){const ns=notesOf(r.id),i=ns.findIndex(n=>n.id===S.noteId)+(e.key==="ArrowRight"?1:-1);if(ns[i]){S.noteId=ns[i].id;render()}}
+  if(r.v==="subject"&&(S.tab||(docsOf(r.id).length?"topics":"notes"))==="notes"&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){const ns=notesOf(r.id),i=ns.findIndex(n=>n.id===S.noteId)+(e.key==="ArrowRight"?1:-1);if(ns[i]){S.noteId=ns[i].id;render()}}
 });
 
 /* ---------- topic PDFs ---------- */
