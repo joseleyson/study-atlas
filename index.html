@@ -497,6 +497,31 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .fade{animation:pagefade .28s ease both}
 @keyframes pagefade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.fade{animation:none}.card:hover,.card:hover .sicon{transform:none}}
+
+/* pass 2 */
+.un-group.tmr{background:color-mix(in srgb,var(--accent) 9%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:14px;padding:0 6px 6px}
+.un-group.tmr .un-day{color:var(--accent)}
+.up-more{display:flex;justify-content:center;padding:6px 0 2px}
+.up-more button{background:none;border:0;font:500 13px/1 var(--f-mono);color:var(--accent);cursor:pointer;padding:8px 10px;border-radius:8px}
+.up-more button:hover{background:var(--soft)}
+.hero{grid-template-columns:minmax(0,1fr)}.urgents{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;min-width:0}.urgent .when{flex:none}.urgent{min-width:0}.urgents .urgent{margin-top:0}
+.urgent.more{border-style:dashed;font-weight:500;color:var(--muted);text-decoration:none}
+.rev{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 11px;font:500 13px/1.3 var(--f-body);cursor:pointer}
+.rev:hover{border-color:var(--c,var(--accent));color:var(--ink)}
+.rev.on{background:color-mix(in srgb,var(--c,var(--accent)) 16%,var(--surface));border-color:var(--c,var(--accent));color:var(--ink)}
+.rev .bx{width:14px;height:14px;border-radius:4px;border:1.5px solid currentColor;display:grid;place-items:center;font-size:10px;line-height:1}
+.rev.on .bx{background:var(--c,var(--accent));border-color:var(--c,var(--accent));color:var(--surface)}
+.viewer-bar .vb-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.suggest-fab .lbl{display:none}.suggest-fab{padding:10px;width:44px;height:44px;justify-content:center;opacity:.85}.suggest-fab:hover{opacity:1}
+body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
+@media (max-width:640px){
+  .top{gap:10px}.top-right{gap:6px;width:100%}
+  .search-btn .lbl,.topnav-btn .lbl,.updates-btn .lbl{display:none}
+  .search-btn,.topnav-btn,.updates-btn{padding:6px 9px}
+  .me>summary .who-nm,.me>summary .chev{display:none}.me>summary{padding:2px}
+  .top-right .me{margin-left:auto}
+  .top-right .back{width:100%;order:-1}
+}
 </style>
 <style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -545,10 +570,11 @@ const ICONS={
   book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 7h8M8 10.5h6"/>'};
 const SUBJ_ICON={neuroanatomy:"brain",neurophysiology:"neuron","gross-anatomy":"bone"};
 const iconSvg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||ICONS.book}</svg>`;
-function readSet(){try{return new Set(JSON.parse(store("read-docs")||"[]"))}catch(e){return new Set()}}
-function markRead(id){const r=readSet();if(r.has(id))return;r.add(id);store("read-docs",JSON.stringify([...r].slice(-1000)))}
+function readSet(){try{return new Set(JSON.parse(store("reviewed-docs")||"[]"))}catch(e){return new Set()}}
+function toggleReviewed(id){const r=readSet();r.has(id)?r.delete(id):r.add(id);store("reviewed-docs",JSON.stringify([...r].slice(-1000)));return r.has(id)}
+const revBtn=d=>{const on=readSet().has(d.id);return `<button type="button" class="rev${on?" on":""}" data-act="rev" data-id="${esc(d.id)}" aria-pressed="${on}"><span class="bx" aria-hidden="true">${on?"✓":""}</span>${on?"Reviewed":"Mark reviewed"}</button>`};
 function topicDots(sid){const ds=docsOf(sid);if(!ds.length)return"";const r=readSet(),n=ds.filter(d=>r.has(d.id)).length;
-  return `<div class="tdots" title="${n} of ${ds.length} topics opened">${ds.map(d=>`<i class="${r.has(d.id)?"on":""}"></i>`).join("")}<b>${n}/${ds.length}</b></div>`}
+  return `<div class="tdots" title="${n} of ${ds.length} topics reviewed. Mark topics reviewed inside the subject.">${ds.map(d=>`<i class="${r.has(d.id)?"on":""}" title="${esc(d.title)}"></i>`).join("")}<b>${n}/${ds.length}</b></div>`}
 const L="ABCDEF";
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 let toastT;function toast(m){toastEl.textContent=m;toastEl.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>toastEl.hidden=true,3200)}
@@ -623,9 +649,9 @@ addEventListener("hashchange",()=>{S.noteId=null;S.tab=null;closePdf();S.quiz=nu
 
 /* ---------- views ---------- */
 function topbar(right=""){const u=LIVE.user;
-  const nm=u?(u.displayName||u.email||""):"";
+  const nm=u?niceName(u.displayName||u.email||""):"";
   const chip=u?`<details class="me"><summary aria-label="Your account">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer" class="who-chip-img" style="width:28px;height:28px;border-radius:50%">`:`<span class="initial">${esc((nm[0]||"?").toUpperCase())}</span>`}<span class="nm who-nm">${esc(nm)}</span><span class="chev" aria-hidden="true">▾</span></summary>
-    <div class="me-menu"><div class="who"><b>${esc(u.displayName||"Signed in")}</b>${esc(u.email||"")}</div>
+    <div class="me-menu"><div class="who"><b>${esc(u.displayName?niceName(u.displayName):"Signed in")}</b>${esc(u.email||"")}</div>
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
     <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
@@ -633,11 +659,12 @@ function topbar(right=""){const u=LIVE.user;
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
   const on=u?(LIVE.isAdmin?`<button type="button" class="online" id="who-online" title="See who is online"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></button>`:`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`):"";
   const nu=u||!LIVE.on?unseenUpdates().length:0;
-  const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
-  const sch=u?`<a class="topnav-btn" href="#schedule"><span aria-hidden="true">📅</span>Schedule</a>`:"";
-  const srch=u||!LIVE.on?`<button type="button" class="search-btn" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search<kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
+  const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs" aria-label="Updates"><span aria-hidden="true">🔔</span><span class="lbl">Updates</span>${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
+  const sch=u?`<a class="topnav-btn" href="#schedule" aria-label="Schedule"><span aria-hidden="true">📅</span><span class="lbl">Schedule</span></a>`:"";
+  const srch=u||!LIVE.on?`<button type="button" class="search-btn" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lbl">Search</span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
   const th=`<button type="button" class="theme-btn" data-g="theme" aria-label="Switch light or dark mode" title="Light / dark mode">${isDark()?"☀":"☾"}</button>`;
   return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${srch}${sch}${upd}${on}${th}${chip}</div></header>`}
+function niceName(n){n=String(n||"");return n.includes("@")||/[A-Z]/.test(n)?n:n.replace(/(^|\s)\S/g,c=>c.toUpperCase())}
 function isDark(){const t=document.documentElement.dataset.theme;return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches}
 function toggleTheme(){const t=isDark()?"light":"dark";document.documentElement.dataset.theme=t;store("theme",t);render()}
 /* ---------- search ---------- */
@@ -689,12 +716,12 @@ function renderHome(){
         ${q?"":`<span class="soon-tag" title="Quizzes for this subject are on the way">✎ Quizzes soon</span>`}
         ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1>What are we reviewing today?</h1>
-    <p>Pick a subject to flip through your notes, or jump straight into its quiz.</p>${urgentChip()}</section>
+    <p>${S.questions.length?"Pick a subject to flip through your notes, or jump straight into its quiz.":"Pick a subject to open its topic notes. Quizzes are on the way."}</p>${urgentChip()}</section>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
     ${comingUp()}
     ${LIVE.on&&LIVE.user?`<div class="share-cta"><div class="l"><span class="ic" aria-hidden="true">📤</span><div><h3>Have notes worth sharing?</h3><p>Send a link to your notes or reviewers. If they're good, they might get added here for everyone.</p></div></div><button class="btn primary small" data-act="share-notes">Share your notes</button></div>`:""}
-    ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
+    ${LIVE.on&&S.questions.length?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
 `;
 }
 
@@ -852,6 +879,8 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   if(a==="new-subject")editSubject(null);
   else if(a==="edit-subject")editSubject(subj(id));
   else if(a==="tab"){S.tab=b.dataset.tab;render()}
+  else if(a==="rev"){const on=toggleReviewed(id);document.querySelectorAll(`.rev[data-id="${CSS.escape(id)}"]`).forEach(x=>x.outerHTML=revBtn(docById(id)));toast(on?"Marked as reviewed ✓":"Unmarked")}
+  else if(a==="up-toggle"){S.upAll=!S.upAll;render()}
   else if(a==="open-note"){S.noteId=id;render();if(innerWidth<=760)document.querySelector(".plate")?.scrollIntoView({behavior:"smooth",block:"start"})}
   else if(a==="step"){const ns=notesOf(r.id),i=ns.findIndex(n=>n.id===S.noteId)+(+b.dataset.d);if(ns[i]){S.noteId=ns[i].id;render();document.querySelector(".plate")?.scrollIntoView({block:"start"})}}
   else if(a==="new-note")editNote(null,id);
@@ -907,8 +936,8 @@ function shelf(docs,s){
   return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${list.map(d=>`<article class="pdf-card" style="--c:${stainVar(s.stain)}">
     <a class="pdf-thumb" href="#d-${esc(d.id)}" aria-label="Preview ${esc(d.title)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"><span class="pdf-tag">PDF</span></span>`:`<span class="pdf-page"><span class="pdf-tag">PDF</span><span class="pdf-lines"></span></span>`}</a>
     <div class="pdf-meta"><h4><a href="#d-${esc(d.id)}">${esc(d.title)}</a>${isNewDoc(d)?` <span class="new-pill">New!</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</h4>${d.desc?`<p>${esc(d.desc)}</p>`:""}
-    <span class="mono">${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
-    <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}</div></div></article>`).join("")}</div>`).join("");
+    <span class="mono">${d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:""}${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
+    <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}${revBtn(d)}</div></div></article>`).join("")}</div>`).join("");
 }
 /* ---------- schedule ---------- */
 const EV_TYPES=[["quiz","Quiz"],["exam","Exam"],["lecture","Lecture"],["deadline","Deadline"],["reminder","Reminder"],["other","Other"]];
@@ -926,20 +955,25 @@ function evChip(e,withDay){const s=e.subject?anySubj(e.subject):null;
 function urgentChip(){if(!LIVE.on||!LIVE.user)return"";
   const now=new Date(),today=ymd(now),hm=pad2(now.getHours())+":"+pad2(now.getMinutes()),lim=ymd(addDays(now,14));
   const up=LIVE.events.filter(e=>(e.date>today||(e.date===today&&(!e.time||e.time>=hm)))&&e.date<=lim).sort(evSort);
-  const e=up.find(x=>x.type==="exam"||x.type==="quiz"||x.type==="deadline")||up.find(x=>x.date<=ymd(addDays(now,2)));if(!e)return"";
-  const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);
-  const when=(d===0?"today":d===1?"tomorrow":parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+(e.time?" "+fmtTime(e.time):"");
-  return `<button class="urgent" data-act="ev-open" data-id="${esc(e.id)}"><span aria-hidden="true">⏰</span><span class="t">${esc(evLabel(e.type))}: ${esc(e.title)}</span><span class="when">${esc(when)}</span></button>`}
+  const imp=x=>x.type==="exam"||x.type==="quiz"||x.type==="deadline";
+  const first=up.find(imp)||up.find(x=>x.date<=ymd(addDays(now,2)));if(!first)return"";
+  const same=up.filter(x=>x.date===first.date&&(imp(first)?imp(x):true));
+  const chip=e=>{const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);
+    const when=(d===0?"today":d===1?"tomorrow":parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+(e.time?" "+fmtTime(e.time):"");
+    return `<button class="urgent" data-act="ev-open" data-id="${esc(e.id)}"><span aria-hidden="true">⏰</span><span class="t">${esc(evLabel(e.type))}: ${esc(e.title)}</span><span class="when">${esc(when)}</span></button>`};
+  const shown=same.slice(0,3),extra=same.length-shown.length;
+  return `<div class="urgents">${shown.map(chip).join("")}${extra?`<a class="urgent more" href="#schedule">+${extra} more</a>`:""}</div>`}
 function comingUp(){if(!LIVE.on||!LIVE.user)return"";
   const now=new Date(),today=ymd(now),tmr=ymd(addDays(now,1)),end=ymd(addDays(now,7));
-  const list=LIVE.events.filter(e=>e.date>=today&&e.date<=end).sort(evSort);
+  const all=LIVE.events.filter(e=>e.date>=today&&e.date<=end).sort(evSort),cut=ymd(addDays(now,2));
+  const list=S.upAll?all:all.filter(e=>e.date<=cut),hidden=all.length-list.length;
   const dayLabel=k=>k===today?"Today":k===tmr?"Tomorrow":parseYmd(k).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
   const soon=e=>{if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d===0?"today":d===1?"tomorrow":`in ${d} days`};
   const groups=[];list.forEach(e=>{let g=groups.find(x=>x[0]===e.date);if(!g)groups.push(g=[e.date,[]]);g[1].push(e)});
-  const body=groups.length?groups.map(([k,es])=>`<div class="un-group"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?anySubj(e.subject):null,sn=soon(e);
+  const body=groups.length?groups.map(([k,es])=>`<div class="un-group${k===tmr?" tmr":""}"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?anySubj(e.subject):null,sn=soon(e);
     return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
-    :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>Nothing due in the next 7 days.</div>`;
-  return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Coming up</h3><span class="mono">through ${esc(parseYmd(end).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span></div><div class="un-groups">${body}</div>
+    :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>${all.length?"Nothing due in the next 3 days.":"Nothing due in the next 7 days."}</div>`;
+  return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Coming up</h3><span class="mono">${S.upAll?"next 7 days":"next 3 days"}</span></div><div class="un-groups">${body}</div>${hidden||S.upAll?`<div class="up-more"><button data-act="up-toggle">${S.upAll?"Show less ↑":`Show full week ↓ <span style="opacity:.7">(${hidden} more)</span>`}</button></div>`:""}
     <div class="upnext-foot"><a class="btn small" href="#schedule">Full schedule →</a>${canSchedule()?`<button class="btn small primary" data-act="ev-new">+ Add</button>`:""}</div></section>`}
 function renderSchedule(startKey){
   const start=/^\d{4}-\d{2}-\d{2}$/.test(startKey||"")?weekStart(parseYmd(startKey)):weekStart(new Date());
@@ -1063,12 +1097,12 @@ function renderDoc(id){
   const d=docById(id),s=d&&subj(d.subject);
   if(!d){app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<div class="empty" style="margin-top:30px"><h3>This PDF isn't here</h3><a class="btn" href="#">All subjects</a></div>`;return}
   if(PDF.id===id&&document.getElementById("pdf-pages")){const b=document.getElementById("dl-slot");if(b)b.innerHTML=dlBtn(d,"primary");return}
-  closePdf();PDF.id=id;markSeen([id]);markRead(id);
+  closePdf();PDF.id=id;markSeen([id]);
   const sib=docsOf(d.subject),nx=sib[sib.findIndex(x=>x.id===id)+1];
   app.innerHTML=topbar(`<a class="back" href="#s-${esc(d.subject)}">← ${esc(s?s.name:"Back")}</a>`)+`<div class="viewer" style="--c:${stainVar(s?.stain)}">
-    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div id="dl-slot">${dlBtn(d,"primary")}</div></div>
+    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${revBtn(d)}<div id="dl-slot">${dlBtn(d,"primary")}</div></div></div>
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div>
-    <nav class="next-topic"><a class="btn small" href="#s-${esc(d.subject)}">← All ${esc(s?s.name:"")} topics</a>${nx?`<a class="go" href="#d-${esc(nx.id)}"><span class="mono">Next topic →</span><b>${esc(nx.title)}</b></a>`:`<a class="go" href="#"><span class="mono">You've reached the end →</span><b>Back to all subjects</b></a>`}</nav></div>
+    <nav class="next-topic"><a class="btn small" href="#s-${esc(d.subject)}">← All ${esc(s?s.name:"")} topics</a>${revBtn(d)}${nx?`<a class="go" href="#d-${esc(nx.id)}"><span class="mono">Next topic →</span><b>${esc(nx.title)}</b></a>`:`<a class="go" href="#"><span class="mono">You've reached the end →</span><b>Back to all subjects</b></a>`}</nav></div>
     <div class="pg-ind" id="pg-ind" aria-live="off"></div>`;
   loadPdf(d);
 }
