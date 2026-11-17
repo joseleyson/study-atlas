@@ -205,6 +205,15 @@ button,input,textarea,select{font:inherit;color:inherit}
 .me .initial{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:13px}
 .me-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:50;min-width:230px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 40px -18px rgba(0,0,0,.35);padding:6px;display:grid;gap:2px;animation:menuin .16s ease-out}
 @keyframes menuin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (max-width:860px){
+  .me-menu{position:fixed;left:12px;right:12px;top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:0;max-height:80vh;overflow:auto;border-radius:20px;padding:8px;
+    box-shadow:0 0 0 100vmax rgba(0,0,0,.45),0 20px 50px -20px rgba(0,0,0,.6);animation:sheetup .22s cubic-bezier(.2,.9,.3,1)}
+  .me-menu::before{content:"";display:block;width:40px;height:4px;border-radius:4px;background:var(--line);margin:2px auto 8px}
+  .me-menu .who{white-space:normal;overflow-wrap:anywhere}
+  .me-menu a,.me-menu button{padding:13px 12px;font-size:16px}
+  .me>summary .who-nm{max-width:12ch}
+}
+@keyframes sheetup{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
 .me-menu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .me-menu .who b{display:block;color:var(--ink);font-size:14.5px}
 .me-menu a,.me-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border-radius:9px;border:0;background:none;font:inherit;font-size:14.5px;color:var(--ink);text-decoration:none;cursor:pointer}
