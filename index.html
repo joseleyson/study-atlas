@@ -621,7 +621,7 @@ function shelf(docs,s){
     <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}</div></div></article>`).join("")}</div>`).join("");
 }
 /* ---------- updates ("New!") ---------- */
-const NEW_DAYS=7;
+const NEW_DAYS=1;
 const addedMs=d=>d&&d.added?Date.parse(d.added+"T00:00:00+08:00"):NaN;
 const datedDocs=()=>((window.STUDY_DATA||{}).docs||[]).filter(d=>!isNaN(addedMs(d))).sort((a,b)=>addedMs(b)-addedMs(a)||((subj(a.subject)?.order||0)-(subj(b.subject)?.order||0))||byOrder(a,b));
 const isNewDoc=d=>Date.now()-addedMs(d)<NEW_DAYS*864e5;
@@ -635,7 +635,7 @@ function renderUpdates(){
   const body=days.map(([k,ds])=>`<h3 class="shelf-h upd-day">${esc(fmt(k))} · ${plural(ds.length,"PDF")}</h3><div class="upd-list">${ds.map(d=>{const s=subj(d.subject),fresh=isNewDoc(d)&&!seen.has(d.id);
     return `<a class="upd${fresh?" unseen":""}" href="#d-${esc(d.id)}" style="--c:${stainVar(s?.stain)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"></span>`:`<span class="pdf-page"><span class="pdf-lines"></span></span>`}
       <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span></span><span class="go">Open →</span></a>`}).join("")}</div>`).join("");
-  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs show up here with a New! tag for ${NEW_DAYS} days. Tap one to open it.</p></section>
+  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs show up here with a New! tag on the day they're added. Tap one to open it.</p></section>
     ${body||`<div class="empty"><h3>Nothing new yet</h3><p>PDFs you upload will be listed here.</p></div>`}`;
   markSeen(list.filter(isNewDoc).map(d=>d.id));
 }
