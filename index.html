@@ -904,15 +904,15 @@ function openShare(){if(!LIVE.on||!LIVE.user)return;document.querySelectorAll("d
     });
   setTimeout(()=>document.getElementById("f-link")?.focus(),50)}
 /* ---------- support / donate ---------- */
-/* To change the QR: replace support-qr.png in the repo (or change the file name below). */
-const SUPPORT={qr:"support-qr.png",label:""};
+/* To change the QR: replace support-qr.jpg in the repo (or change the file name below). */
+const SUPPORT={qr:"support-qr.jpg",label:"InstaPay · scan with GCash, Maya or any bank app"};
 function renderSupport(){
   app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">Support the site</span><h1>Help keep Study Atlas running</h1></section>
   <div class="support"><div class="why"><p>Study Atlas is free for everyone. If it's helped you review, you can chip in to keep it going. Any amount helps, and it's completely optional.</p>
     <p>Donations go toward:</p><ul><li>Keeping the site and database online</li><li>Adding more notes, topics and quizzes</li><li>New features and improvements</li></ul>
     <p>Thank you for studying with us! ♥</p></div>
   <div class="qr-card"><img src="${esc(SUPPORT.qr)}?v=${Date.now()}" alt="Donation QR code" onerror="this.outerHTML='<div class=&quot;qr-empty&quot;>QR code coming soon</div>'">
-    ${SUPPORT.label?`<span class="mono">${esc(SUPPORT.label)}</span>`:""}<span class="thanks">Scan to donate. Any amount helps!</span></div></div>`;
+    ${SUPPORT.label?`<span class="mono">${esc(SUPPORT.label)}</span>`:""}<span class="thanks">Scan to donate. Any amount helps!</span><a class="btn small" href="${esc(SUPPORT.qr)}" download="Study-Atlas-donate-QR.jpg">⤓ Save QR image</a><span class="mono" style="font-size:11.5px">On your phone? Save it, then upload it in your bank or GCash app’s QR scanner.</span></div></div>`;
 }
 document.addEventListener("click",e=>{document.querySelectorAll("details.me[open]").forEach(d=>{if(!d.contains(e.target))d.open=false})});
 /* ---------- updates ("New!") ---------- */
