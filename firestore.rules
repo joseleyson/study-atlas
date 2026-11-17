@@ -1,20 +1,63 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Quiz attempts: anyone can read, anyone can add a valid score, nobody can edit or delete from the site.
-    match /attempts/{id} {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    // Site owner(s): add a document here with your account ID, from the Firebase console only.
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // One document per signed-in person. Only the owner can read them all.
+    match /users/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name','email','photo','firstSeen','lastSeen','visits'])
+        && request.resource.data.lastSeen == request.time
+        && request.resource.data.visits is int;
+      allow delete: if false;
+    }
+
+    // Public download counts per note: only ever goes up by one.
+    match /downloads/{noteId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['subject','subjectName','name','player','score','total','at'])
+      allow create: if signedIn() && request.resource.data.keys().hasOnly(['count']) && request.resource.data.count == 1;
+      allow update: if signedIn() && request.resource.data.keys().hasOnly(['count']) && request.resource.data.count == resource.data.count + 1;
+      allow delete: if false;
+    }
+
+    // Who downloaded what. Only the owner can read it.
+    match /downloadLog/{id} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid','name','noteId','noteTitle','subject','at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.at == request.time
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && request.resource.data.noteId is string && request.resource.data.noteId.size() <= 100
+        && request.resource.data.noteTitle is string && request.resource.data.noteTitle.size() <= 120
+        && request.resource.data.subject is string && request.resource.data.subject.size() <= 80;
+      allow update, delete: if false;
+    }
+
+    // Quiz attempts: signed-in people read the leaderboard and add their own scores.
+    match /attempts/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['subject','subjectName','name','player','score','total','at'])
+        && request.resource.data.player == request.auth.uid
         && request.resource.data.subject is string && request.resource.data.subject.size() <= 80
         && request.resource.data.subjectName is string && request.resource.data.subjectName.size() <= 80
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 30
-        && request.resource.data.player is string && request.resource.data.player.size() <= 40
         && request.resource.data.score is int && request.resource.data.total is int
         && request.resource.data.total > 0 && request.resource.data.total <= 500
         && request.resource.data.score >= 0 && request.resource.data.score <= request.resource.data.total
         && request.resource.data.at == request.time;
-      allow update, delete: if false;
+      allow update, delete: if isAdmin();
     }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -193,6 +193,39 @@ button,input,textarea,select{font:inherit;color:inherit}
 .feed li .mono{white-space:nowrap;font-size:12px}
 .muted{color:var(--muted);margin:0;font-size:14.5px}
 .qcard .field input{width:100%;max-width:340px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
+.top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.who-chip{display:flex;align-items:center;gap:8px}
+.who-chip img{width:28px;height:28px;border-radius:50%}
+.who-chip .nm{font-weight:500;font-size:14px;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.signin{display:grid;place-items:center;padding-block:8vh}
+.signin-card{max-width:440px;text-align:center;display:grid;gap:14px;justify-items:center;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:36px 28px}
+.signin-card h1{font-size:36px;font-weight:750}
+.signin-card p{margin:0;color:var(--muted)}
+.signin-card .fine{font-size:13px}
+.mark.big{width:56px;height:56px;border-width:2px}
+.signin-card .btn svg{background:#fff;border-radius:50%;padding:2px;width:22px;height:22px}
+.dl-n{font-family:var(--f-mono);font-size:12px;opacity:.75}
+.index .ti{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.dl-tag{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);font-weight:400;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stats>div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:2px}
+.big-n{font-family:var(--f-display);font-size:34px;font-weight:750;font-variant-numeric:tabular-nums;line-height:1.1}
+.sec{font-size:20px;margin:30px 0 10px}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl th{font-family:var(--f-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tbl tr:last-child td{border-bottom:0}
+.person{display:inline-flex;align-items:center;gap:8px}
+.person img{width:22px;height:22px;border-radius:50%}
+code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border-radius:6px;user-select:all;word-break:break-all}
+@media print{
+  body{background:#fff!important;color:#000!important;padding:0}
+  .top,.subj-head,.tabs,.index,.pager,.plate-head .actions,#toast,#sheet,.tools,.live,#live-slot{display:none!important}
+  .reader{display:block}.plate{border:0;padding:0}
+  .prose{max-width:none}
+}
 .loading{padding:60px 0;text-align:center;color:var(--muted)}
 
 @media (max-width:760px){
@@ -213,6 +246,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="data.js"></script>
 <script>
@@ -297,15 +331,21 @@ async function init(){
 function route(){const h=decodeURIComponent(location.hash.slice(1));
   if(h.startsWith("s-"))return{v:"subject",id:h.slice(2)};
   if(h.startsWith("q-"))return{v:"quiz",id:h.slice(2)};
+  if(h==="admin")return{v:"admin"};
   return{v:"home"}}
 addEventListener("hashchange",()=>{S.noteId=null;S.tab="notes";S.quiz=null;render();scrollTo(0,0)});
 
 /* ---------- views ---------- */
-function topbar(right=""){return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a>${right}</header>`}
-const canEdit=()=>S.writable&&S.mode==="live"&&store("edit-mode")==="1";
+function topbar(right=""){const u=LIVE.user;
+  const chip=u?`<div class="who-chip">${LIVE.isAdmin?`<a class="btn small ghost" href="#admin">Visitors</a>`:""}${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:""}<span class="nm">${esc(u.displayName||u.email||"")}</span><button class="btn small ghost" data-act="sign-out">Sign out</button></div>`:"";
+  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${chip}</div></header>`}
+const canEdit=()=>S.writable&&S.mode==="live"&&store("edit-mode")==="1"&&(!LIVE.on||LIVE.isAdmin);
 
 function render(){
   const r=route();
+  if(LIVE.on&&!LIVE.authReady){app.innerHTML=topbar()+`<div class="loading">Checking your sign-in…</div>`;return}
+  if(LIVE.on&&!LIVE.user)return renderSignIn();
+  if(r.v==="admin")return renderAdmin();
   if(S.mode==="loading"){app.innerHTML=topbar()+`<div class="loading">${S.slow?"Your notes can't be reached yet. They'll appear here as soon as the connection catches up.":"Opening your study atlas…"}</div>`;return}
   if(S.mode==="error"&&!S.subjects.length){app.innerHTML=topbar()+`<div class="empty" style="margin-top:40px"><h3>Your notes didn't load</h3><p>Reload the page to try again.</p></div>`;return}
   if(r.v==="subject")return renderSubject(r.id);
@@ -330,7 +370,7 @@ function renderHome(){
     ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
     <div class="tools">${canEdit()?`<span class="mono">Editing is on. Changes are saved in this browser only.</span><button class="btn small" data-act="export">Download backup (data.js)</button>
     <label class="btn small" for="import-file">Restore a backup</label><input type="file" id="import-file" accept=".js,.json" hidden>`:`<span class="mono"></span>`}
-    <button class="btn small ghost" data-act="toggle-edit">${canEdit()?"Turn off editing":"Edit notes"}</button></div>`;
+    ${LIVE.on&&!LIVE.isAdmin?"":`<button class="btn small ghost" data-act="toggle-edit">`}${LIVE.on&&!LIVE.isAdmin?"":`${canEdit()?"Turn off editing":"Edit notes"}</button>`}</div>`;
 }
 
 function renderSubject(id){
@@ -356,10 +396,10 @@ function renderSubject(id){
   }else{
     body=`<div class="reader" style="--c:${stainVar(s.stain)}"><aside class="index">
       <input class="search" id="note-search" type="search" placeholder="Search notes" aria-label="Search notes">
-      <ol id="note-list">${notes.map((n,i)=>`<li data-text="${esc((n.title+" "+n.body).toLowerCase())}"><button data-act="open-note" data-id="${esc(n.id)}" aria-current="${n.id===S.noteId}"><span class="num">${String(i+1).padStart(2,"0")}</span><span>${esc(n.title)}</span></button></li>`).join("")}</ol>
+      <ol id="note-list">${notes.map((n,i)=>`<li data-text="${esc((n.title+" "+n.body).toLowerCase())}"><button data-act="open-note" data-id="${esc(n.id)}" aria-current="${n.id===S.noteId}"><span class="num">${String(i+1).padStart(2,"0")}</span><span class="ti">${esc(n.title)}${LIVE.on&&dlCount(n.id)?`<span class="dl-tag" title="${dlCount(n.id)} downloads">⤓ ${dlCount(n.id)}</span>`:""}</span></button></li>`).join("")}</ol>
       ${canEdit()?`<button class="btn small" data-act="new-note" data-id="${esc(id)}">+ New note</button>`:""}</aside>
       <article class="plate"><div class="plate-head"><div><div class="mono">Note ${idx+1} of ${notes.length}${note.updated?` · updated ${new Date(note.updated).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}`:""}</div><h2>${esc(note.title)}</h2></div>
-      ${canEdit()?`<button class="btn small" data-act="edit-note" data-id="${esc(note.id)}">Edit</button>`:""}</div>
+      <div class="actions">${LIVE.on?`<button class="btn small" data-act="download" data-id="${esc(note.id)}" title="Download this note as a PDF"><span aria-hidden="true">⤓</span> Download PDF <span class="dl-n">${dlCount(note.id)}</span></button>`:""}${canEdit()?`<button class="btn small" data-act="edit-note" data-id="${esc(note.id)}">Edit</button>`:""}</div></div>
       <div class="prose">${md(note.body)}</div>
       <nav class="pager"><button class="btn" data-act="step" data-d="-1" ${idx<=0?"disabled":""}>← ${idx>0?esc(notes[idx-1].title):"Previous"}</button>
       <button class="btn" data-act="step" data-d="1" ${idx>=notes.length-1?"disabled":""}>${idx<notes.length-1?esc(notes[idx+1].title):"Next"} →</button></nav></article></div>`;
@@ -378,7 +418,7 @@ function renderQuiz(id){
     const best=store("best-"+id);
     app.innerHTML=back+`<div class="quiz" style="--c:${c}"><div class="qcard"><span class="mono eyebrow" style="color:${c}">Quiz</span><h2 style="font-size:clamp(26px,4vw,34px)">${esc(s.name)}</h2>
       ${all.length?`<p style="margin:0;color:var(--muted)">${plural(all.length,"question")} in the bank, shuffled each time. Keys 1–5 pick an answer and Enter moves on.${best?` Your best so far is ${esc(best)}%.`:""}</p>
-      ${LIVE.on?`<div class="field"><label for="player-name">Your name on the leaderboard</label><input type="text" id="player-name" maxlength="30" value="${esc(playerName())}" placeholder="e.g. Jose" autocomplete="nickname"></div>`:""}
+      ${LIVE.on?`<p class="mono" style="margin:0">Your score will show on the leaderboard as ${esc(playerName())}.</p>`:""}
       <div class="actions">${all.length>10?`<button class="btn primary" data-act="start" data-n="10">Start · 10 questions</button><button class="btn" data-act="start" data-n="all">All ${all.length}</button>`:`<button class="btn primary" data-act="start" data-n="all">Start · ${plural(all.length,"question")}</button>`}</div>`
       :`<p style="margin:0;color:var(--muted)">There are no questions for this subject yet. Add some in the question bank.</p><div><a class="btn" href="#s-${esc(id)}">Go to ${esc(s.name)}</a></div>`}</div>${liveSlot(id)}</div>`;
     return;
@@ -494,6 +534,9 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="retry-missed"){startQuiz(r.id,shuffle(S.quiz.items.filter(q=>q.picked!==q.answer).map(q=>q.src)),false,true)}
   else if(a==="quit"){S.quiz=null;render()}
   else if(a==="export")exportData();
+  else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")toast("Sign-in didn't work. Try again.")})}
+  else if(a==="download")downloadNote(S.notes.find(n=>n.id===id));
+  else if(a==="sign-out"){firebase.auth().signOut();location.hash=""}
   else if(a==="toggle-edit"){store("edit-mode",canEdit()?"0":"1");render()}
 });
 addEventListener("keydown",e=>{
@@ -507,18 +550,69 @@ addEventListener("keydown",e=>{
 });
 
 /* ---------- live scores (Firebase) ---------- */
-const LIVE={on:false,attempts:[],err:null,fs:null};
-function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase)return;
-  try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true;
-    LIVE.fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
+const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[]};
+function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase||!firebase.auth)return;
+  try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
+  firebase.auth().onAuthStateChanged(async u=>{
+    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
+    if(!u){render();return}
+    recordVisit(u);
+    const fs=LIVE.fs;
+    LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
-      e=>{LIVE.err=e.code||"error";renderLive()});
-  }catch(e){LIVE.on=false;console.error(e)}}
-function playerName(){return store("player-name")||""}
-function playerId(){let id=store("player-id");if(!id){id=rid("p");store("player-id",id)}return id}
-async function postAttempt(sid,score,total){if(!LIVE.on||!playerName())return;
+      e=>{LIVE.err=e.code||"error";renderLive()}));
+    LIVE.unsubs.push(fs.collection("downloads").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data().count||0);LIVE.downloads=m;if(route().v==="subject")render()},()=>{}));
+    try{const a=await fs.collection("admins").doc(u.uid).get();LIVE.isAdmin=a.exists}catch(e){LIVE.isAdmin=false}
+    if(LIVE.isAdmin){
+      LIVE.unsubs.push(fs.collection("users").orderBy("lastSeen","desc").limit(500).onSnapshot(snap=>{LIVE.users=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
+      LIVE.unsubs.push(fs.collection("downloadLog").orderBy("at","desc").limit(500).onSnapshot(snap=>{LIVE.dlog=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
+    }
+    render();
+  });
+}
+async function recordVisit(u){
+  const FV=firebase.firestore.FieldValue,ref=LIVE.fs.collection("users").doc(u.uid);
+  const base={name:(u.displayName||"").slice(0,80),email:(u.email||"").slice(0,120),photo:(u.photoURL||"").slice(0,500),lastSeen:FV.serverTimestamp()};
+  try{const d=await ref.get();
+    if(d.exists)await ref.update({...base,visits:FV.increment(1)});else await ref.set({...base,firstSeen:FV.serverTimestamp(),visits:1});
+  }catch(e){console.warn("visit not recorded",e)}}
+function dlCount(id){return LIVE.downloads[id]||0}
+async function downloadNote(n){if(!n)return;
+  const FV=firebase.firestore.FieldValue,u=LIVE.user;
+  try{await Promise.all([
+    LIVE.fs.collection("downloads").doc(n.id).set({count:FV.increment(1)},{merge:true}),
+    LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:n.id,noteTitle:String(n.title).slice(0,120),subject:String(subj(n.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()})])}
+  catch(e){console.warn("download not counted",e)}
+  document.title=n.title+" · Study Atlas";setTimeout(()=>{window.print();setTimeout(()=>document.title="Study Atlas",500)},50);
+}
+function playerName(){const u=LIVE.user;return u?(u.displayName||u.email||"Someone").slice(0,30):""}
+function playerId(){return LIVE.user?LIVE.user.uid:""}
+async function postAttempt(sid,score,total){if(!LIVE.on||!LIVE.user)return;
   try{await LIVE.fs.collection("attempts").add({subject:sid,subjectName:(subj(sid)?.name||"").slice(0,80),name:playerName(),player:playerId(),score,total,at:firebase.firestore.FieldValue.serverTimestamp()})}
   catch(e){toast("Your score couldn't be shared. Check your connection.")}}
+function renderSignIn(){
+  app.innerHTML=topbar()+`<section class="signin"><div class="signin-card"><span class="mark big" aria-hidden="true"></span><h1>Study Atlas</h1>
+    <p>Notes and quizzes for Neuroanatomy, Neurophysiology, Gross Anatomy and more. Sign in to open them.</p>
+    <button class="btn primary" data-act="sign-in"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Sign in with Google</button>
+    <p class="fine">By signing in, your name, email and the notes you download are visible to the site owner. Your quiz scores show on the leaderboard under your Google name.</p></div></section>`;
+}
+function fmt(t){const ms=t&&t.toMillis?t.toMillis():0;return ms?new Date(ms).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"—"}
+function renderAdmin(){
+  const back=`<a class="back" href="#">← All subjects</a>`;
+  if(!LIVE.isAdmin){app.innerHTML=topbar(back)+`<div class="empty" style="margin-top:30px"><h3>This page is for the site owner</h3><p>Your account ID is <code class="uid">${esc(LIVE.user?.uid||"")}</code></p></div>`;return}
+  const byNote={};LIVE.dlog.forEach(d=>{(byNote[d.noteId]=byNote[d.noteId]||{title:d.noteTitle,subject:d.subject,people:new Map()});const p=byNote[d.noteId].people;p.set(d.uid,(p.get(d.uid)||0)+1)});
+  const nameOf=uid=>{const u=LIVE.users.find(x=>x.id===uid);return u?(u.name||u.email):(LIVE.dlog.find(d=>d.uid===uid)?.name||"Someone")};
+  const notesRows=Object.entries(byNote).map(([id,v])=>({id,...v,total:LIVE.downloads[id]||[...v.people.values()].reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
+  const totalDl=Object.values(LIVE.downloads).reduce((a,b)=>a+b,0);
+  app.innerHTML=topbar(back)+`<section class="hero"><span class="mono eyebrow">Only you can see this page</span><h1>Who's visiting</h1></section>
+   <div class="stats"><div><span class="big-n">${LIVE.users.length}</span><span class="mono">people signed in</span></div><div><span class="big-n">${LIVE.users.reduce((a,u)=>a+(u.visits||0),0)}</span><span class="mono">total visits</span></div><div><span class="big-n">${totalDl}</span><span class="mono">downloads</span></div><div><span class="big-n">${LIVE.attempts.length}</span><span class="mono">quiz attempts</span></div></div>
+   <h2 class="sec">People</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th class="n">Visits</th><th class="n">Downloads</th><th class="n">Quizzes</th><th>First visit</th><th>Last seen</th></tr></thead><tbody>
+   ${LIVE.users.map(u=>`<tr><td><span class="person">${u.photo?`<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">`:""}${esc(u.name||"—")}</span></td><td>${esc(u.email||"")}</td><td class="n">${u.visits||0}</td><td class="n">${LIVE.dlog.filter(d=>d.uid===u.id).length}</td><td class="n">${LIVE.attempts.filter(a=>a.player===u.id).length}</td><td>${fmt(u.firstSeen)}</td><td>${fmt(u.lastSeen)}</td></tr>`).join("")||`<tr><td colspan="7" class="muted">Nobody has signed in yet.</td></tr>`}
+   </tbody></table></div>
+   <h2 class="sec">Downloads by note</h2>${notesRows.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Note</th><th>Subject</th><th class="n">Downloads</th><th>Who</th></tr></thead><tbody>
+   ${notesRows.map(r=>`<tr><td>${esc(r.title)}</td><td>${esc(r.subject)}</td><td class="n">${r.total}</td><td>${[...r.people.entries()].map(([uid,c])=>esc(nameOf(uid))+(c>1?` ×${c}`:"")).join(", ")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">No downloads yet.</p>`}
+   <h2 class="sec">Latest downloads</h2>${LIVE.dlog.length?`<ul class="feed">${LIVE.dlog.slice(0,30).map(d=>`<li><span><b>${esc(d.name)}</b> downloaded ${esc(d.noteTitle)} <span class="muted">(${esc(d.subject)})</span></span><span class="mono">${fmt(d.at)}</span></li>`).join("")}</ul>`:`<p class="muted">No downloads yet.</p>`}`;
+}
 const tms=a=>a.at&&a.at.toMillis?a.at.toMillis():Date.now();
 function ago(ms){const x=Math.max(0,(Date.now()-ms)/1000);if(x<60)return"just now";if(x<3600)return Math.floor(x/60)+" min ago";if(x<86400)return Math.floor(x/3600)+" h ago";return Math.floor(x/86400)+" d ago"}
 function leaderboard(sid){const best=new Map();
