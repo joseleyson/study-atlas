@@ -37,7 +37,8 @@ window.STUDY_DATA = {
    "size": 2454405,
    "lab": false,
    "order": 1,
-   "srcPages": "2-8"
+   "srcPages": "2-8",
+   "added": "2026-11-17"
   },
   {
    "id": "ne-cerebellum-basal-ganglia",
@@ -50,7 +51,8 @@ window.STUDY_DATA = {
    "size": 70395,
    "lab": false,
    "order": 2,
-   "srcPages": "9-16"
+   "srcPages": "9-16",
+   "added": "2026-11-17"
   },
   {
    "id": "ne-vision",
@@ -63,7 +65,8 @@ window.STUDY_DATA = {
    "size": 864144,
    "lab": false,
    "order": 3,
-   "srcPages": "17-21"
+   "srcPages": "17-21",
+   "added": "2026-11-17"
   },
   {
    "id": "ne-hearing",
@@ -76,7 +79,8 @@ window.STUDY_DATA = {
    "size": 1032354,
    "lab": false,
    "order": 4,
-   "srcPages": "22-25"
+   "srcPages": "22-25",
+   "added": "2026-11-17"
   },
   {
    "id": "ne-taste-smell",
@@ -89,7 +93,8 @@ window.STUDY_DATA = {
    "size": 767587,
    "lab": false,
    "order": 5,
-   "srcPages": "26-30"
+   "srcPages": "26-30",
+   "added": "2026-11-17"
   },
   {
    "id": "ne-reflex-action-in-the-frog",
@@ -102,7 +107,8 @@ window.STUDY_DATA = {
    "size": 48342,
    "lab": true,
    "order": 6,
-   "srcPages": "31-32"
+   "srcPages": "31-32",
+   "added": "2026-11-17"
   },
   {
    "id": "ne-experiments-11-13",
@@ -115,7 +121,8 @@ window.STUDY_DATA = {
    "size": 61209,
    "lab": true,
    "order": 7,
-   "srcPages": "33-34"
+   "srcPages": "33-34",
+   "added": "2026-11-17"
   },
   {
    "id": "ga-wrist-hand",
@@ -127,7 +134,8 @@ window.STUDY_DATA = {
    "pages": 9,
    "size": 85428,
    "lab": false,
-   "order": 1
+   "order": 1,
+   "added": "2026-11-17"
   },
   {
    "id": "ga-vertebral-column-back",
@@ -139,7 +147,8 @@ window.STUDY_DATA = {
    "pages": 16,
    "size": 6183655,
    "lab": false,
-   "order": 2
+   "order": 2,
+   "added": "2026-11-17"
   },
   {
    "id": "ga-abdomen-slides",
@@ -151,7 +160,8 @@ window.STUDY_DATA = {
    "pages": 18,
    "size": 11172822,
    "lab": false,
-   "order": 3
+   "order": 3,
+   "added": "2026-11-17"
   },
   {
    "id": "ga-abdomen-snell",
@@ -163,7 +173,8 @@ window.STUDY_DATA = {
    "pages": 45,
    "size": 15597353,
    "lab": false,
-   "order": 4
+   "order": 4,
+   "added": "2026-11-17"
   },
   {
    "id": "ga-pelvis-gluteal",
@@ -175,7 +186,8 @@ window.STUDY_DATA = {
    "pages": 8,
    "size": 6202346,
    "lab": false,
-   "order": 5
+   "order": 5,
+   "added": "2026-11-17"
   },
   {
    "id": "ga-thigh",
@@ -187,7 +199,8 @@ window.STUDY_DATA = {
    "pages": 8,
    "size": 5009141,
    "lab": false,
-   "order": 6
+   "order": 6,
+   "added": "2026-11-17"
   },
   {
    "id": "ga-leg",
@@ -199,7 +212,8 @@ window.STUDY_DATA = {
    "pages": 7,
    "size": 4255933,
    "lab": false,
-   "order": 7
+   "order": 7,
+   "added": "2026-11-17"
   },
   {
    "id": "na-cerebrum",

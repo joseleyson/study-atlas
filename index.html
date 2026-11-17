@@ -231,6 +231,23 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
   .reader{display:block}.plate{border:0;padding:0}
   .prose{max-width:none}
 }
+.new-pill{display:inline-block;font:700 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;background:#e5484d;color:#fff;padding:4px 7px;border-radius:999px;vertical-align:middle;white-space:nowrap}
+.updates-btn{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13.5px;font-weight:500;text-decoration:none;color:var(--ink);white-space:nowrap}
+.updates-btn:hover{border-color:var(--ink)}
+.updates-btn .new-pill{animation:newpop 2.4s ease-in-out infinite}
+@keyframes newpop{0%,80%,100%{transform:scale(1)}88%{transform:scale(1.12)}}
+@media (prefers-reduced-motion: reduce){.updates-btn .new-pill{animation:none}}
+.card .new-pill{position:absolute;left:14px;top:14px;z-index:1}
+.upd-day{margin:22px 0 10px}
+.upd-list{display:grid;gap:10px}
+.upd{--c:var(--accent);display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;text-decoration:none;transition:border-color .2s,transform .2s}
+.upd:hover{border-color:var(--c);transform:translateY(-1px)}
+.upd.unseen{border-left:4px solid #e5484d}
+.upd .pdf-page{width:52px}
+.upd h4{margin:0 0 3px;font-family:var(--f-display);font-size:16px;line-height:1.25;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.upd .go{color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
+.upd:hover .go{color:var(--c)}
+@media (max-width:520px){.upd{grid-template-columns:44px minmax(0,1fr)}.upd .pdf-page{width:44px}.upd .go{display:none}}
 .shelf-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 12px}
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:26px}
 .pdf-card{--c:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:border-color .2s,transform .2s,box-shadow .2s}
@@ -362,6 +379,7 @@ function route(){const h=decodeURIComponent(location.hash.slice(1));
   if(h.startsWith("q-"))return{v:"quiz",id:h.slice(2)};
   if(h.startsWith("d-"))return{v:"doc",id:h.slice(2)};
   if(h==="admin")return{v:"admin"};
+  if(h==="new")return{v:"new"};
   return{v:"home"}}
 addEventListener("hashchange",()=>{S.noteId=null;S.tab=null;closePdf();S.quiz=null;render();scrollTo(0,0)});
 
@@ -369,7 +387,9 @@ addEventListener("hashchange",()=>{S.noteId=null;S.tab=null;closePdf();S.quiz=nu
 function topbar(right=""){const u=LIVE.user;
   const chip=u?`<div class="who-chip">${LIVE.isAdmin?`<a class="btn small ghost" href="#admin">Visitors</a>`:""}${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:""}<span class="nm">${esc(u.displayName||u.email||"")}</span><button class="btn small ghost" data-act="sign-out">Sign out</button></div>`:"";
   const on=u?`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`:"";
-  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${on}${chip}</div></header>`}
+  const nu=u||!LIVE.on?unseenUpdates().length:0;
+  const upd=(u||!LIVE.on)&&datedDocs().length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
+  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${upd}${on}${chip}</div></header>`}
 const canEdit=()=>S.writable&&S.mode==="live"&&store("edit-mode")==="1"&&(!LIVE.on||LIVE.isAdmin);
 
 function render(){
@@ -382,6 +402,7 @@ function render(){
   if(r.v==="subject")return renderSubject(r.id);
   if(r.v==="quiz")return renderQuiz(r.id);
   if(r.v==="doc")return renderDoc(r.id);
+  if(r.v==="new")return renderUpdates();
   renderHome();
 }
 
@@ -390,7 +411,7 @@ function renderHome(){
   const meta=`<span class="mono">${plural(subs.length,"subject")} · ${plural(S.notes.length,"note")} · ${plural(S.questions.length,"question")}</span>`;
   const cards=subs.map(s=>{const n=notesOf(s.id).length,q=qsOf(s.id).length,best=store("best-"+s.id);
     return `<article class="card" style="--c:${stainVar(s.stain)}">
-      <a class="card-main" href="#s-${esc(s.id)}"><div class="slide"><span class="blob"></span></div>
+      <a class="card-main" href="#s-${esc(s.id)}"><div class="slide">${docsOf(s.id).some(isNewDoc)?`<span class="new-pill">New!</span>`:""}<span class="blob"></span></div>
         <h2>${esc(s.name)}</h2>${s.blurb?`<p>${esc(s.blurb)}</p>`:""}</a>
       <div class="card-foot"><span class="mono">${docsOf(s.id).length?plural(docsOf(s.id).length,"topic")+" · ":""}${n?plural(n,"note")+" · ":""}${q} Qs${best?` · best ${esc(best)}%`:""}</span>
         ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
@@ -595,9 +616,28 @@ function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
   return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${list.map(d=>`<article class="pdf-card" style="--c:${stainVar(s.stain)}">
     <a class="pdf-thumb" href="#d-${esc(d.id)}" aria-label="Preview ${esc(d.title)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"><span class="pdf-tag">PDF</span></span>`:`<span class="pdf-page"><span class="pdf-tag">PDF</span><span class="pdf-lines"></span></span>`}</a>
-    <div class="pdf-meta"><h4><a href="#d-${esc(d.id)}">${esc(d.title)}</a></h4>${d.desc?`<p>${esc(d.desc)}</p>`:""}
+    <div class="pdf-meta"><h4><a href="#d-${esc(d.id)}">${esc(d.title)}</a>${isNewDoc(d)?` <span class="new-pill">New!</span>`:""}</h4>${d.desc?`<p>${esc(d.desc)}</p>`:""}
     <span class="mono">${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
     <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}</div></div></article>`).join("")}</div>`).join("");
+}
+/* ---------- updates ("New!") ---------- */
+const NEW_DAYS=1;
+const addedMs=d=>d&&d.added?Date.parse(d.added+"T00:00:00+08:00"):NaN;
+const datedDocs=()=>((window.STUDY_DATA||{}).docs||[]).filter(d=>!isNaN(addedMs(d))).sort((a,b)=>addedMs(b)-addedMs(a)||((subj(a.subject)?.order||0)-(subj(b.subject)?.order||0))||byOrder(a,b));
+const isNewDoc=d=>Date.now()-addedMs(d)<NEW_DAYS*864e5;
+function seenSet(){try{return new Set(JSON.parse(store("seen-updates")||"[]"))}catch(e){return new Set()}}
+function markSeen(ids){const s=seenSet();ids.forEach(i=>s.add(i));store("seen-updates",JSON.stringify([...s].slice(-500)))}
+const unseenUpdates=()=>{const s=seenSet();return datedDocs().filter(d=>isNewDoc(d)&&!s.has(d.id))};
+function renderUpdates(){
+  const list=datedDocs(),seen=seenSet(),days=[];
+  list.forEach(d=>{const k=d.added;let g=days.find(x=>x[0]===k);if(!g)days.push(g=[k,[]]);g[1].push(d)});
+  const fmt=k=>new Date(k+"T12:00:00+08:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  const body=days.map(([k,ds])=>`<h3 class="shelf-h upd-day">${esc(fmt(k))} · ${plural(ds.length,"PDF")}</h3><div class="upd-list">${ds.map(d=>{const s=subj(d.subject),fresh=isNewDoc(d)&&!seen.has(d.id);
+    return `<a class="upd${fresh?" unseen":""}" href="#d-${esc(d.id)}" style="--c:${stainVar(s?.stain)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"></span>`:`<span class="pdf-page"><span class="pdf-lines"></span></span>`}
+      <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span></span><span class="go">Open →</span></a>`}).join("")}</div>`).join("");
+  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs show up here with a New! tag on the day they're added. Tap one to open it.</p></section>
+    ${body||`<div class="empty"><h3>Nothing new yet</h3><p>PDFs you upload will be listed here.</p></div>`}`;
+  markSeen(list.filter(isNewDoc).map(d=>d.id));
 }
 let PDF={task:null,doc:null,obs:null,id:null};
 function closePdf(){try{PDF.obs&&PDF.obs.disconnect();PDF.task&&PDF.task.destroy()}catch(e){}PDF={task:null,doc:null,obs:null,id:null}}
@@ -605,7 +645,7 @@ function renderDoc(id){
   const d=docById(id),s=d&&subj(d.subject);
   if(!d){app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<div class="empty" style="margin-top:30px"><h3>This PDF isn't here</h3><a class="btn" href="#">All subjects</a></div>`;return}
   if(PDF.id===id&&document.getElementById("pdf-pages")){const b=document.getElementById("dl-slot");if(b)b.innerHTML=dlBtn(d,"primary");return}
-  closePdf();PDF.id=id;
+  closePdf();PDF.id=id;markSeen([id]);
   app.innerHTML=topbar(`<a class="back" href="#s-${esc(d.subject)}">← ${esc(s?s.name:"Back")}</a>`)+`<div class="viewer" style="--c:${stainVar(s?.stain)}">
     <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div id="dl-slot">${dlBtn(d,"primary")}</div></div>
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div></div>`;
