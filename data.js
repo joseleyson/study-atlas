@@ -4,21 +4,21 @@ window.STUDY_DATA = {
   {
    "id": "neuroanatomy",
    "name": "Neuroanatomy",
-   "blurb": "Brainstem, cranial nerves, tracts and blood supply",
+   "blurb": "Cerebrum, diencephalon, basal ganglia & limbic system, cerebellum and fiber tracts",
    "stain": "hema",
    "order": 1
   },
   {
    "id": "neurophysiology",
    "name": "Neurophysiology",
-   "blurb": "Membrane potentials, synapses, reflexes and sensory systems",
+   "blurb": "Intellectual functions, vision, hearing, taste & smell, motor control and lab experiments",
    "stain": "lfb",
    "order": 2
   },
   {
    "id": "gross-anatomy",
    "name": "Gross Anatomy",
-   "blurb": "Limbs, thorax, abdomen and the head and neck",
+   "blurb": "Wrist & hand, the back, abdomen, pelvis & gluteal region, thigh and leg",
    "stain": "eosin",
    "order": 3
   }
