@@ -487,15 +487,30 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
-.reacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.react{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font:inherit;font-size:13px;transition:transform .12s}
-.react .em{font-size:17px;line-height:1}
+.pdf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.pdf-head h4{min-width:0}
+.reacts{position:relative;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px;flex:none;max-width:60%}
+.react{display:inline-flex;align-items:center;gap:3px;height:26px;padding:0 7px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font:inherit;font-size:12px;transition:transform .12s}
+.react .em{font-size:14px;line-height:1}
 .react b{font-weight:650}
-.react.zero{opacity:.7}
-.react.zero:hover{opacity:1}
-.react.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));opacity:1}
-.react:active{transform:scale(.92)}
-.viewer-bar .reacts{margin-top:8px}
+.react.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.react:active,.react-pop .pick:active{transform:scale(.9)}
+.react-add{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;padding:0}
+.react-add:hover,.react-add.open{color:var(--ink);border-color:var(--ink)}
+.react-pop{position:absolute;top:calc(100% + 6px);right:0;z-index:30;display:flex;gap:2px;padding:6px;border:1px solid var(--line);border-radius:999px;background:var(--surface);box-shadow:0 10px 30px rgba(0,0,0,.18);animation:popin .14s ease-out}
+.react-pop .pick{width:38px;height:38px;border:0;border-radius:50%;background:none;font-size:22px;line-height:1;cursor:pointer;transition:transform .12s}
+.react-pop .pick:hover{transform:scale(1.18)}
+.react-pop .pick.on{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+@keyframes popin{from{opacity:0;transform:translateY(-4px) scale(.96)}}
+@media (prefers-reduced-motion: reduce){.react-pop{animation:none}}
+.pdf-card{position:relative}
+.react.open{border-color:var(--ink)}
+.react-who{position:absolute;top:calc(100% + 6px);right:0;z-index:30;min-width:190px;max-width:260px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:0 10px 30px rgba(0,0,0,.18);text-align:left;animation:popin .14s ease-out}
+.react-who .rw-h{font-weight:650;font-size:14px;margin-bottom:6px}
+.react-who .rw-h .em{font-size:18px}
+.react-who ul{list-style:none;margin:0 0 10px;padding:0;max-height:180px;overflow:auto;font-size:14px;display:grid;gap:3px}
+.react-who .btn{width:100%;justify-content:center}
+@media (max-width:640px){.viewer-bar .react-who,.viewer-bar .react-pop{left:0;right:auto}}
 .inapp{border:1px solid #e5383b55;background:#e5383b12;border-radius:14px;padding:14px 16px;margin:4px 0 16px;text-align:left}
 .inapp b{display:block;margin-bottom:4px}
 .inapp p{margin:0 0 12px;font-size:14px}
@@ -682,7 +697,7 @@ function route(){const h=decodeURIComponent(location.hash.slice(1));
   if(h==="support")return{v:"support"};
   if(h==="schedule"||h.startsWith("schedule-"))return{v:"schedule",id:h.slice(9)};
   return{v:"home"}}
-addEventListener("hashchange",()=>{S.noteId=null;S.tab=null;closePdf();S.quiz=null;render();scrollTo(0,0);app.classList.remove("fade");void app.offsetWidth;app.classList.add("fade")});
+addEventListener("hashchange",()=>{REACT_OPEN=null;REACT_WHO=null;S.noteId=null;S.tab=null;closePdf();S.quiz=null;render();scrollTo(0,0);app.classList.remove("fade");void app.offsetWidth;app.classList.add("fade")});
 
 /* ---------- views ---------- */
 function topbar(right=""){const u=LIVE.user;
@@ -913,7 +928,9 @@ sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet()});
 app.addEventListener("input",e=>{if(e.target.id==="note-search")filterNotes(e.target.value)});
 app.addEventListener("change",e=>{if(e.target.id==="import-file"&&e.target.files[0]){importData(e.target.files[0]);e.target.value=""}});
 app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act,id=b.dataset.id,r=route();
-  if(a==="react"){toggleReact(b.dataset.doc,b.dataset.e);return}
+  if(a==="react"){const inPop=!!b.closest(".react-pop");toggleReact(b.dataset.doc,b.dataset.e);if(inPop||b.closest(".react-who"))closeReactPop();return}
+  if(a==="react-who"){const k={doc:b.dataset.doc,e:b.dataset.e};REACT_OPEN=null;REACT_WHO=REACT_WHO&&REACT_WHO.doc===k.doc&&REACT_WHO.e===k.e?null:k;paintReacts();return}
+  if(a==="react-pick"){REACT_WHO=null;REACT_OPEN=REACT_OPEN===b.dataset.doc?null:b.dataset.doc;paintReacts();return}
   if(a==="new-subject")editSubject(null);
   else if(a==="edit-subject")editSubject(subj(id));
   else if(a==="tab"){S.tab=b.dataset.tab;render()}
@@ -982,9 +999,9 @@ function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
   return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${list.map(d=>`<article class="pdf-card" style="--c:${stainVar(s.stain)}">
     <a class="pdf-thumb" href="#d-${esc(d.id)}" aria-label="Preview ${esc(d.title)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"><span class="pdf-tag">PDF</span></span>`:`<span class="pdf-page"><span class="pdf-tag">PDF</span><span class="pdf-lines"></span></span>`}</a>
-    <div class="pdf-meta"><h4><a href="#d-${esc(d.id)}">${esc(d.title)}</a>${isNewDoc(d)?` <span class="new-pill">New!</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</h4>${d.desc?`<p>${esc(d.desc)}</p>`:""}
+    <div class="pdf-meta"><div class="pdf-head"><h4><a href="#d-${esc(d.id)}">${esc(d.title)}</a>${isNewDoc(d)?` <span class="new-pill">New!</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</h4>${reactBar(d)}</div>${d.desc?`<p>${esc(d.desc)}</p>`:""}
     <span class="mono">${d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:""}${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
-    <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}${revBtn(d)}</div>${reactBar(d)}</div></article>`).join("")}</div>`).join("");
+    <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}${revBtn(d)}</div></div></article>`).join("")}</div>`).join("");
 }
 /* ---------- schedule ---------- */
 const EV_TYPES=[["quiz","Quiz"],["exam","Exam"],["lecture","Lecture"],["deadline","Deadline"],["reminder","Reminder"],["other","Other"]];
@@ -1116,6 +1133,8 @@ function renderSupport(){
   <div class="qr-card"><img src="${esc(SUPPORT.qr)}?v=${Date.now()}" alt="Donation QR code" onerror="this.outerHTML='<div class=&quot;qr-empty&quot;>QR code coming soon</div>'">
     ${SUPPORT.label?`<span class="mono">${esc(SUPPORT.label)}</span>`:""}<span class="thanks">Scan to donate. Any amount helps!</span><a class="btn small" href="${esc(SUPPORT.qr)}" download="Study-Atlas-donate-QR.jpg">⤓ Save QR image</a><span class="mono" style="font-size:11.5px">On your phone? Save it, then upload it in your bank or GCash app’s QR scanner.</span></div></div>`;
 }
+document.addEventListener("click",e=>{if((REACT_OPEN||REACT_WHO)&&e.target.isConnected&&!e.target.closest(".reacts"))closeReactPop()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&(REACT_OPEN||REACT_WHO))closeReactPop()});
 document.addEventListener("click",e=>{document.querySelectorAll("details.me[open]").forEach(d=>{if(!d.contains(e.target))d.open=false})});
 /* ---------- updates ("New!") ---------- */
 const NEW_DAYS=1;
@@ -1148,7 +1167,7 @@ function renderDoc(id){
   closePdf();PDF.id=id;markSeen([id]);
   const sib=docsOf(d.subject),nx=sib[sib.findIndex(x=>x.id===id)+1];
   app.innerHTML=topbar(`<a class="back" href="#s-${esc(d.subject)}">← ${esc(s?s.name:"Back")}</a>`)+`<div class="viewer" style="--c:${stainVar(s?.stain)}">
-    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span>${reactBar(d)}</div><div class="vb-r">${revBtn(d)}<div id="dl-slot">${dlBtn(d,"primary")}</div></div></div>
+    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${reactBar(d)}${revBtn(d)}<div id="dl-slot">${dlBtn(d,"primary")}</div></div></div>
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div>
     <nav class="next-topic"><a class="btn small" href="#s-${esc(d.subject)}">← All ${esc(s?s.name:"")} topics</a>${revBtn(d)}${nx?`<a class="go" href="#d-${esc(nx.id)}"><span class="mono">Next topic →</span><b>${esc(nx.title)}</b></a>`:`<a class="go" href="#"><span class="mono">You've reached the end →</span><b>Back to all subjects</b></a>`}</nav></div>
     <div class="pg-ind" id="pg-ind" aria-live="off"></div>`;
@@ -1209,10 +1228,17 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
 const REACTS=["❤️","🔥","🙏","🧠","🦴","💪","🩺"];
 const canReact=d=>!!(d&&d.added);
 function reactBar(d){if(!LIVE.on||!LIVE.user||!canReact(d))return"";return `<div class="reacts" data-doc="${esc(d.id)}">${reactInner(d.id)}</div>`}
+let REACT_OPEN=null,REACT_WHO=null;
+const SMILE_PLUS=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20.9 11a9 9 0 1 1-7.9-7.9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/><path d="M19 2v6M16 5h6"/></svg>`;
 function reactInner(id){const me=LIVE.user?.uid,mine=(LIVE.reacts.find(r=>r.doc===id&&r.uid===me)||{}).es||[];
-  return REACTS.map(e=>{const who=LIVE.reacts.filter(r=>r.doc===id&&Array.isArray(r.es)&&r.es.includes(e)),n=who.length,on=mine.includes(e);
-    const tip=n?who.map(r=>r.uid===me?"You":niceName(r.name||"Someone")).join(", "):"React with "+e;
-    return `<button type="button" class="react${on?" on":""}${n?"":" zero"}" data-act="react" data-doc="${esc(id)}" data-e="${e}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${on}"><span class="em">${e}</span>${n?`<b>${n}</b>`:""}</button>`}).join("")}
+  const info=e=>{const who=LIVE.reacts.filter(r=>r.doc===id&&Array.isArray(r.es)&&r.es.includes(e));return{n:who.length,on:mine.includes(e),tip:who.length?who.map(r=>r.uid===me?"You":niceName(r.name||"Someone")).join(", "):"React with "+e}};
+  const chips=REACTS.map(e=>{const x=info(e);return x.n?`<button type="button" class="react${x.on?" on":""}${REACT_WHO&&REACT_WHO.doc===id&&REACT_WHO.e===e?" open":""}" data-act="react-who" data-doc="${esc(id)}" data-e="${e}" title="${esc(x.tip)}" aria-label="${esc(e+" "+x.n+": "+x.tip)}" aria-pressed="${x.on}"><span class="em">${e}</span><b>${x.n}</b></button>`:""}).join("");
+  const open=REACT_OPEN===id;
+  const pop=open?`<div class="react-pop" role="menu">${REACTS.map(e=>{const x=info(e);return `<button type="button" role="menuitemcheckbox" class="pick${x.on?" on":""}" data-act="react" data-doc="${esc(id)}" data-e="${e}" aria-checked="${x.on}" title="${esc(x.tip)}">${e}</button>`}).join("")}</div>`:"";
+  let who="";if(REACT_WHO&&REACT_WHO.doc===id&&!open){const e=REACT_WHO.e,ppl=LIVE.reacts.filter(r=>r.doc===id&&Array.isArray(r.es)&&r.es.includes(e)),on=mine.includes(e);
+    who=ppl.length?`<div class="react-who" role="dialog" aria-label="People who reacted ${e}"><div class="rw-h"><span class="em">${e}</span> ${ppl.length} ${ppl.length===1?"person":"people"}</div><ul>${ppl.map(r=>`<li>${r.uid===me?"You":esc(niceName(r.name||"Someone"))}</li>`).join("")}</ul><button type="button" class="btn small${on?" ghost":" primary"}" data-act="react" data-doc="${esc(id)}" data-e="${e}">${on?"Remove my "+e:"React "+e+" too"}</button></div>`:""}
+  return chips+`<button type="button" class="react-add${open?" open":""}" data-act="react-pick" data-doc="${esc(id)}" aria-label="Add a reaction" aria-expanded="${open}" title="React">${SMILE_PLUS}</button>`+pop+who}
+function closeReactPop(){if(REACT_OPEN||REACT_WHO){REACT_OPEN=null;REACT_WHO=null;paintReacts()}}
 function paintReacts(){document.querySelectorAll(".reacts[data-doc]").forEach(el=>{el.innerHTML=reactInner(el.dataset.doc)})}
 function toggleReact(id,e){const u=LIVE.user;if(!u||!LIVE.fs||!REACTS.includes(e))return;
   const prev=LIVE.reacts.find(r=>r.doc===id&&r.uid===u.uid),cur=prev?.es||[],es=cur.includes(e)?cur.filter(x=>x!==e):[...cur,e];
