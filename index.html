@@ -195,6 +195,10 @@ button,input,textarea,select{font:inherit;color:inherit}
 .qcard .field input{width:100%;max-width:340px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
 .top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .who-chip{display:flex;align-items:center;gap:8px}
+.online{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap}
+.online .dot{width:8px;height:8px;border-radius:50%;background:#22a861;box-shadow:0 0 0 0 rgba(34,168,97,.55);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(34,168,97,0)}100%{box-shadow:0 0 0 0 rgba(34,168,97,0)}}
+@media (prefers-reduced-motion: reduce){.online .dot{animation:none}}
 .who-chip img{width:28px;height:28px;border-radius:50%}
 .who-chip .nm{font-weight:500;font-size:14px;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .signin{display:grid;place-items:center;padding-block:8vh}
@@ -363,7 +367,8 @@ addEventListener("hashchange",()=>{S.noteId=null;S.tab=null;closePdf();S.quiz=nu
 /* ---------- views ---------- */
 function topbar(right=""){const u=LIVE.user;
   const chip=u?`<div class="who-chip">${LIVE.isAdmin?`<a class="btn small ghost" href="#admin">Visitors</a>`:""}${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:""}<span class="nm">${esc(u.displayName||u.email||"")}</span><button class="btn small ghost" data-act="sign-out">Sign out</button></div>`:"";
-  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${chip}</div></header>`}
+  const on=u?`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`:"";
+  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${on}${chip}</div></header>`}
 const canEdit=()=>S.writable&&S.mode==="live"&&store("edit-mode")==="1"&&(!LIVE.on||LIVE.isAdmin);
 
 function render(){
@@ -567,7 +572,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request"){const c=e.code||"";
     toast(c==="auth/unauthorized-domain"?"Sign-in isn't allowed on this web address yet. The site owner needs to add it in Firebase.":(c==="auth/configuration-not-found"||c==="auth/operation-not-allowed")?"Google sign-in isn't switched on yet. The site owner needs to enable it in Firebase.":c==="auth/network-request-failed"?"No connection. Check your internet and try again.":"Sign-in didn't work ("+c.replace("auth/","")+"). Try again.")}})}
   else if(a==="download")downloadNote(S.notes.find(n=>n.id===id));
-  else if(a==="sign-out"){firebase.auth().signOut();location.hash=""}
+  else if(a==="sign-out"){leavePresence();firebase.auth().signOut();location.hash=""}
   else if(a==="toggle-edit"){store("edit-mode",canEdit()?"0":"1");render()}
 });
 addEventListener("keydown",e=>{
@@ -626,13 +631,13 @@ function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d)return;const FV=fireba
   LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:d.id,noteTitle:String(d.title).slice(0,120),subject:String(subj(d.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()}).catch(()=>{})}
 
 /* ---------- live scores (Firebase) ---------- */
-const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[]};
+const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[],presence:[]};
 function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase||!firebase.auth)return;
   try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
   firebase.auth().onAuthStateChanged(async u=>{
-    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
+    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];stopPresence();LIVE.presence=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
-    recordVisit(u);
+    recordVisit(u);startPresence(u);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
@@ -646,6 +651,22 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
     render();
   });
 }
+/* ---------- who's online ---------- */
+const ONLINE_MS=2*60*1000,BEAT_MS=45*1000;let beatTimer=null,tickTimer=null;
+function onlineCount(){const now=Date.now(),me=LIVE.user?.uid;
+  const n=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS).length;
+  return n+(LIVE.user?1:0)}
+function onlineLabel(){return `${onlineCount()} online`}
+function paintOnline(){const el=document.getElementById("online-count");if(el)el.textContent=onlineLabel()}
+function beat(){const u=LIVE.user;if(!u||document.visibilityState==="hidden")return;
+  LIVE.fs.collection("presence").doc(u.uid).set({name:(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{})}
+function startPresence(u){stopPresence();beat();beatTimer=setInterval(beat,BEAT_MS);tickTimer=setInterval(paintOnline,15000);
+  LIVE.unsubs.push(LIVE.fs.collection("presence").orderBy("at","desc").limit(300).onSnapshot(snap=>{
+    LIVE.presence=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));paintOnline()},()=>{}))}
+function stopPresence(){clearInterval(beatTimer);clearInterval(tickTimer);beatTimer=tickTimer=null}
+function leavePresence(){const u=LIVE.user;if(LIVE.on&&u)LIVE.fs.collection("presence").doc(u.uid).delete().catch(()=>{})}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")beat()});
+addEventListener("pagehide",leavePresence);
 async function recordVisit(u){
   const FV=firebase.firestore.FieldValue,ref=LIVE.fs.collection("users").doc(u.uid);
   const base={name:(u.displayName||"").slice(0,80),email:(u.email||"").slice(0,120),photo:(u.photoURL||"").slice(0,500),lastSeen:FV.serverTimestamp()};
