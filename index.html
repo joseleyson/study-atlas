@@ -245,6 +245,10 @@ button,input,textarea,select{font:inherit;color:inherit}
 .online .dot{width:8px;height:8px;border-radius:50%;background:#22a861;box-shadow:0 0 0 0 rgba(34,168,97,.55);animation:pulse 2s infinite}
 @keyframes pulse{70%{box-shadow:0 0 0 7px rgba(34,168,97,0)}100%{box-shadow:0 0 0 0 rgba(34,168,97,0)}}
 @media (prefers-reduced-motion: reduce){.online .dot{animation:none}}
+button.online{cursor:pointer;font:inherit;font-size:13.5px;font-weight:500}button.online:hover{border-color:var(--accent)}
+.who{list-style:none;margin:0 0 16px;padding:0;max-height:55vh;overflow:auto}
+.who li{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.who .dot{width:8px;height:8px;border-radius:50%;background:#22a861;flex:none}.who .who-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who-chip img{width:28px;height:28px;border-radius:50%}
 .who-nm{font-weight:500;font-size:14px;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who-chip .nm{font-weight:500;font-size:14px;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -555,7 +559,7 @@ function topbar(right=""){const u=LIVE.user;
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
-  const on=u?`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`:"";
+  const on=u?(LIVE.isAdmin?`<button type="button" class="online" id="who-online" title="See who is online"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></button>`:`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`):"";
   const nu=u||!LIVE.on?unseenUpdates().length:0;
   const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
   const sch=u?`<a class="topnav-btn" href="#schedule"><span aria-hidden="true">📅</span>Schedule</a>`:"";
@@ -1011,7 +1015,17 @@ function onlineCount(){const now=Date.now(),me=LIVE.user?.uid;
   const n=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS).length;
   return n+(LIVE.user?1:0)}
 function onlineLabel(){return `${onlineCount()} online`}
-function paintOnline(){const el=document.getElementById("online-count");if(el)el.textContent=onlineLabel()}
+function paintOnline(){const el=document.getElementById("online-count");if(el)el.textContent=onlineLabel();
+  const w=document.getElementById("who-list");if(w&&!sheet.hidden)w.innerHTML=whoRows()}
+function onlineNow(){const now=Date.now(),me=LIVE.user?.uid;
+  const list=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS);
+  if(LIVE.user)list.unshift({id:me,name:LIVE.user.displayName||LIVE.user.email||"You",at:{toMillis:()=>now},you:true});
+  return list}
+function whoRows(){const now=Date.now();return onlineNow().map(p=>{const s=Math.max(0,Math.round((now-p.at.toMillis())/1000));
+  return `<li><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(p.name||"Someone")}${p.you?' <span class="mono">(you)</span>':""}</span><span class="mono">${p.you||s<20?"active now":s<60?s+"s ago":Math.round(s/60)+" min ago"}</span></li>`}).join("")}
+function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-4px 0 14px">Signed-in people active in the last 2 minutes. Only you can see this.</p>
+  <ul class="who" id="who-list">${whoRows()}</ul><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Close</button></div></div>`)}
+document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho()});
 function beat(){const u=LIVE.user;if(!u||document.visibilityState==="hidden")return;
   LIVE.fs.collection("presence").doc(u.uid).set({name:(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{})}
 function startPresence(u){stopPresence();beat();beatTimer=setInterval(beat,BEAT_MS);tickTimer=setInterval(paintOnline,15000);
