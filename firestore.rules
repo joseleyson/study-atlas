@@ -15,8 +15,10 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name','email','photo','firstSeen','lastSeen','visits','app'])
+        && request.resource.data.keys().hasOnly(['name','email','photo','firstSeen','lastSeen','visits','app','progressAt','progressViews'])
         && (!('app' in request.resource.data) || request.resource.data.app is timestamp)
+        && (!('progressAt' in request.resource.data) || request.resource.data.progressAt is timestamp)
+        && (!('progressViews' in request.resource.data) || request.resource.data.progressViews is int)
         && request.resource.data.lastSeen == request.time
         && request.resource.data.visits is int;
       allow delete: if false;
