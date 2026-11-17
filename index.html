@@ -912,7 +912,7 @@ function renderSupport(){
     <p>Donations go toward:</p><ul><li>Keeping the site and database online</li><li>Adding more notes, topics and quizzes</li><li>New features and improvements</li></ul>
     <p>Thank you for studying with us! ♥</p></div>
   <div class="qr-card"><img src="${esc(SUPPORT.qr)}?v=${Date.now()}" alt="Donation QR code" onerror="this.outerHTML='<div class=&quot;qr-empty&quot;>QR code coming soon</div>'">
-    ${SUPPORT.label?`<span class="mono">${esc(SUPPORT.label)}</span>`:""}<span class="thanks">Scan to donate. Any amount helps!</span></div></div>`;
+    ${SUPPORT.label?`<span class="mono">${esc(SUPPORT.label)}</span>`:""}<span class="thanks">Scan to donate. Any amount helps!</span><a class="btn small" href="${esc(SUPPORT.qr)}" download="Study-Atlas-donate-QR.jpg">⤓ Save QR image</a><span class="mono" style="font-size:11.5px">On your phone? Save it, then upload it in your bank or GCash app’s QR scanner.</span></div></div>`;
 }
 document.addEventListener("click",e=>{document.querySelectorAll("details.me[open]").forEach(d=>{if(!d.contains(e.target))d.open=false})});
 /* ---------- updates ("New!") ---------- */
