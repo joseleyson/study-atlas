@@ -197,9 +197,11 @@ window.STUDY_DATA = {
    "file": "pdfs/gross-anatomy/leg.pdf",
    "thumb": "pdfs/gross-anatomy/leg.jpg",
    "pages": 7,
-   "size": 4255933,
+   "size": 4256416,
    "lab": false,
-   "order": 7
+   "order": 7,
+   "added": "2026-11-17",
+   "updated": "2026-11-17"
   },
   {
    "id": "na-cerebrum",
