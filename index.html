@@ -654,6 +654,61 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .prep p{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
 .prep p a{color:var(--accent);font-weight:500;text-decoration:none}.prep p a:hover{text-decoration:underline}
 @media (prefers-reduced-motion: reduce){.prep{transition:none}}
+
+/* ===== upgrades 3-6 ===== */
+/* 3 · subject colours in Coming up */
+.un .bd{border-left:2px solid var(--sc,var(--line));padding-left:10px}
+.un .su{display:inline-flex;align-items:center;gap:6px;color:var(--sc,var(--muted));font-weight:500}
+.un .su::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--sc,var(--muted));flex:none}
+/* 4 · subject cards */
+.subj{position:relative;display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.subj:hover{transform:translateY(-3px);border-color:var(--c);box-shadow:0 12px 32px -14px var(--c)}
+.sj-head{display:flex;align-items:center;gap:12px}
+.subj-ico{width:46px;height:46px;flex:none;border-radius:13px;display:grid;place-items:center;color:var(--c);border:1px solid color-mix(in srgb,var(--c) 70%,transparent);background:color-mix(in srgb,var(--c) 12%,transparent);transition:transform .3s}
+.subj:hover .subj-ico{transform:rotate(-6deg) scale(1.05)}
+.subj-ico svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.subj-name{margin:0;font-family:var(--f-display);font-size:19px;font-weight:700;line-height:1.2}
+.subj-count{font:500 11.5px/1.4 var(--f-mono);color:var(--muted);letter-spacing:.03em}
+.subj .new-pill{position:absolute;right:14px;top:14px}
+.subj-chips{display:flex;flex-wrap:wrap;gap:6px}
+.subj-chips span{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.subj-chips span.more{border-style:dashed}
+.subj-prog{display:flex;align-items:center;gap:4px}
+.subj-prog i{width:9px;height:9px;border-radius:3px;border:1.5px solid color-mix(in srgb,var(--c) 55%,transparent)}
+.subj-prog i.on{background:var(--c);border-color:var(--c)}
+.subj-prog b{font:500 11px/1 var(--f-mono);color:var(--muted);margin-left:6px}
+.subj-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:10px;border-top:1px dashed var(--line);font:500 11.5px/1.3 var(--f-mono);color:var(--muted)}
+.subj-new{color:var(--c);font-weight:600}
+.subj-quiz{color:var(--c);text-decoration:none;font-weight:600}
+/* 5 · countdown chips */
+.urgent{gap:10px;font-size:13.5px;border-color:var(--line);background:var(--surface)}
+.urgent .cd-ico{color:var(--muted)}
+.urgent .cd-time{font:500 12px/1 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.urgent .cd-bar{display:none;width:42px;height:3px;border-radius:2px;background:var(--soft);overflow:hidden;flex:none}
+.urgent .cd-fill{display:block;height:100%;width:0;background:var(--bad);transition:width 1s linear}
+.urgent.hot{border-color:color-mix(in srgb,var(--bad) 55%,transparent);background:color-mix(in srgb,var(--bad) 8%,var(--surface))}
+.urgent.hot .cd-time,.urgent.hot .cd-ico{color:var(--bad)}
+.urgent.hot .cd-bar{display:inline-block}
+/* 6 · note cards */
+.nc{--c:var(--accent);position:relative;display:flex;gap:14px;padding:12px;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.nc:hover,.nc:focus-visible{transform:translateY(-2px);border-color:var(--c);box-shadow:0 12px 26px -20px var(--c);outline:none}
+.nc-thumb{width:62px;height:82px;flex:none;border-radius:7px;border:1px solid var(--line);overflow:hidden;background:#fff;display:block}
+.nc-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.nc-thumb.blank{background:color-mix(in srgb,var(--c) 14%,var(--surface))}
+.nc-body{flex:1;min-width:0;display:flex;flex-direction:column}
+.nc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.nc-name{margin:0;font-family:var(--f-display);font-size:16px;font-weight:700;line-height:1.25;min-width:0}
+.nc-new{display:inline-block;margin-left:6px;vertical-align:2px;font:600 10px/1 var(--f-mono);padding:3px 7px;border-radius:999px;background:color-mix(in srgb,#8e4ec6 18%,transparent);color:#a879e0;text-transform:uppercase;letter-spacing:.05em}
+.nc-src{margin:3px 0 0;font-size:12.5px;color:var(--muted);line-height:1.4}
+.nc-meta{margin-top:6px;font:500 11px/1.4 var(--f-mono);color:var(--muted)}
+.nc-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:10px;flex-wrap:wrap}
+.nc-hint{font-size:11.5px;color:var(--c);font-weight:500}
+.nc-acts{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.nc-acts .btn{min-height:0;height:30px;padding:0 12px;font:500 12.5px/1 var(--f-mono);gap:6px}
+.nc-acts .rev{height:30px;padding:0 10px;font-size:12px}
+@media (hover:none){.nc-hint::before{content:"Tap to preview"}}
+@media (hover:hover){.nc-hint::before{content:"Click to preview"}}
+@media (prefers-reduced-motion: reduce){.subj:hover,.nc:hover,.subj:hover .subj-ico{transform:none}}
 </style>
 <style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -701,10 +756,15 @@ const ICONS={
   bone:'<path d="M15.5 5.2a2.3 2.3 0 1 1 3.3 3.3 2.3 2.3 0 1 1-1 3.8l-5.6 5.6a2.3 2.3 0 1 1-3.8 1 2.3 2.3 0 1 1-3.3-3.3 2.3 2.3 0 1 1 1-3.8l5.6-5.6a2.3 2.3 0 1 1 3.8-1Z"/>',
   book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 7h8M8 10.5h6"/>'};
 const SUBJ_ICON={neuroanatomy:"brain",neurophysiology:"neuron","gross-anatomy":"bone"};
+/* colours for schedule-only subjects; subjects in data.js use their stain colour */
+const EXTRA_COLORS={"human-dev":"#e0a84f",nhw:"#3fb58f",ethics:"#b98ae8",genetics:"#5aa9e6",tl1:"#e3864f",pe104:"#58b368",histopath:"#e06a8c",psychiatry:"#8f8ce8"};
+const subjColor=id=>{const s=subj(id);return s?stainVar(s.stain):(EXTRA_COLORS[id]||"var(--muted)")};
 const iconSvg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||ICONS.book}</svg>`;
 function readSet(){try{return new Set(JSON.parse(store("reviewed-docs")||"[]"))}catch(e){return new Set()}}
 function toggleReviewed(id){const r=readSet();r.has(id)?r.delete(id):r.add(id);store("reviewed-docs",JSON.stringify([...r].slice(-1000)));return r.has(id)}
 const revBtn=d=>{const on=readSet().has(d.id);return `<button type="button" class="rev${on?" on":""}" data-act="rev" data-id="${esc(d.id)}" aria-pressed="${on}"><span class="bx" aria-hidden="true">${on?"✓":""}</span>${on?"Reviewed":"Mark reviewed"}</button>`};
+function updatedLabel(day){const days=Math.floor((Date.now()-Date.parse(day+"T00:00:00+08:00"))/864e5);
+  return days<1?`<span class="subj-new">New today</span>`:days===1?"Updated yesterday":days<30?`Updated ${days}d ago`:"Updated "+new Date(day+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}
 function topicDots(sid){const ds=docsOf(sid);if(!ds.length)return"";const r=readSet(),n=ds.filter(d=>r.has(d.id)).length;
   return `<div class="tdots" title="${n} of ${ds.length} topics reviewed. Mark topics reviewed inside the subject.">${ds.map(d=>`<i class="${r.has(d.id)?"on":""}" title="${esc(d.title)}"></i>`).join("")}<b>${n}/${ds.length}</b></div>`}
 const L="ABCDEF";
@@ -870,13 +930,14 @@ function render(){
 
 function renderHome(){
   const subs=S.subjects.slice().sort(byOrder);
-  const cards=subs.map(s=>{const n=notesOf(s.id).length,q=qsOf(s.id).length,best=store("best-"+s.id);
-    return `<article class="card" style="--c:${stainVar(s.stain)}">
-      <a class="card-main" href="#s-${esc(s.id)}"><div class="slide">${docsOf(s.id).some(isNewDoc)?`<span class="new-pill">New!</span>`:""}<span class="sicon">${iconSvg(SUBJ_ICON[s.id]||s.icon)}</span>${topicDots(s.id)}</div>
-        <h2>${esc(s.name)}</h2>${s.blurb?`<p>${esc(s.blurb)}</p>`:""}</a>
-      <div class="card-foot"><span class="mono">${docsOf(s.id).length?plural(docsOf(s.id).length,"topic"):""}${n?(docsOf(s.id).length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}${best?` · best ${esc(best)}%`:""}</span>
-        ${q?"":`<span class="soon-tag" title="Quizzes for this subject are on the way">✎ Quizzes soon</span>`}
-        ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
+  const cards=subs.map(s=>{const n=notesOf(s.id).length,q=qsOf(s.id).length,best=store("best-"+s.id),ds=docsOf(s.id),r=readSet(),nr=ds.filter(d=>r.has(d.id)).length;
+    const last=ds.map(d=>d.updated||d.added).filter(Boolean).sort().pop();
+    const chips=ds.slice(0,6).map(d=>`<span>${esc(d.title)}</span>`).join("")+(ds.length>6?`<span class="more">+${ds.length-6} more</span>`:"");
+    return `<a class="subj" href="#s-${esc(s.id)}" style="--c:${stainVar(s.stain)}">${ds.some(isNewDoc)?`<span class="new-pill">New!</span>`:""}
+      <div class="sj-head"><span class="subj-ico">${iconSvg(SUBJ_ICON[s.id]||s.icon)}</span><div><p class="subj-name">${esc(s.name)}</p><span class="subj-count">${ds.length?plural(ds.length,"topic"):""}${n?(ds.length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}</span></div></div>
+      ${chips?`<div class="subj-chips">${chips}</div>`:s.blurb?`<p class="muted" style="font-size:13.5px">${esc(s.blurb)}</p>`:""}
+      ${ds.length?`<div class="subj-prog" title="${nr} of ${ds.length} topics marked reviewed">${ds.map(d=>`<i class="${r.has(d.id)?"on":""}"></i>`).join("")}<b>${nr}/${ds.length} reviewed</b></div>`:""}
+      <div class="subj-foot"><span>${last?updatedLabel(last):""}</span><span>${q?`best ${best?esc(best)+"%":"–"}`:"✎ Quizzes soon"}</span></div></a>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1 class="greet-h">${helloLine()}<span id="greet" class="greet-p" aria-live="off">${esc(greetText())}</span></h1>
     <p>${S.questions.length?"Pick a subject to flip through your notes, or jump straight into its quiz.":"Pick a subject to open its topic notes."}</p>${urgentChip()}</section>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
@@ -884,6 +945,7 @@ function renderHome(){
     ${comingUp()}
     ${LIVE.on&&S.questions.length?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
 `;
+  tickCountdowns();
 }
 
 function renderSubject(id){
@@ -1044,6 +1106,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="edit-subject")editSubject(subj(id));
   else if(a==="tab"){S.tab=b.dataset.tab;render()}
   else if(a==="rev"){const on=toggleReviewed(id);document.querySelectorAll(`.rev[data-id="${CSS.escape(id)}"]`).forEach(x=>x.outerHTML=revBtn(docById(id)));toast(on?"Marked as reviewed ✓":"Unmarked")}
+  else if(a==="open-doc"){if(!e.target.closest("a,button,.reacts,input"))location.hash="#d-"+id}
   else if(a==="up-toggle"){S.upAll=!S.upAll;render()}
   else if(a==="open-note"){S.noteId=id;render();if(innerWidth<=760)document.querySelector(".plate")?.scrollIntoView({behavior:"smooth",block:"start"})}
   else if(a==="step"){const ns=notesOf(r.id),i=ns.findIndex(n=>n.id===S.noteId)+(+b.dataset.d);if(ns[i]){S.noteId=ns[i].id;render();document.querySelector(".plate")?.scrollIntoView({block:"start"})}}
@@ -1106,11 +1169,13 @@ function prepDownload(href,name){document.querySelector(".prep")?.remove();
 function dlBtn(d,cls=""){return `<a class="btn ${cls}" href="${esc(d.file)}" download="${esc(d.title.replace(/[\\/:*?"<>|]/g,""))}.pdf" data-act="dl-doc" data-id="${esc(d.id)}"><span aria-hidden="true">⤓</span> Download${LIVE.on?` <span class="dl-n">${dlCount(d.id)}</span>`:""}</a>`}
 function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
-  return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${list.map(d=>`<article class="pdf-card" style="--c:${stainVar(s.stain)}">
-    <a class="pdf-thumb" href="#d-${esc(d.id)}" aria-label="Preview ${esc(d.title)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"><span class="pdf-tag">PDF</span></span>`:`<span class="pdf-page"><span class="pdf-tag">PDF</span><span class="pdf-lines"></span></span>`}</a>
-    <div class="pdf-meta"><div class="pdf-head"><h4><a href="#d-${esc(d.id)}">${esc(d.title)}</a>${isNewDoc(d)?` <span class="new-pill">New!</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</h4>${reactBar(d)}</div>${d.desc?`<p>${esc(d.desc)}</p>`:""}
-    <span class="mono">${d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:""}${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
-    <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}${revBtn(d)}</div></div></article>`).join("")}</div>`).join("");
+  const when=d=>d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:"";
+  return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${list.map(d=>`<article class="nc" style="--c:${stainVar(s.stain)}" data-act="open-doc" data-id="${esc(d.id)}" tabindex="0" aria-label="Preview ${esc(d.title)}">
+    <a class="nc-thumb${d.thumb?"":" blank"}" href="#d-${esc(d.id)}" tabindex="-1" aria-hidden="true">${d.thumb?`<img src="${esc(d.thumb)}" alt="" loading="lazy">`:""}</a>
+    <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(d.title)}${isNewDoc(d)?`<span class="nc-new">new</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</p>${reactBar(d)}</div>
+    ${d.desc?`<p class="nc-src">${esc(d.desc)}</p>`:""}
+    <div class="nc-meta">${when(d)}${d.pages?plural(d.pages,"page"):""}${d.size?" · "+mb(d.size):""}</div>
+    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span><div class="nc-acts">${revBtn(d)}${dlBtn(d,"small")}</div></div></div></article>`).join("")}</div>`).join("");
 }
 /* ---------- schedule ---------- */
 const EV_TYPES=[["quiz","Quiz"],["exam","Exam"],["lecture","Lecture"],["deadline","Deadline"],["reminder","Reminder"],["other","Other"]];
@@ -1133,6 +1198,15 @@ const evUpcoming=(today)=>LIVE.events.filter(e=>evEnd(e)>=today).map(e=>e.date<t
 const evSort=(a,b)=>a.date.localeCompare(b.date)||(a.time||"99").localeCompare(b.time||"99")||a.title.localeCompare(b.title);
 function evChip(e,withDay){const s=e.subject?anySubj(e.subject):null;
   return `<button class="ev ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}</span><span class="ti">${esc(e.title)}</span>${withDay?`<span class="when">${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span>`:evEnd(e)!==e.date?`<span class="when">${esc(evRange(e))}</span>`:""}${s?`<span class="su">${esc(s.name)}</span>`:""}</button>`}
+/* live countdowns on the urgent chips; "hot" in the last 3 hours */
+function tickCountdowns(){const now=Date.now(),pad=n=>String(n).padStart(2,"0"),H3=3*3600e3;
+  document.querySelectorAll(".urgent[data-due]").forEach(c=>{const out=c.querySelector(".cd-time");if(!out)return;const[d0,t0]=c.dataset.due.split("T"),[y,mo,da]=d0.split("-").map(Number),[hh,mi]=t0.split(":").map(Number);
+    const left=new Date(y,mo-1,da,hh,mi).getTime()-now;
+    if(left<=0){out.textContent="now";c.classList.add("hot");return}
+    const s=Math.floor(left/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),sec=s%60;
+    out.textContent="in "+(d>0?d+"d "+h+"h":h>0?h+"h "+pad(m)+"m":m+"m "+pad(sec)+"s");
+    const hot=left<H3;c.classList.toggle("hot",hot);const f=c.querySelector(".cd-fill");if(f)f.style.width=hot?Math.round((1-left/H3)*100)+"%":"0%"})}
+setInterval(tickCountdowns,1000);
 function urgentChip(){if(!LIVE.on||!LIVE.user)return"";
   const now=new Date(),today=ymd(now),hm=pad2(now.getHours())+":"+pad2(now.getMinutes()),lim=ymd(addDays(now,14));
   const up=evUpcoming(today).filter(e=>(e.date>today||(e.date===today&&(e._ongoing||evEnd(e)>today||!e.time||e.time>=hm)))&&e.date<=lim).sort(evSort);
@@ -1142,7 +1216,8 @@ function urgentChip(){if(!LIVE.on||!LIVE.user)return"";
   const chip=e=>{const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);
     const multi=evEnd(e)!==e.date,orig=LIVE.events.find(x=>x.id===e.id)||e;
     const when=multi?(e._ongoing?"until "+parseYmd(evEnd(e)).toLocaleDateString(undefined,{month:"short",day:"numeric"}):evRange(orig)):(d===0?"today":d===1?"tomorrow":parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+(e.time?" "+fmtTime(e.time):"");
-    return `<button class="urgent" data-act="ev-open" data-id="${esc(e.id)}"><span aria-hidden="true">⏰</span><span class="t">${esc(evLabel(e.type))}: ${esc(e.title)}</span><span class="when">${esc(when)}</span></button>`};
+    const due=(e._ongoing||multi?evEnd(e):e.date)+"T"+(e.time&&!multi?e.time:"23:59")+":00";
+    return `<button class="urgent" data-act="ev-open" data-id="${esc(e.id)}" data-due="${esc(due)}" title="${esc(when)}"><span class="cd-ico" aria-hidden="true">${e.type==="quiz"?"✎":e.type==="exam"?"📝":"⏰"}</span><span class="t">${esc(evLabel(e.type))}: ${esc(e.title)}</span><span class="cd-time">${esc(when)}</span><span class="cd-bar" aria-hidden="true"><span class="cd-fill"></span></span></button>`};
   const shown=same.slice(0,3),extra=same.length-shown.length;
   return `<div class="urgents">${shown.map(chip).join("")}${extra?`<a class="urgent more" href="#schedule">+${extra} more</a>`:""}</div>`}
 function comingUp(){if(!LIVE.on||!LIVE.user)return"";
@@ -1153,7 +1228,7 @@ function comingUp(){if(!LIVE.on||!LIVE.user)return"";
   const soon=e=>{if(e._ongoing)return"ongoing";if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d<=1?"":`in ${d} days`};
   const groups=[];list.forEach(e=>{let g=groups.find(x=>x[0]===e.date);if(!g)groups.push(g=[e.date,[]]);g[1].push(e)});
   const body=groups.length?groups.map(([k,es])=>`<div class="un-group${k===tmr?" tmr":""}"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?anySubj(e.subject):null,sn=soon(e);
-    return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${evEnd(e)!==e.date||e._ongoing?" · "+esc(evRange(LIVE.events.find(x=>x.id===e.id)||e)):""}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
+    return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}" style="--sc:${e.subject?subjColor(e.subject):"var(--line)"}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${evEnd(e)!==e.date||e._ongoing?" · "+esc(evRange(LIVE.events.find(x=>x.id===e.id)||e)):""}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
     :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>Nothing due in the next 7 days.</div>`;
   return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Coming up</h3><span class="mono">${S.upAll||!hidden?"next 7 days":"through "+esc(parseYmd(cut).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span></div><div class="un-groups">${body}</div>${hidden||S.upAll?`<div class="up-more"><button data-act="up-toggle">${S.upAll?"Show less ↑":`Show full week ↓ <span style="opacity:.7">(${hidden} more)</span>`}</button></div>`:""}
     <div class="upnext-foot"><a class="btn small" href="#schedule">Full schedule →</a>${canSchedule()?`<button class="btn small primary" data-act="ev-new">+ Add</button>`:""}</div></section>`}
@@ -1388,6 +1463,7 @@ function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-
 document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho();
   const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search"){const t=g.querySelector(".sa-sx-txt"),qe=g.querySelector(".sa-sx-q");const q=t&&qe&&getComputedStyle(t).display!=="none"?qe.textContent.trim():"";openSearch();if(q)setTimeout(()=>{const i=document.getElementById("sx-q");if(i){i.value=q;i.focus();i.select();i.dispatchEvent(new Event("input",{bubbles:true}))}},0)}else if(g.dataset.g==="theme")toggleTheme()}
   const f=e.target.closest("[data-foot]");if(f){if(f.dataset.foot==="share")openShare();else openSuggest()}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList?.contains("nc")&&e.target.dataset.id){location.hash="#d-"+e.target.dataset.id}});
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&(e.key==="k"||e.key==="K")){if(LIVE.on&&!LIVE.user)return;e.preventDefault();if(sheet.hidden||!document.getElementById("sx-q"))openSearch();else document.getElementById("sx-q").focus()}});
 function beat(){const u=LIVE.user;if(!u||document.visibilityState==="hidden")return;
   LIVE.fs.collection("presence").doc(u.uid).set({name:(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{})}
