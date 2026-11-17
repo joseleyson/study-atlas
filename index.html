@@ -347,6 +347,19 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 .ev-detail .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .field select,.field input[type=date],.field input[type=time]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
 .field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.field,.field-row>*{min-width:0}
+.field input,.field select,.field textarea{box-sizing:border-box;max-width:100%;min-width:0}
+.field input[type=date],.field input[type=time]{display:block;-webkit-appearance:none;appearance:none;min-height:44px;line-height:1.4;font:inherit;color:inherit;text-align:left}
+.field input[type=date]::-webkit-date-and-time-value,.field input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
+@media (max-width:420px){.field-row{grid-template-columns:1fr 1fr;gap:10px}}
+.dt-wrap{position:relative;display:block;min-width:0}
+.dt-wrap input{width:100%!important;padding-right:40px!important;cursor:pointer}
+.dt-wrap::after{content:"";position:absolute;right:12px;top:50%;width:18px;height:18px;transform:translateY(-50%);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a90a0' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='3.5' y='4.5' width='17' height='16' rx='3.5'/%3E%3Cpath d='M8 3v3M16 3v3M3.5 10h17'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none}
+.dt-clock::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a90a0' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E")}
+.dt-wrap.dt-empty::before{content:attr(data-ph);position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:15px}
+.dt-wrap.dt-empty input{color:transparent}
+.dt-wrap input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:auto;height:auto;opacity:0;cursor:pointer}
+.dt-wrap input:focus{outline:2px solid var(--accent);outline-offset:1px}
 textarea.short{min-height:90px!important;font-family:var(--f-body)!important}
 .editor-tag{font:600 11px/1 var(--f-mono);padding:3px 7px;border-radius:999px;background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
 @media (max-width:860px){.week{grid-template-columns:1fr}.day{min-height:0}.day-h{justify-content:flex-start}.day-h .add-ev{margin-left:auto}.day.past{display:none}}
@@ -940,7 +953,7 @@ function startQuiz(id,items,full,retry){
 
 /* ---------- editors ---------- */
 let sheetSubmit=null;
-function openSheet(html,onSubmit){panel.innerHTML=html;sheetSubmit=onSubmit;sheet.hidden=false;const f=panel.querySelector("input[type=text],textarea");f&&f.focus()}
+function openSheet(html,onSubmit){panel.innerHTML=html;sheetSubmit=onSubmit;sheet.hidden=false;dtSync(panel);const f=panel.querySelector("input[type=text],textarea");f&&f.focus()}
 function closeSheet(){sheet.hidden=true;panel.innerHTML="";sheetSubmit=null}
 function foot(delLabel){return `<p class="err" id="form-err" hidden></p><div class="form-foot">${delLabel?`<button type="button" class="btn danger" data-act="del">${delLabel}</button>`:""}
   <div class="right"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></div>`}
@@ -1156,6 +1169,7 @@ function openEvent(e){if(!e)return;const s=e.subject?anySubj(e.subject):null;
     <div class="meta"><span>📅 ${esc(evRange(e,true))}</span>${e.time?`<span>🕒 ${esc(fmtTime(e.time))}</span>`:""}${s?`<span>📚 ${esc(s.name)}</span>`:""}</div>
     ${e.notes?`<div class="nt">${esc(e.notes)}</div>`:""}${e.byName?`<span class="mono">Added by ${esc(e.byName)}</span>`:""}
     <div class="acts">${canSchedule()?`<button class="btn" data-act="ev-edit" data-id="${esc(e.id)}">Edit</button>`:""}<a class="btn primary" href="${esc(gcalLink(e))}" target="_blank" rel="noopener">Add to Google Calendar</a><button class="btn ghost" data-act="close">Close</button></div></div>`)}
+function dtSync(root){(root||document).querySelectorAll(".dt-wrap input").forEach(i=>{const w=i.parentNode;const f=()=>w.classList.toggle("dt-empty",!i.value);f();if(!i._dt){i._dt=1;i.addEventListener("input",f);i.addEventListener("change",f);i.addEventListener("blur",f)}})}
 function editEvent(e,date){if(!canSchedule())return;
   delHandler=e?async()=>{closeSheet();try{await LIVE.fs.collection("events").doc(e.id).delete();toast("Removed from the schedule")}catch(x){toast("Couldn't delete. Check your connection.")}}:null;
   const subs=pickSubjects();
@@ -1163,9 +1177,9 @@ function editEvent(e,date){if(!canSchedule())return;
     <div class="field-row"><div class="field"><label for="f-type">Type</label><select id="f-type">${EV_TYPES.map(([k,l])=>`<option value="${k}"${(e?.type||"quiz")===k?" selected":""}>${l}</option>`).join("")}</select></div>
     <div class="field"><label for="f-subj">Subject</label><select id="f-subj"><option value="">None</option>${subs.map(x=>`<option value="${esc(x.id)}"${e?.subject===x.id?" selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
     <div class="field"><label for="f-title">What is it?</label><input type="text" id="f-title" required maxlength="120" value="${esc(e?.title||"")}" placeholder="e.g. Brainstem quiz, Midterm exam, Submit lab sheet"></div>
-    <div class="field-row"><div class="field"><label for="f-date">Date</label><input type="date" id="f-date" required value="${esc(e?.date||date||ymd(new Date()))}"></div>
-    <div class="field"><label for="f-end">Until <span class="hint">(optional, for more than 1 day)</span></label><input type="date" id="f-end" value="${esc(e&&evEnd(e)!==e.date?e.endDate:"")}"></div></div>
-    <div class="field"><label for="f-time">Time <span class="hint">(optional)</span></label><input type="time" id="f-time" value="${esc(e?.time||"")}"></div>
+    <div class="field-row"><div class="field"><label for="f-date">Date</label><span class="dt-wrap dt-cal" data-ph="Pick a date"><input type="date" id="f-date" required value="${esc(e?.date||date||ymd(new Date()))}"></span></div>
+    <div class="field"><label for="f-end">Until <span class="hint">(optional)</span></label><span class="dt-wrap dt-cal" data-ph="Same day"><input type="date" id="f-end" value="${esc(e&&evEnd(e)!==e.date?e.endDate:"")}"></span></div></div>
+    <div class="field"><label for="f-time">Time <span class="hint">(optional)</span></label><span class="dt-wrap dt-clock" data-ph="All day"><input type="time" id="f-time" value="${esc(e?.time||"")}"></span></div>
     <div class="field"><label for="f-notes">Notes <span class="hint">(optional)</span></label><textarea id="f-notes" class="short" maxlength="1000" placeholder="Coverage, room, what to bring…">${esc(e?.notes||"")}</textarea></div>
     ${foot(e?"Delete":"")}</form>`,async f=>{
       const title=f.querySelector("#f-title").value.trim(),dt=f.querySelector("#f-date").value;
