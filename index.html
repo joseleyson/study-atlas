@@ -817,6 +817,12 @@ body.cram .cram-hero{display:flex}
 .cram-time{font:600 24px var(--f-mono);color:var(--bad);font-variant-numeric:tabular-nums}
 body.cram [data-cram-hide]{display:none!important}
 body.cram .cram-far{opacity:.18;filter:grayscale(1);transition:opacity .4s,filter .4s}
+
+/* here now on home subject cards */
+.here-subj.on{height:20px;margin-top:6px}
+.subj-ico.ico-here::before{content:"";position:absolute;top:-4px;right:-4px;z-index:2;width:12px;height:12px;border-radius:50%;background:#3fb950;border:2px solid var(--surface);box-shadow:0 0 0 0 rgba(63,185,80,.6);animation:ico-live 2s infinite}
+@keyframes ico-live{70%{box-shadow:0 0 0 7px rgba(63,185,80,0)}100%{box-shadow:0 0 0 0 rgba(63,185,80,0)}}
+@media (prefers-reduced-motion: reduce){.subj-ico.ico-here::before{animation:none}}
 </style>
 <style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -1054,7 +1060,7 @@ function renderHome(){
     const last=ds.map(d=>d.updated||d.added).filter(Boolean).sort().pop();
     const chips=ds.slice(0,6).map(d=>`<span>${esc(d.title)}</span>`).join("")+(ds.length>6?`<span class="more">+${ds.length-6} more</span>`:"");
     return `<a class="subj" href="#s-${esc(s.id)}" style="--c:${stainVar(s.stain)}">${ds.some(isNewDoc)?`<span class="new-pill">New!</span>`:""}
-      <div class="sj-head"><span class="subj-ico" data-anim="${esc(SUBJ_ICON[s.id]||s.icon||"book")}">${iconSvg(SUBJ_ICON[s.id]||s.icon)}</span><div><p class="subj-name">${esc(s.name)}</p><span class="subj-count">${ds.length?plural(ds.length,"topic"):""}${n?(ds.length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}</span></div></div>
+      <div class="sj-head"><span class="subj-ico${hereInner("s:"+s.id)?" ico-here":""}" data-anim="${esc(SUBJ_ICON[s.id]||s.icon||"book")}">${iconSvg(SUBJ_ICON[s.id]||s.icon)}</span><div><p class="subj-name">${esc(s.name)}</p><span class="subj-count">${ds.length?plural(ds.length,"topic"):""}${n?(ds.length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}</span><div class="here here-subj${hereInner("s:"+s.id)?" on":""}" data-here="s:${esc(s.id)}">${hereInner("s:"+s.id)}</div></div></div>
       ${chips?`<div class="subj-chips">${chips}</div>`:s.blurb?`<p class="muted" style="font-size:13.5px">${esc(s.blurb)}</p>`:""}
       ${last||q?`<div class="subj-foot"><span>${last?updatedLabel(last):""}</span><span>${q?`best ${best?esc(best)+"%":"–"}`:""}</span></div>`:""}</a>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1 class="greet-h">${helloLine()}<span id="greet" class="greet-p" aria-live="off">${esc(greetText())}</span></h1>
@@ -1375,10 +1381,12 @@ function openProgress(){document.querySelectorAll("details.me[open]").forEach(d=
 /* ===== 9 · here now (who else has this PDF open) ===== */
 const HERE_COLORS=["#7f77dd","#378add","#d4537e","#1d9e75","#ba7517","#993c1d"];
 function hereColor(n){let h=0;for(const ch of String(n))h=(h*31+ch.charCodeAt(0))|0;return HERE_COLORS[Math.abs(h)%HERE_COLORS.length]}
-function hereFor(docId){const now=Date.now(),me=LIVE.user?.uid;return LIVE.presence.filter(p=>p.id!==me&&p.doc===docId&&p.at&&now-p.at.toMillis()<ONLINE_MS).map(p=>niceName(p.name||"Someone"))}
+function hereFor(key){const now=Date.now(),me=LIVE.user?.uid,subj=key.startsWith("s:")?key.slice(2):null;
+  const hit=p=>subj?!!p.doc&&docById(p.doc)?.subject===subj:p.doc===key;
+  return LIVE.presence.filter(p=>p.id!==me&&hit(p)&&p.at&&now-p.at.toMillis()<ONLINE_MS).map(p=>niceName(p.name||"Someone"))}
 function hereInner(docId){const ppl=hereFor(docId);if(!ppl.length)return"";
   return `<span class="here-dot"></span><span class="here-av">${ppl.slice(0,3).map(n=>`<span style="background:${hereColor(n)}" title="${esc(n)}">${esc((n.trim()[0]||"?").toUpperCase())}</span>`).join("")}</span><span class="here-txt">${ppl.length} here now</span>`}
-function paintHere(){document.querySelectorAll(".here[data-here]").forEach(b=>{const h=hereInner(b.dataset.here);b.innerHTML=h;b.classList.toggle("on",!!h);b.closest(".nc")?.classList.toggle("has-here",!!h)})}
+function paintHere(){document.querySelectorAll(".here[data-here]").forEach(b=>{const h=hereInner(b.dataset.here);b.innerHTML=h;b.classList.toggle("on",!!h);b.closest(".nc")?.classList.toggle("has-here",!!h);b.closest(".subj")?.querySelector(".subj-ico")?.classList.toggle("ico-here",!!h)})}
 /* ===== 10 · cram mode ===== */
 const CRAM_MS=48*3600e3;
 const cramOn=()=>store("cram")==="1";
