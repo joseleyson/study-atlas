@@ -487,6 +487,23 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
+/* expanding search pill, styled like the button group */
+.sa-search{--sa-bg:var(--surface);--sa-text:#5d6270;--sa-text-hi:var(--ink);position:relative;display:inline-flex;align-items:center;height:42px;padding:0 12px;border:0;border-radius:999px;background:var(--sa-bg);color:var(--sa-text);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap;transition:color .2s,padding .3s cubic-bezier(.3,.7,.2,1)}
+:root[data-theme="dark"] .sa-search{--sa-bg:#151a23;--sa-text:#9aa0ae;--sa-text-hi:#e8e8ef}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sa-search{--sa-bg:#151a23;--sa-text:#9aa0ae;--sa-text-hi:#e8e8ef}}
+.sa-search::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(110deg,#a99cff,#6fb3f2,#f07fa6);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.5;pointer-events:none;transition:opacity .2s}
+.sa-search svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;flex:none;transition:transform .3s cubic-bezier(.3,.7,.2,1)}
+.sa-search .sa-sx-txt{display:inline-block;max-width:0;opacity:0;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;transition:max-width .35s cubic-bezier(.3,.7,.2,1),opacity .25s,margin .35s;margin-left:0}
+.sa-search .sa-sx-try{color:var(--sa-text)}
+.sa-search .sa-sx-q{display:inline-block;color:var(--sa-text-hi);font-weight:600}
+.sa-search kbd{font:500 11px/1 var(--f-mono);border:1px solid var(--line);border-radius:5px;padding:0;max-width:0;opacity:0;overflow:hidden;border-width:0;transition:max-width .35s,opacity .25s,margin .35s,padding .35s}
+.sa-search:hover,.sa-search:focus-visible{color:var(--sa-text-hi);padding:0 14px}
+.sa-search:hover::before,.sa-search:focus-visible::before{opacity:.9}
+.sa-search:hover svg{transform:rotate(-8deg) scale(1.05)}
+.sa-search:hover .sa-sx-txt,.sa-search:focus-visible .sa-sx-txt{max-width:220px;opacity:1;margin-left:9px}
+.sa-search:hover kbd,.sa-search:focus-visible kbd{max-width:64px;opacity:1;margin-left:10px;padding:2px 5px;border-width:1px}
+@media (hover:none){.sa-search .sa-sx-txt,.sa-search kbd{display:none}}
+@media (prefers-reduced-motion: reduce){.sa-search,.sa-search svg,.sa-search .sa-sx-txt,.sa-search kbd{transition:none}}
 /* top bar button group */
 .sa-group{--sa-bg:var(--surface);--sa-text:#5d6270;--sa-text-hi:var(--ink);--sa-line:rgba(0,0,0,.08);--sa-hover:rgba(0,0,0,.035);position:relative;display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:var(--sa-bg)}
 :root[data-theme="dark"] .sa-group{--sa-bg:#151a23;--sa-text:#9aa0ae;--sa-text-hi:#e8e8ef;--sa-line:rgba(255,255,255,.08);--sa-hover:rgba(255,255,255,.05)}
@@ -511,8 +528,7 @@ button.sa-online{cursor:pointer}button.sa-online:hover{color:var(--sa-text-hi)}
 .sa-dot{position:relative;width:7px;height:7px;border-radius:50%;background:#3fb950;flex:none}
 .sa-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:#3fb950;animation:sa-ping 2.2s cubic-bezier(0,0,.2,1) infinite}
 @keyframes sa-ping{0%{transform:scale(1);opacity:.6}80%,100%{transform:scale(2.8);opacity:0}}
-@media (max-width:600px){.sa-btn{gap:0;padding:0 10px}.sa-btn .sa-lbl{display:none}.sa-badge{left:20px}.sa-online{padding:0 10px}
-  .me-menu [data-act="share-notes"]{display:none}}
+@media (max-width:600px){.sa-btn{gap:0;padding:0 10px}.sa-btn .sa-lbl{display:none}.sa-badge{left:20px}.sa-online{padding:0 10px}}
 @media (prefers-reduced-motion: reduce){.sa-dot::after,.sa-btn:hover .sa-bell,.sa-btn:hover .sa-cal text,.sa-btn:hover .sa-pins{animation:none}.sa-glide{transition:opacity .2s}}
 #greet{will-change:opacity,transform}
 .greet-h .hello{display:block;margin-bottom:2px}
@@ -740,7 +756,6 @@ function topbar(right=""){const u=LIVE.user;
   const chip=u?`<details class="me"><summary aria-label="Your account">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer" class="who-chip-img" style="width:28px;height:28px;border-radius:50%">`:`<span class="initial">${esc((nm[0]||"?").toUpperCase())}</span>`}<span class="nm who-nm">${esc(nm)}</span><span class="chev" aria-hidden="true">▾</span></summary>
     <div class="me-menu"><div class="who"><b>${esc(u.displayName?niceName(u.displayName):"Signed in")}</b>${esc(u.email||"")}</div>
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
-    <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
@@ -750,9 +765,16 @@ function topbar(right=""){const u=LIVE.user;
   const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="sa-btn" href="#new" title="Recently added PDFs" aria-label="Updates${nu?`, ${nu} new`:""}"><svg class="sa-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="sa-lbl">Updates</span>${nu?`<span class="sa-badge">${nu>9?"9+":nu}</span>`:""}</a>`:"";
   const sch=u?`<a class="sa-btn" href="#schedule" aria-label="Schedule"><svg class="sa-cal" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><path class="sa-pins" d="M8 3v3M16 3v3"/><text x="12" y="17.2" text-anchor="middle">${new Date().getDate()}</text></svg><span class="sa-lbl">Schedule</span></a>`:"";
   const grp=sch||upd||on?`<nav class="sa-group" aria-label="Quick links"><span class="sa-glide" aria-hidden="true"></span>${sch}${upd}${on}</nav>`:"";
-  const srch=u||!LIVE.on?`<button type="button" class="search-btn" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lbl">Search</span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
+  const srch=u||!LIVE.on?`<button type="button" class="sa-search" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="sa-sx-txt"><span class="sa-sx-try">Try</span> <span class="sa-sx-q">${esc(searchSuggest())}</span></span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
   const th=`<button type="button" class="theme-btn" data-g="theme" aria-label="Switch light or dark mode" title="Light / dark mode">${isDark()?"☀":"☾"}</button>`;
   return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${srch}${grp}${th}${chip}</div></header>`}
+/* search pill suggestions */
+let SX_I=0,SX_T=null;
+function searchSuggest(){const d=((window.STUDY_DATA||{}).docs||[]).map(x=>x.title);if(!d.length)return"cerebellum";return d[SX_I%d.length]}
+function sxNext(btn){const el=btn.querySelector(".sa-sx-q");if(!el)return;SX_I=(SX_I+1+Math.floor(Math.random()*3));
+  el.animate?el.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(-4px)"}],{duration:180,easing:"ease-in"}).onfinish=()=>{el.textContent=searchSuggest();el.animate([{opacity:0,transform:"translateY(4px)"},{opacity:1,transform:"none"}],{duration:220,easing:"ease-out"})}:el.textContent=searchSuggest()}
+document.addEventListener("mouseover",e=>{const b=e.target.closest&&e.target.closest(".sa-search");if(b&&!SX_T){SX_T=setInterval(()=>sxNext(b),2400)}});
+document.addEventListener("mouseout",e=>{const b=e.target.closest&&e.target.closest(".sa-search");if(b&&!b.contains(e.relatedTarget)){clearInterval(SX_T);SX_T=null;setTimeout(()=>{if(!b.matches(":hover"))sxNext(b)},350)}});
 /* glide highlight for the top bar button group */
 function saMove(btn){const g=btn.closest(".sa-group");const gl=g&&g.querySelector(".sa-glide");if(!gl)return;gl.style.left=btn.offsetLeft+"px";gl.style.width=btn.offsetWidth+"px";gl.style.opacity=1}
 document.addEventListener("mouseover",e=>{const b=e.target.closest&&e.target.closest(".sa-group .sa-btn,.sa-group button.sa-online");if(b)saMove(b);else document.querySelectorAll(".sa-glide").forEach(x=>x.style.opacity=0)});
@@ -1334,7 +1356,7 @@ function whoRows(){const now=Date.now();return onlineNow().map(p=>{const s=Math.
 function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-4px 0 14px">Signed-in people active in the last 2 minutes. Only you can see this.</p>
   <ul class="who" id="who-list">${whoRows()}</ul><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Close</button></div></div>`)}
 document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho();
-  const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search")openSearch();else if(g.dataset.g==="theme")toggleTheme()}
+  const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search"){const q=g.matches(":hover")||g.matches(":focus-visible")?(g.querySelector(".sa-sx-q")||{}).textContent:"";openSearch();if(q&&matchMedia("(hover:hover)").matches){const i=document.getElementById("sx-q");if(i){i.value=q;i.select();i.dispatchEvent(new Event("input"))}}}else if(g.dataset.g==="theme")toggleTheme()}
   const f=e.target.closest("[data-foot]");if(f){if(f.dataset.foot==="share")openShare();else openSuggest()}});
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&(e.key==="k"||e.key==="K")){if(LIVE.on&&!LIVE.user)return;e.preventDefault();if(sheet.hidden||!document.getElementById("sx-q"))openSearch();else document.getElementById("sx-q").focus()}});
 function beat(){const u=LIVE.user;if(!u||document.visibilityState==="hidden")return;
