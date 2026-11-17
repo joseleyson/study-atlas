@@ -490,10 +490,10 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 #greet{will-change:opacity,transform}
 .greet-h .hello{display:block;margin-bottom:2px}
 .greet-p{display:block}
-.shine{background:linear-gradient(110deg,#7f77dd 0%,#378add 30%,#534ab7 42%,#7f77dd 46%,#378add 56%,#d4537e 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:shine 3.6s ease-in-out infinite}
-:root[data-theme="dark"] .shine{background-image:linear-gradient(110deg,#a99cff 0%,#6fb3f2 30%,#ffffff 42%,#e6e1ff 46%,#6fb3f2 56%,#f07fa6 100%)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .shine{background-image:linear-gradient(110deg,#a99cff 0%,#6fb3f2 30%,#ffffff 42%,#e6e1ff 46%,#6fb3f2 56%,#f07fa6 100%)}}
-@keyframes shine{0%{background-position:100% 0}50%,100%{background-position:0% 0}}
+.shine{background-image:linear-gradient(90deg,#7f77dd 0%,#378add 25%,#534ab7 50%,#d4537e 75%,#7f77dd 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:shine 6s linear infinite}
+:root[data-theme="dark"] .shine{background-image:linear-gradient(90deg,#a99cff 0%,#6fb3f2 25%,#e6e1ff 50%,#f07fa6 75%,#a99cff 100%)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .shine{background-image:linear-gradient(90deg,#a99cff 0%,#6fb3f2 25%,#e6e1ff 50%,#f07fa6 75%,#a99cff 100%)}}
+@keyframes shine{from{background-position:0% 0}to{background-position:200% 0}}
 @media (prefers-reduced-motion: reduce){.shine{animation:none}}
 .pdf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .pdf-head h4{min-width:0}
