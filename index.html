@@ -487,6 +487,11 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
+.sx-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sx-head h2{margin:0}
+.sx-x{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.sx-x:hover{border-color:var(--ink)}
+@media (hover:none){.sx-keys{display:none}}
 /* footer */
 .site-foot{max-width:1120px;margin:56px auto 0;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px 18px;flex-wrap:wrap;color:var(--muted);font-size:14px}
 .site-foot .by b{color:var(--ink);font-weight:600}
@@ -699,7 +704,7 @@ function searchRows(q){q=q.trim().toLowerCase();const idx=searchIndex();
 function paintSearch(q){const ul=document.getElementById("sx-list");if(!ul)return;const hits=searchRows(q);
   ul.innerHTML=hits.length?hits.map((h,i)=>`<li><a href="${esc(h.href)}" ${h.note?`data-note="${esc(h.note)}"`:""} class="${i?"":"sel"}" style="--c:${h.c}"><span class="k"></span><span class="t">${esc(h.t)}${h.sub?`<small>${esc(h.sub)}</small>`:""}</span><span class="mono">${h.k}</span></a></li>`).join(""):`<li class="sx-empty">Nothing matches “${esc(q)}”.</li>`}
 function openSearch(){document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
-  openSheet(`<h2 style="margin-bottom:12px">Search Study Atlas</h2><input class="sx-input" id="sx-q" type="text" placeholder="Try “basal ganglia” or “thigh”" autocomplete="off" aria-label="Search"><ul class="sx-list" id="sx-list"></ul><p class="mono" style="margin:6px 0 0">↑ ↓ to move · Enter to open · Esc to close</p>`);
+  openSheet(`<div class="sx-head"><h2>Search Study Atlas</h2><button type="button" class="sx-x" data-act="close" aria-label="Close search">✕</button></div><input class="sx-input" id="sx-q" type="text" placeholder="Try “basal ganglia” or “thigh”" autocomplete="off" aria-label="Search"><ul class="sx-list" id="sx-list"></ul><p class="mono sx-keys" style="margin:6px 0 0">↑ ↓ to move · Enter to open · Esc to close</p>`);
   paintSearch("");const inp=document.getElementById("sx-q");
   inp.addEventListener("input",()=>paintSearch(inp.value));
   inp.addEventListener("keydown",e=>{const as=[...document.querySelectorAll("#sx-list a")];let i=as.findIndex(a=>a.classList.contains("sel"));
