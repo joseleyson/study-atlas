@@ -445,7 +445,7 @@ const slug=s=>(String(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$
 const byOrder=(a,b)=>(a.order??0)-(b.order??0)||String(a.title||a.name||"").localeCompare(String(b.title||b.name||""));
 const subj=id=>S.subjects.find(s=>s.id===id);
 /* Subjects that only appear in the schedule and share form (no notes page). Add more here. */
-const EXTRA_SUBJECTS=[["genetics","Genetics"],["tl1","Teaching & Learning 1 (TL1)"],["nhw","Nutrition, Health & Wellness"],["human-dev","Human Development"],["ethics","Ethics"],["pe104","PE 104"],["histopath","Histopathology"],["psychiatry","Psychiatry"]].map(([id,name],i)=>({id,name,order:100+i}));
+const EXTRA_SUBJECTS=[["genetics","Genetics"],["tl1","TL1"],["nhw","NHW"],["human-dev","Human Development"],["ethics","Ethics"],["pe104","PE 104"],["histopath","Histopathology"],["psychiatry","Psychiatry"]].map(([id,name],i)=>({id,name,order:100+i}));
 const anySubj=id=>subj(id)||EXTRA_SUBJECTS.find(s=>s.id===id);
 const pickSubjects=()=>[...S.subjects.slice().sort(byOrder),...EXTRA_SUBJECTS.filter(x=>!subj(x.id))];
 const notesOf=id=>S.notes.filter(n=>n.subject===id).sort(byOrder);
