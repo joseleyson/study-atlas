@@ -756,6 +756,7 @@ function topbar(right=""){const u=LIVE.user;
   const chip=u?`<details class="me"><summary aria-label="Your account">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer" class="who-chip-img" style="width:28px;height:28px;border-radius:50%">`:`<span class="initial">${esc((nm[0]||"?").toUpperCase())}</span>`}<span class="nm who-nm">${esc(nm)}</span><span class="chev" aria-hidden="true">▾</span></summary>
     <div class="me-menu"><div class="who"><b>${esc(u.displayName?niceName(u.displayName):"Signed in")}</b>${esc(u.email||"")}</div>
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
+    <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
@@ -852,7 +853,6 @@ function renderHome(){
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
     ${comingUp()}
-    ${LIVE.on&&LIVE.user?`<div class="share-cta"><div class="l"><span class="ic" aria-hidden="true">📤</span><div><h3>Have notes worth sharing?</h3><p>Send a link to your notes or reviewers. If they're good, they might get added here for everyone.</p></div></div><button class="btn primary small" data-act="share-notes">Share your notes</button></div>`:""}
     ${LIVE.on&&S.questions.length?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
 `;
 }
