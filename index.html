@@ -507,14 +507,26 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
-#a2hs{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:80;max-width:460px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 50px -12px rgba(0,0,0,.45);transform:translateY(140%);opacity:0;transition:transform .35s cubic-bezier(.2,.9,.3,1),opacity .25s}
+#a2hs{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:80;max-width:440px;margin:0 auto;display:grid;gap:12px;padding:16px;background:var(--surface);color:var(--ink);border-radius:22px;box-shadow:0 24px 60px -14px rgba(0,0,0,.55),0 0 0 1px var(--line);transform:translateY(140%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.3,1.15),opacity .25s}
+#a2hs::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(110deg,#a99cff,#6fb3f2,#f07fa6,#a99cff);background-size:200% 100%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:a2border 4s linear infinite}
+@keyframes a2border{to{background-position:200% 0}}
 #a2hs.in{transform:none;opacity:1}
-#a2hs img{border-radius:11px;flex:none}
-#a2hs .t{display:grid;gap:2px;flex:1;min-width:0;font-size:14px}
-#a2hs .t span{color:var(--muted);font-size:13px}
-#a2hs .t span svg{vertical-align:-3px;color:var(--accent)}
-#a2hs .x{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:var(--soft);color:var(--muted);cursor:pointer;font-size:14px}
-@media (prefers-reduced-motion: reduce){#a2hs{transition:opacity .2s}}
+.a2-top{display:flex;align-items:center;gap:12px}
+.a2-top img{border-radius:12px;flex:none;box-shadow:0 6px 16px -6px rgba(63,55,150,.6)}
+.a2-top .t{display:grid;gap:2px;flex:1;min-width:0}
+.a2-top .t b{font-size:15.5px}.a2-top .t span{color:var(--muted);font-size:13.5px}.a2-top h2{margin:0}
+#a2hs .x{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:var(--soft);color:var(--muted);cursor:pointer;font-size:14px;align-self:flex-start}
+.a2-steps{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:a2}
+.a2-steps li{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--soft);font-size:14.5px;line-height:1.35}
+.a2-steps li::before{counter-increment:a2;content:counter(a2);flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 12px/22px var(--f-mono);text-align:center}
+.a2-ic{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--surface);color:var(--accent);font-weight:700}
+.a2-ic.a2-app img{width:26px;height:26px;border-radius:7px}
+.a2-steps li:first-child .a2-ic{animation:a2nudge 1.8s ease-in-out infinite}
+@keyframes a2nudge{0%,100%{transform:none}50%{transform:translateY(-3px)}}
+.a2-go{width:100%;justify-content:center}
+.a2-later{justify-self:center;border:0;background:none;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:2px 8px}
+.a2-sheet{display:grid;gap:16px}
+@media (prefers-reduced-motion: reduce){#a2hs{transition:opacity .2s}#a2hs::before,.a2-steps li:first-child .a2-ic{animation:none}}
 @media (display-mode: standalone){body{padding-top:env(safe-area-inset-top,0px)}}
 /* expanding search pill, styled like the button group */
 .sa-search{--sa-bg:var(--surface);--sa-text:#5d6270;--sa-text-hi:var(--ink);position:relative;display:inline-flex;align-items:center;height:42px;padding:0 12px;border:0;border-radius:999px;background:var(--sa-bg);color:var(--sa-text);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap;transition:color .2s,padding .3s cubic-bezier(.3,.7,.2,1)}
@@ -610,7 +622,7 @@ button.sa-online{cursor:pointer}button.sa-online:hover{color:var(--sa-text-hi)}
 .coming{display:grid;justify-items:center;gap:10px;text-align:center;padding:30px 18px}
 .coming svg{width:120px;height:90px}
 /* page fade */
-.fade{animation:pagefade .28s ease both}
+.fade{animation:pagefade .28s ease backwards}
 @keyframes pagefade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.fade{animation:none}.card:hover,.card:hover .sicon{transform:none}}
 
@@ -837,6 +849,7 @@ function route(){const h=decodeURIComponent(location.hash.slice(1));
   if(h==="support")return{v:"support"};
   if(h==="schedule"||h.startsWith("schedule-"))return{v:"schedule",id:h.slice(9)};
   return{v:"home"}}
+app.addEventListener("animationend",e=>{if(e.target===app)app.classList.remove("fade")});
 addEventListener("hashchange",()=>{REACT_OPEN=null;REACT_WHO=null;S.noteId=null;S.tab=null;closePdf();S.quiz=null;render();scrollTo(0,0);app.classList.remove("fade");void app.offsetWidth;app.classList.add("fade")});
 
 /* ---------- views ---------- */
@@ -847,6 +860,7 @@ function topbar(right=""){const u=LIVE.user;
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
     <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
+    ${IS_STANDALONE?"":`<button data-act="a2hs-help"><span aria-hidden="true">📲</span>Add to Home Screen</button>`}
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
   const dotOn=`<span class="sa-dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span>`;
@@ -1121,6 +1135,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="export")exportData();
   else if(a==="suggest"){openSuggest()}
   else if(a==="share-notes"){openShare()}
+  else if(a==="a2hs-help"){openA2HSHelp()}
   else if(a==="share-done"){LIVE.fs.collection("shares").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
   else if(a==="sugg-done"){LIVE.fs.collection("suggestions").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
   else if(a==="ev-open"){openEvent(LIVE.events.find(x=>x.id===id))}
@@ -1500,19 +1515,35 @@ const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.
 const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 let A2HS_EVT=null;
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();A2HS_EVT=e;maybeA2HS()});
-addEventListener("appinstalled",()=>{store("a2hs","done");document.getElementById("a2hs")?.remove()});
-function maybeA2HS(){try{
-  if(IS_STANDALONE||IN_APP||!LIVE.user||store("a2hs")||document.getElementById("a2hs"))return;
-  const iosSafari=IS_IOS&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-  if(!A2HS_EVT&&!iosSafari)return;
-  const share=`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`;
+addEventListener("appinstalled",()=>{store("a2hs",JSON.stringify({done:1}));document.getElementById("a2hs")?.remove()});
+/* show the tip at most 3 times, at least 3 days apart, never inside the installed app */
+function a2hsState(){try{const v=store("a2hs");if(!v)return{n:0,at:0};if(v==="done")return{done:1};if(v==="dismissed")return{n:1,at:Date.now()};return JSON.parse(v)}catch(e){return{n:0,at:0}}}
+const IOS_SAFARI=()=>IS_IOS&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+const SHARE_SVG=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`;
+const PLUSSQ_SVG=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>`;
+function iosSteps(){return `<ol class="a2-steps"><li><span class="a2-ic">${SHARE_SVG}</span><span>Tap <b>Share</b> in Safari${/iPad/.test(navigator.userAgent)?" (top right)":" (bottom of the screen, or under ••• )"}</span></li><li><span class="a2-ic">${PLUSSQ_SVG}</span><span>Scroll and tap <b>Add to Home Screen</b></span></li><li><span class="a2-ic a2-app"><img src="icons/icon-192.png" alt=""></span><span>Tap <b>Add</b>. Study Atlas is now on your Home Screen</span></li></ol>`}
+function maybeA2HS(force){try{
+  if(IS_STANDALONE||IN_APP||!LIVE.user||document.getElementById("a2hs"))return;
+  const st=a2hsState();if(!force&&(st.done||st.n>=3||(st.at&&Date.now()-st.at<3*864e5)))return;
+  if(!A2HS_EVT&&!IOS_SAFARI())return;
   const el=document.createElement("div");el.id="a2hs";el.setAttribute("role","dialog");el.setAttribute("aria-label","Add Study Atlas to your Home Screen");
-  el.innerHTML=`<img src="icons/icon-192.png" alt="" width="44" height="44"><div class="t"><b>Get the Study Atlas app</b><span>${A2HS_EVT?"Install it to open your notes in one tap.":`Tap ${share} Share, then <b>Add to Home Screen</b>.`}</span></div>${A2HS_EVT?`<button type="button" class="btn small primary" data-a2hs="install">Install</button>`:""}<button type="button" class="x" data-a2hs="close" aria-label="Not now">✕</button>`;
-  document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add("in"));
+  el.innerHTML=`<div class="a2-top"><img src="icons/icon-192.png" alt="" width="48" height="48"><div class="t"><b>Add it to your Home Screen</b><span>Open your notes in one tap, like an app.</span></div><button type="button" class="x" data-a2hs="close" aria-label="Not now">✕</button></div>
+    ${A2HS_EVT?`<button type="button" class="btn primary a2-go" data-a2hs="install">Install the app</button>`:iosSteps()}
+    <button type="button" class="a2-later" data-a2hs="close">Maybe later</button>`;
+  document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("in")));
   el.addEventListener("click",async e=>{const b=e.target.closest("[data-a2hs]");if(!b)return;
-    if(b.dataset.a2hs==="install"&&A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted")store("a2hs","done")}
-    else store("a2hs","dismissed");
-    el.classList.remove("in");setTimeout(()=>el.remove(),300)})}catch(e){}}
+    if(b.dataset.a2hs==="install"&&A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted")store("a2hs",JSON.stringify({done:1}));else{const s2=a2hsState();store("a2hs",JSON.stringify({n:(s2.n||0)+1,at:Date.now()}))}}
+    else{const s2=a2hsState();store("a2hs",JSON.stringify({n:(s2.n||0)+1,at:Date.now()}))}
+    el.classList.remove("in");setTimeout(()=>el.remove(),350)})}catch(e){}}
+/* always-available how-to, from the profile menu */
+async function openA2HSHelp(){document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
+  if(A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted"){store("a2hs",JSON.stringify({done:1}));toast("Study Atlas was added to your Home Screen")}return}
+  const android=/Android/i.test(navigator.userAgent);
+  const body=IN_APP?`<p>First open this page in ${android?"Chrome":"Safari"} (tap ••• and choose Open in browser), then come back here.</p>`
+    :IS_IOS?(IOS_SAFARI()?iosSteps():`<p>On iPhone this works in <b>Safari</b>. Open the site in Safari, then follow these steps:</p>${iosSteps()}`)
+    :android?`<ol class="a2-steps"><li><span class="a2-ic">⋮</span><span>Tap the <b>⋮</b> menu in Chrome</span></li><li><span class="a2-ic">${PLUSSQ_SVG}</span><span>Tap <b>Add to Home screen</b> or <b>Install app</b></span></li></ol>`
+    :`<ol class="a2-steps"><li><span class="a2-ic">${PLUSSQ_SVG}</span><span>In Chrome or Edge, click the <b>install</b> icon at the right end of the address bar</span></li><li><span class="a2-ic a2-app"><img src="icons/icon-192.png" alt=""></span><span>Study Atlas opens in its own window and shows up with your apps</span></li></ol>`;
+  openSheet(`<div class="a2-sheet"><div class="a2-top"><img src="icons/icon-192.png" alt="" width="52" height="52"><div class="t"><h2>Add to Home Screen</h2><span class="muted">Open Study Atlas in one tap, like an app.</span></div></div>${body}<div class="form-foot"><div class="right"><button type="button" class="btn primary" data-act="close">Got it</button></div></div></div>`)}
 const IN_APP=/FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|Line\/|MicroMessenger|TikTok|musical_ly|Snapchat|Twitter|; wv\)/i.test(navigator.userAgent||"");
 const IS_ANDROID=/Android/i.test(navigator.userAgent||"");
 function inAppNotice(){const url=location.href.split("#")[0];
