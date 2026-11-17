@@ -522,6 +522,22 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
   .top-right .me{margin-left:auto}
   .top-right .back{width:100%;order:-1}
 }
+
+/* download prep popup (first download per visit) */
+.prep{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;z-index:70;width:min(420px,calc(100vw - 32px));
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px 14px;box-shadow:0 24px 50px -20px rgba(0,0,0,.55);display:grid;gap:8px;transition:transform .28s cubic-bezier(.2,.9,.3,1.2),opacity .2s}
+.prep.in{transform:translate(-50%,0);opacity:1}
+.prep .row{display:flex;align-items:center;gap:10px}
+.prep .ic{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 18%,var(--surface));color:var(--accent);font-size:15px}
+.prep b{font-weight:600;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.prep .skip{background:none;border:0;padding:4px 6px;font:500 13px/1 var(--f-body);color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;border-radius:6px}
+.prep .skip:hover{color:var(--ink)}
+.prep .bar{height:4px;border-radius:4px;background:var(--soft);overflow:hidden}
+.prep .bar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0);animation:prepbar var(--dur,3s) linear forwards}
+@keyframes prepbar{to{transform:scaleX(1)}}
+.prep p{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
+.prep p a{color:var(--accent);font-weight:500;text-decoration:none}.prep p a:hover{text-decoration:underline}
+@media (prefers-reduced-motion: reduce){.prep{transition:none}}
 </style>
 <style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -900,7 +916,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="ev-open"){openEvent(LIVE.events.find(x=>x.id===id))}
   else if(a==="ev-new"){editEvent(null,b.dataset.date||"")}
   else if(a==="editor-on"||a==="editor-off"){setEditor(id,a==="editor-on")}
-  else if(a==="dl-doc"){popBurst(b,e);recordDocDownload(docById(id))}
+  else if(a==="dl-doc"){popBurst(b,e);recordDocDownload(docById(id));if(firstDlThisVisit()){e.preventDefault();prepDownload(b.getAttribute("href"),b.getAttribute("download")||"notes.pdf")}}
   else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request"){const c=e.code||"";
     toast(c==="auth/unauthorized-domain"?"Sign-in isn't allowed on this web address yet. The site owner needs to add it in Firebase.":(c==="auth/configuration-not-found"||c==="auth/operation-not-allowed")?"Google sign-in isn't switched on yet. The site owner needs to enable it in Firebase.":c==="auth/network-request-failed"?"No connection. Check your internet and try again.":"Sign-in didn't work ("+c.replace("auth/","")+"). Try again.")}})}
   else if(a==="download")downloadNote(S.notes.find(n=>n.id===id));
@@ -930,6 +946,15 @@ function popBurst(el,ev){
     h+=`<span class="bit" style="--bc:${cols[i%cols.length]};--x:${Math.cos(ang)*dist}px;--y:${Math.sin(ang)*dist}px;--r:${Math.random()*540-270}deg;border-radius:${i%3?"3px":"50%"}"></span>`}
   h+=`<span class="plus" style="--bc:${cols[2]}">+1</span>`;
   box.innerHTML=h;document.body.appendChild(box);setTimeout(()=>box.remove(),1000)}
+/* First download of each visit: a short "preparing" popup with a quiet support line. Later downloads start instantly. */
+function firstDlThisVisit(){try{if(sessionStorage.getItem("dl-prep"))return false;sessionStorage.setItem("dl-prep","1");return true}catch(e){return false}}
+function startFileDownload(href,name){const a=document.createElement("a");a.href=href;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();a.remove()}
+function prepDownload(href,name){document.querySelector(".prep")?.remove();
+  const DUR=3000,box=document.createElement("div");box.className="prep";box.setAttribute("role","status");box.style.setProperty("--dur",DUR+"ms");
+  box.innerHTML=`<div class="row"><span class="ic" aria-hidden="true">⤓</span><b>Preparing ${esc(name)}…</b><button type="button" class="skip">Skip</button></div><div class="bar"><i></i></div><p>These notes are free, always. If they've helped you, you can <a href="#support">chip in to keep the site running</a> ♥</p>`;
+  document.body.appendChild(box);requestAnimationFrame(()=>box.classList.add("in"));
+  let done=false;const go=()=>{if(done)return;done=true;clearTimeout(t);startFileDownload(href,name);box.querySelector("b").textContent="Downloading "+name;box.querySelector(".skip").remove();setTimeout(()=>{box.classList.remove("in");setTimeout(()=>box.remove(),300)},1400)};
+  const t=setTimeout(go,DUR);box.querySelector(".skip").onclick=go;box.querySelector("p a").addEventListener("click",go)}
 function dlBtn(d,cls=""){return `<a class="btn ${cls}" href="${esc(d.file)}" download="${esc(d.title.replace(/[\\/:*?"<>|]/g,""))}.pdf" data-act="dl-doc" data-id="${esc(d.id)}"><span aria-hidden="true">⤓</span> Download${LIVE.on?` <span class="dl-n">${dlCount(d.id)}</span>`:""}</a>`}
 function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
