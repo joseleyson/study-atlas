@@ -32,11 +32,12 @@ service cloud.firestore {
     match /events/{id} {
       allow read: if signedIn();
       allow create, update: if (isAdmin() || isEditor())
-        && request.resource.data.keys().hasOnly(['title','type','subject','date','time','notes','by','byName','at'])
+        && request.resource.data.keys().hasOnly(['title','type','subject','date','endDate','time','notes','by','byName','at'])
         && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 120
         && request.resource.data.type in ['quiz','exam','lecture','deadline','reminder','other']
         && request.resource.data.subject is string && request.resource.data.subject.size() <= 80
         && request.resource.data.date is string && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && (!('endDate' in request.resource.data) || (request.resource.data.endDate is string && request.resource.data.endDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && request.resource.data.endDate > request.resource.data.date))
         && request.resource.data.time is string && request.resource.data.time.size() <= 5
         && request.resource.data.notes is string && request.resource.data.notes.size() <= 1000
         && request.resource.data.by == request.auth.uid

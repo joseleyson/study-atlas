@@ -1013,29 +1013,38 @@ const parseYmd=k=>{const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d
 const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const weekStart=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());return addDays(x,-((x.getDay()+6)%7))};
 const fmtTime=t=>{if(!t)return"";let[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";h=h%12||12;return `${h}:${pad2(m)} ${ap}`};
+/* multi-day events: optional endDate (YYYY-MM-DD, after date) */
+const evEnd=e=>e.endDate&&e.endDate>e.date?e.endDate:e.date;
+const evCovers=(e,k)=>e.date<=k&&k<=evEnd(e);
+function evRange(e,long){const a=parseYmd(e.date),b=parseYmd(evEnd(e));const o=long?{weekday:"short",month:"short",day:"numeric"}:{month:"short",day:"numeric"};
+  if(evEnd(e)===e.date)return a.toLocaleDateString(undefined,long?{weekday:"long",month:"long",day:"numeric"}:o);
+  return a.getMonth()===b.getMonth()&&!long?`${a.toLocaleDateString(undefined,{month:"short"})} ${a.getDate()}–${b.getDate()}`:`${a.toLocaleDateString(undefined,o)} – ${b.toLocaleDateString(undefined,o)}`}
+/* upcoming view: an event already running counts as "today" */
+const evUpcoming=(today)=>LIVE.events.filter(e=>evEnd(e)>=today).map(e=>e.date<today?{...e,date:today,_ongoing:true}:e);
 const evSort=(a,b)=>a.date.localeCompare(b.date)||(a.time||"99").localeCompare(b.time||"99")||a.title.localeCompare(b.title);
 function evChip(e,withDay){const s=e.subject?anySubj(e.subject):null;
-  return `<button class="ev ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}</span><span class="ti">${esc(e.title)}</span>${withDay?`<span class="when">${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span>`:""}${s?`<span class="su">${esc(s.name)}</span>`:""}</button>`}
+  return `<button class="ev ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}</span><span class="ti">${esc(e.title)}</span>${withDay?`<span class="when">${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span>`:evEnd(e)!==e.date?`<span class="when">${esc(evRange(e))}</span>`:""}${s?`<span class="su">${esc(s.name)}</span>`:""}</button>`}
 function urgentChip(){if(!LIVE.on||!LIVE.user)return"";
   const now=new Date(),today=ymd(now),hm=pad2(now.getHours())+":"+pad2(now.getMinutes()),lim=ymd(addDays(now,14));
-  const up=LIVE.events.filter(e=>(e.date>today||(e.date===today&&(!e.time||e.time>=hm)))&&e.date<=lim).sort(evSort);
+  const up=evUpcoming(today).filter(e=>(e.date>today||(e.date===today&&(e._ongoing||evEnd(e)>today||!e.time||e.time>=hm)))&&e.date<=lim).sort(evSort);
   const imp=x=>x.type==="exam"||x.type==="quiz"||x.type==="deadline";
   const first=up.find(imp)||up.find(x=>x.date<=ymd(addDays(now,2)));if(!first)return"";
   const same=up.filter(x=>x.date===first.date&&(imp(first)?imp(x):true));
   const chip=e=>{const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);
-    const when=(d===0?"today":d===1?"tomorrow":parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+(e.time?" "+fmtTime(e.time):"");
+    const multi=evEnd(e)!==e.date,orig=LIVE.events.find(x=>x.id===e.id)||e;
+    const when=multi?(e._ongoing?"until "+parseYmd(evEnd(e)).toLocaleDateString(undefined,{month:"short",day:"numeric"}):evRange(orig)):(d===0?"today":d===1?"tomorrow":parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+(e.time?" "+fmtTime(e.time):"");
     return `<button class="urgent" data-act="ev-open" data-id="${esc(e.id)}"><span aria-hidden="true">⏰</span><span class="t">${esc(evLabel(e.type))}: ${esc(e.title)}</span><span class="when">${esc(when)}</span></button>`};
   const shown=same.slice(0,3),extra=same.length-shown.length;
   return `<div class="urgents">${shown.map(chip).join("")}${extra?`<a class="urgent more" href="#schedule">+${extra} more</a>`:""}</div>`}
 function comingUp(){if(!LIVE.on||!LIVE.user)return"";
   const now=new Date(),today=ymd(now),tmr=ymd(addDays(now,1)),end=ymd(addDays(now,7));
-  const all=LIVE.events.filter(e=>e.date>=today&&e.date<=end).sort(evSort),cut=[...new Set(all.map(e=>e.date))].slice(0,3).pop()||today;
+  const all=evUpcoming(today).filter(e=>e.date>=today&&e.date<=end).sort(evSort),cut=[...new Set(all.map(e=>e.date))].slice(0,3).pop()||today;
   const list=S.upAll?all:all.filter(e=>e.date<=cut),hidden=all.length-list.length;
   const dayLabel=k=>k===today?"Today":k===tmr?"Tomorrow":parseYmd(k).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
-  const soon=e=>{if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d<=1?"":`in ${d} days`};
+  const soon=e=>{if(e._ongoing)return"ongoing";if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d<=1?"":`in ${d} days`};
   const groups=[];list.forEach(e=>{let g=groups.find(x=>x[0]===e.date);if(!g)groups.push(g=[e.date,[]]);g[1].push(e)});
   const body=groups.length?groups.map(([k,es])=>`<div class="un-group${k===tmr?" tmr":""}"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?anySubj(e.subject):null,sn=soon(e);
-    return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
+    return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${evEnd(e)!==e.date||e._ongoing?" · "+esc(evRange(LIVE.events.find(x=>x.id===e.id)||e)):""}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
     :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>Nothing due in the next 7 days.</div>`;
   return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Coming up</h3><span class="mono">${S.upAll||!hidden?"next 7 days":"through "+esc(parseYmd(cut).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span></div><div class="un-groups">${body}</div>${hidden||S.upAll?`<div class="up-more"><button data-act="up-toggle">${S.upAll?"Show less ↑":`Show full week ↓ <span style="opacity:.7">(${hidden} more)</span>`}</button></div>`:""}
     <div class="upnext-foot"><a class="btn small" href="#schedule">Full schedule →</a>${canSchedule()?`<button class="btn small primary" data-act="ev-new">+ Add</button>`:""}</div></section>`}
@@ -1045,7 +1054,7 @@ function renderSchedule(startKey){
   const end=days[6],thisWeek=ymd(weekStart(new Date()))===ymd(start);
   const md=d=>d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
   const rng=`${md(start)} – ${start.getMonth()===end.getMonth()?end.getDate():md(end)}, ${end.getFullYear()}`;
-  const cols=days.map(d=>{const k=ymd(d),evs=LIVE.events.filter(e=>e.date===k).sort(evSort);
+  const cols=days.map(d=>{const k=ymd(d),evs=LIVE.events.filter(e=>evCovers(e,k)).sort(evSort);
     return `<div class="day${k===today?" today":""}${k<today?" past":""}"><div class="day-h"><span class="dw">${d.toLocaleDateString(undefined,{weekday:"short"})}</span><span class="dn">${d.getDate()}</span>${canSchedule()?`<button class="add-ev" data-act="ev-new" data-date="${k}" title="Add on this day" aria-label="Add on ${esc(d.toDateString())}">+</button>`:""}</div>
       <div class="day-evs">${evs.length?evs.map(e=>evChip(e)).join(""):`<span class="none">—</span>`}</div></div>`}).join("");
   app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">Schedule</span><h1>This week's quizzes &amp; exams</h1>
@@ -1057,13 +1066,14 @@ function renderSchedule(startKey){
 }
 function gcalLink(e){const d=e.date.replace(/-/g,"");let dates;
   if(e.time){const t=e.time.replace(":","")+"00";const[h,m]=e.time.split(":").map(Number);const end=new Date(2000,0,1,h+1,m);dates=`${d}T${t}/${(h+1>=24?ymd(addDays(parseYmd(e.date),1)).replace(/-/g,""):d)}T${pad2(end.getHours())}${pad2(end.getMinutes())}00`}
-  else dates=`${d}/${ymd(addDays(parseYmd(e.date),1)).replace(/-/g,"")}`;
+  else dates=`${d}/${ymd(addDays(parseYmd(evEnd(e)),1)).replace(/-/g,"")}`;
+  if(e.time&&evEnd(e)!==e.date)dates=dates.replace(/\/\d{8}T/,"/"+evEnd(e).replace(/-/g,"")+"T");
   const s=e.subject?anySubj(e.subject):null;
   const q=new URLSearchParams({action:"TEMPLATE",text:`${evLabel(e.type)}: ${e.title}`,dates,details:[s?s.name:"",e.notes||"","From Study Atlas"].filter(Boolean).join("\n\n"),ctz:"Asia/Manila"});
   return "https://calendar.google.com/calendar/render?"+q}
 function openEvent(e){if(!e)return;const s=e.subject?anySubj(e.subject):null;
   openSheet(`<div class="ev-detail"><span class="ev-t t-${esc(e.type)}" style="display:block;font:700 12px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t)">${esc(evLabel(e.type))}</span><h2>${esc(e.title)}</h2>
-    <div class="meta"><span>📅 ${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}))}</span>${e.time?`<span>🕒 ${esc(fmtTime(e.time))}</span>`:""}${s?`<span>📚 ${esc(s.name)}</span>`:""}</div>
+    <div class="meta"><span>📅 ${esc(evRange(e,true))}</span>${e.time?`<span>🕒 ${esc(fmtTime(e.time))}</span>`:""}${s?`<span>📚 ${esc(s.name)}</span>`:""}</div>
     ${e.notes?`<div class="nt">${esc(e.notes)}</div>`:""}${e.byName?`<span class="mono">Added by ${esc(e.byName)}</span>`:""}
     <div class="acts">${canSchedule()?`<button class="btn" data-act="ev-edit" data-id="${esc(e.id)}">Edit</button>`:""}<a class="btn primary" href="${esc(gcalLink(e))}" target="_blank" rel="noopener">Add to Google Calendar</a><button class="btn ghost" data-act="close">Close</button></div></div>`)}
 function editEvent(e,date){if(!canSchedule())return;
@@ -1074,12 +1084,15 @@ function editEvent(e,date){if(!canSchedule())return;
     <div class="field"><label for="f-subj">Subject</label><select id="f-subj"><option value="">None</option>${subs.map(x=>`<option value="${esc(x.id)}"${e?.subject===x.id?" selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
     <div class="field"><label for="f-title">What is it?</label><input type="text" id="f-title" required maxlength="120" value="${esc(e?.title||"")}" placeholder="e.g. Brainstem quiz, Midterm exam, Submit lab sheet"></div>
     <div class="field-row"><div class="field"><label for="f-date">Date</label><input type="date" id="f-date" required value="${esc(e?.date||date||ymd(new Date()))}"></div>
-    <div class="field"><label for="f-time">Time <span class="hint">(optional)</span></label><input type="time" id="f-time" value="${esc(e?.time||"")}"></div></div>
+    <div class="field"><label for="f-end">Until <span class="hint">(optional, for more than 1 day)</span></label><input type="date" id="f-end" value="${esc(e&&evEnd(e)!==e.date?e.endDate:"")}"></div></div>
+    <div class="field"><label for="f-time">Time <span class="hint">(optional)</span></label><input type="time" id="f-time" value="${esc(e?.time||"")}"></div>
     <div class="field"><label for="f-notes">Notes <span class="hint">(optional)</span></label><textarea id="f-notes" class="short" maxlength="1000" placeholder="Coverage, room, what to bring…">${esc(e?.notes||"")}</textarea></div>
     ${foot(e?"Delete":"")}</form>`,async f=>{
       const title=f.querySelector("#f-title").value.trim(),dt=f.querySelector("#f-date").value;
       if(!title)return formErr("Say what it is.");if(!/^\d{4}-\d{2}-\d{2}$/.test(dt))return formErr("Pick a date.");
+      const en=f.querySelector("#f-end").value;if(en&&!/^\d{4}-\d{2}-\d{2}$/.test(en))return formErr("Pick a valid end date.");if(en&&en<dt)return formErr("The end date can't be before the start date.");
       const u=LIVE.user,data={title:title.slice(0,120),type:f.querySelector("#f-type").value,subject:f.querySelector("#f-subj").value,date:dt,time:f.querySelector("#f-time").value||"",notes:f.querySelector("#f-notes").value.trim().slice(0,1000),by:u.uid,byName:(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()};
+      if(en&&en>dt)data.endDate=en;
       try{if(e)await LIVE.fs.collection("events").doc(e.id).set(data);else await LIVE.fs.collection("events").add(data);
         closeSheet();toast(e?"Schedule updated":"Added to the schedule");if(!e&&route().v==="schedule")location.hash="schedule-"+dt}
       catch(x){formErr(x&&x.code==="permission-denied"?"You don't have permission to edit the schedule yet. Ask the site owner (and make sure the new database rules are published).":"Couldn't save. Check your connection and try again.")}
