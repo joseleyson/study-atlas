@@ -487,6 +487,10 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
+.inapp{border:1px solid #e5383b55;background:#e5383b12;border-radius:14px;padding:14px 16px;margin:4px 0 16px;text-align:left}
+.inapp b{display:block;margin-bottom:4px}
+.inapp p{margin:0 0 12px;font-size:14px}
+.inapp-acts{display:flex;gap:8px;flex-wrap:wrap}
 .sx-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .sx-head h2{margin:0}
 .sx-x{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center}
@@ -925,6 +929,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="ev-new"){editEvent(null,b.dataset.date||"")}
   else if(a==="editor-on"||a==="editor-off"){setEditor(id,a==="editor-on")}
   else if(a==="dl-doc"){popBurst(b,e);recordDocDownload(docById(id));{e.preventDefault();prepDownload(b.getAttribute("href"),b.getAttribute("download")||"notes.pdf")}}
+  else if(a==="copy-site"){const url=location.href.split("#")[0];(navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>toast("Link copied. Paste it into your browser."),()=>{prompt("Copy this link:",url)})}
   else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request"){const c=e.code||"";
     toast(c==="auth/unauthorized-domain"?"Sign-in isn't allowed on this web address yet. The site owner needs to add it in Firebase.":(c==="auth/configuration-not-found"||c==="auth/operation-not-allowed")?"Google sign-in isn't switched on yet. The site owner needs to enable it in Firebase.":c==="auth/network-request-failed"?"No connection. Check your internet and try again.":"Sign-in didn't work ("+c.replace("auth/","")+"). Try again.")}})}
   else if(a==="download")downloadNote(S.notes.find(n=>n.id===id));
@@ -1238,10 +1243,18 @@ function playerId(){return LIVE.user?LIVE.user.uid:""}
 async function postAttempt(sid,score,total){if(!LIVE.on||!LIVE.user)return;
   try{await LIVE.fs.collection("attempts").add({subject:sid,subjectName:(subj(sid)?.name||"").slice(0,80),name:playerName(),player:playerId(),score,total,at:firebase.firestore.FieldValue.serverTimestamp()})}
   catch(e){toast("Your score couldn't be shared. Check your connection.")}}
+/* Messenger, Facebook, Instagram etc. open links in their own browser, where Google sign-in fails. */
+const IN_APP=/FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|Line\/|MicroMessenger|TikTok|musical_ly|Snapchat|Twitter|; wv\)/i.test(navigator.userAgent||"");
+const IS_ANDROID=/Android/i.test(navigator.userAgent||"");
+function inAppNotice(){const url=location.href.split("#")[0];
+  const chrome=IS_ANDROID?`<a class="btn primary" href="intent://${esc(url.replace(/^https?:\/\//,""))}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end">Open in Chrome</a>`:"";
+  return `<div class="inapp"><b>Open this in ${IS_ANDROID?"Chrome":"Safari"} to sign in</b>
+    <p>Google sign-in doesn't work inside Messenger, Facebook or Instagram. ${IS_ANDROID?"Tap the button below, or tap ⋮ at the top and choose “Open in Chrome”.":"Tap ••• at the bottom (or top) of this screen and choose “Open in external browser” or “Open in Safari”."} You can also copy the link and paste it into ${IS_ANDROID?"Chrome":"Safari"}.</p>
+    <div class="inapp-acts">${chrome}<button type="button" class="btn ${IS_ANDROID?"":"primary"}" data-act="copy-site">Copy link</button></div></div>`}
 function renderSignIn(){
   app.innerHTML=topbar()+`<section class="signin"><div class="signin-card"><span class="mark big" aria-hidden="true"></span><h1>Study Atlas</h1>
     <p>Notes and quizzes for Neuroanatomy, Neurophysiology, Gross Anatomy and more. Sign in to open them.</p>
-    <button class="btn primary" data-act="sign-in"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Sign in with Google</button>
+    ${IN_APP?inAppNotice():""}<button class="btn ${IN_APP?"ghost":"primary"}" data-act="sign-in"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Sign in with Google</button>
     <p class="fine">By signing in, your name, email and the notes you download are visible to the site owner. Your quiz scores show on the leaderboard under your Google name.</p></div></section>`;
 }
 function fmt(t){const ms=t&&t.toMillis?t.toMillis():0;return ms?new Date(ms).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"—"}
