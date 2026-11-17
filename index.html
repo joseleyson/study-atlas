@@ -398,7 +398,7 @@ function topbar(right=""){const u=LIVE.user;
   const chip=u?`<div class="who-chip">${LIVE.isAdmin?`<a class="btn small ghost" href="#admin">Visitors</a>`:""}${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:""}<span class="nm">${esc(u.displayName||u.email||"")}</span><button class="btn small ghost" data-act="sign-out">Sign out</button></div>`:"";
   const on=u?`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`:"";
   const nu=u||!LIVE.on?unseenUpdates().length:0;
-  const upd=(u||!LIVE.on)&&datedDocs().length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
+  const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
   return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${upd}${on}${chip}</div></header>`}
 const canEdit=()=>S.writable&&S.mode==="live"&&store("edit-mode")==="1"&&(!LIVE.on||LIVE.isAdmin);
 
@@ -656,7 +656,7 @@ function renderUpdates(){
     return `<a class="upd${fresh?" unseen":""}" href="#d-${esc(d.id)}" style="--c:${stainVar(s?.stain)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"></span>`:`<span class="pdf-page"><span class="pdf-lines"></span></span>`}
       <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span></span><span class="go">Open →</span></a>`}).join("")}</div>`).join("");
   app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs show up here with a New! tag on the day they're added. Tap one to open it.</p></section>
-    ${body||`<div class="empty"><h3>Nothing new yet</h3><p>PDFs you upload will be listed here.</p></div>`}`;
+    ${body||`<div class="empty"><h3>Nothing new yet</h3><p>New PDFs will show up here the day they're uploaded.</p></div>`}`;
   markSeen(list.filter(isNewDoc).map(d=>d.id));
 }
 let PDF={task:null,doc:null,obs:null,id:null};
