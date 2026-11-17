@@ -81,7 +81,10 @@ service cloud.firestore {
     match /presence/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name','at','doc','hidden'])
+        && request.resource.data.keys().hasOnly(['name','at','doc','hidden','photo','streak','badges'])
+        && (!('photo' in request.resource.data) || (request.resource.data.photo is string && request.resource.data.photo.size() <= 500))
+        && (!('streak' in request.resource.data) || request.resource.data.streak is int)
+        && (!('badges' in request.resource.data) || request.resource.data.badges is int)
         && (!('hidden' in request.resource.data) || request.resource.data.hidden is bool)
         && request.resource.data.name is string && request.resource.data.name.size() <= 80
         && (!('doc' in request.resource.data) || (request.resource.data.doc is string && request.resource.data.doc.size() <= 100))
@@ -141,6 +144,19 @@ service cloud.firestore {
         && request.resource.data.es.toSet().size() == request.resource.data.es.size()
         && request.resource.data.at == request.time;
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Nudges: a signed-in person can buzz someone; only the person nudged can read or clear it.
+    match /nudges/{id} {
+      allow read, delete: if signedIn() && resource.data.to == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['to','from','fromName','at'])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string && request.resource.data.to.size() > 0 && request.resource.data.to.size() <= 128
+        && request.resource.data.to != request.auth.uid
+        && request.resource.data.fromName is string && request.resource.data.fromName.size() <= 80
+        && request.resource.data.at == request.time;
+      allow update: if false;
     }
 
     match /{document=**} {

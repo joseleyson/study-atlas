@@ -837,6 +837,34 @@ body.cram .cram-far{opacity:.18;filter:grayscale(1);transition:opacity .4s,filte
 .who-more{color:var(--muted)}
 .dot.off{background:var(--muted)!important;box-shadow:none!important;animation:none!important}
 .who-tip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:0!important;padding-top:12px}
+
+/* profiles + nudges */
+.who-tap{cursor:pointer;border-radius:10px;transition:background .15s}
+.who-tap:hover,.who-tap:focus-visible{background:var(--soft);outline:none}
+.who-go{color:var(--muted);font-size:18px;line-height:1;margin-left:4px}
+.pf{position:relative;text-align:center;padding:6px 0 10px}
+.pf-back{position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--muted);font-size:20px;cursor:pointer}
+.pf-av{position:relative;width:84px;height:84px;margin:4px auto 12px;border-radius:50%;display:grid;place-items:center;font-size:32px;font-weight:700;color:#fff;background:var(--hc)}
+.pf-av img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.pf-dot{position:absolute;right:4px;bottom:4px;width:16px;height:16px;border-radius:50%;background:#3fb950;border:3px solid var(--surface)}
+.pf-name{margin:0;font-size:22px}
+.pf-doing{margin:4px 0 0;color:var(--muted);font-size:14px}
+.pf-stats{display:flex;justify-content:center;gap:12px;margin:16px 0 0}
+.pf-stats div{min-width:110px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg)}
+.pf-stats b{display:block;font-size:18px}.pf-stats span{font-size:12px;color:var(--muted)}
+.pf-nudge{margin-top:18px;min-width:160px;font-size:16px;gap:8px}
+.pf-nudge.sent .pf-wave{display:inline-block;animation:wave .7s ease}
+.pf-nudge.shake{animation:nudge-shake .4s}
+.pf-note{margin:10px 0 0;font-size:12px;color:var(--muted)}
+@keyframes wave{0%,100%{transform:rotate(0)}20%{transform:rotate(-25deg)}40%{transform:rotate(20deg)}60%{transform:rotate(-15deg)}80%{transform:rotate(10deg)}}
+@keyframes nudge-shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+body.nudged #app{animation:nudge-shake .55s}
+.nudge-pop{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));z-index:9600;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 14px;border-radius:999px;background:var(--surface);color:var(--ink);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 14px 34px rgba(0,0,0,.45);font-size:15px;transform:translate(-50%,-140%);opacity:0;transition:transform .4s cubic-bezier(.3,1.4,.5,1),opacity .3s;max-width:calc(100vw - 32px)}
+.nudge-pop.on{transform:translate(-50%,0);opacity:1}
+.nudge-pop{width:max-content}.nudge-pop>span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.nudge-hand{font-size:22px;display:inline-block;transform-origin:70% 80%}
+.nudge-pop.on .nudge-hand{animation:wave 1s ease 2}
+@media (prefers-reduced-motion: reduce){body.nudged #app,.nudge-pop.on .nudge-hand,.pf-nudge.sent .pf-wave,.pf-nudge.shake{animation:none}}
 </style>
 <style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -1623,7 +1651,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
   firebase.auth().onAuthStateChanged(async u=>{
     LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.adminKnown=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
-    recordVisit(u);startPresence(u);track("visit");setTimeout(maybeA2HS,6000);
+    recordVisit(u);startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
@@ -1688,7 +1716,8 @@ function onlineNow(){const now=Date.now(),me=LIVE.user?.uid;
   return list}
 function whoRows(){const now=Date.now(),all=onlineNow(),shown=all.filter(p=>p.you||(canSeeNames()&&visiblePres(p))),hid=all.length-shown.length;
   return shown.map(p=>{const s=Math.max(0,Math.round((now-p.at.toMillis())/1000));
-  return `<li><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(niceName(p.you?p.name:presName(p))||"Someone")}${p.you?' <span class="mono">(you)</span>':""}${p.hidden&&(LIVE.isAdmin||p.you)?' <span class="who-hid">hidden</span>':""}</span><span class="mono">${p.you||s<20?"active now":s<60?s+"s ago":Math.round(s/60)+" min ago"}</span></li>`}).join("")
+  const tap=!p.you;
+  return `<li${tap?` class="who-tap" data-who="${esc(p.id)}" tabindex="0" role="button"`:""}><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(niceName(p.you?p.name:presName(p))||"Someone")}${p.you?' <span class="mono">(you)</span>':""}${p.hidden&&(LIVE.isAdmin||p.you)?' <span class="who-hid">hidden</span>':""}</span><span class="mono">${p.you||s<20?"active now":s<60?s+"s ago":Math.round(s/60)+" min ago"}</span>${tap?'<span class="who-go" aria-hidden="true">›</span>':""}</li>`}).join("")
   +(hid?`<li class="who-more"><span class="dot off" aria-hidden="true"></span><span class="who-name">${hid} more ${hid===1?"person":"people"} online</span></li>`:"")
   +(canSeeNames()?"":`<li class="who-tip"><button type="button" class="btn small" data-act="share-active">Show me as online</button><span class="mono">to see who's here</span></li>`)}
 function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-4px 0 14px">${LIVE.isAdmin?"Everyone active in the last 2 minutes, including people who hid their status. You're always hidden from others.":shareActive()?"People active in the last 2 minutes who share their status.":"You're hidden, so you can only see how many people are online."}</p>
@@ -1702,10 +1731,45 @@ document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&(e.key==="k"|
 let PRES_NODOC=false;
 function beat(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.adminKnown||document.visibilityState==="hidden")return;
   const hid=iAmHidden(),base={name:hid?"":(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()},r=route(),ref=LIVE.fs.collection("presence").doc(u.uid);
-  const full={...base,doc:r.v==="doc"?String(r.id).slice(0,100):r.v==="subject"?("s:"+r.id).slice(0,100):"",hidden:hid};
+  const full={...base,doc:r.v==="doc"?String(r.id).slice(0,100):r.v==="subject"?("s:"+r.id).slice(0,100):"",hidden:hid,
+    photo:hid?"":(u.photoURL||"").slice(0,500),streak:hid?0:progStreak(),badges:hid?0:Object.keys(PROG.badges).length};
   if(PRES_NODOC){ref.set(base).catch(()=>{});return}
   ref.set(full).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}
 document.addEventListener("click",e=>{if(e.target.closest("[data-act=share-active]"))setShareActive(!shareActive())});
+/* ---------- profiles + nudges (online people only) ---------- */
+function presDoing(p){if(!p.doc)return"Browsing Study Atlas";if(p.doc.startsWith("s:")){const sb=anySubj(p.doc.slice(2));return sb?`Looking through ${sb.name}`:"Browsing a subject"}
+  const d=docById(p.doc);return d?`Reading ${d.title}`:"Reading notes"}
+function openProfile(uid){const now=Date.now(),p=LIVE.presence.find(x=>x.id===uid&&x.at&&now-x.at.toMillis()<ONLINE_MS&&visiblePres(x));
+  if(!p||!canSeeNames()){toast("They're not online anymore");openWho();return}
+  const nm=niceName(presName(p)||"Someone"),ph=p.photo||(LIVE.isAdmin?LIVE.users.find(x=>x.id===uid)?.photo:"")||"";
+  openSheet(`<div class="pf"><button type="button" class="pf-back" data-pf="back" aria-label="Back to Online now">‹</button>
+    <div class="pf-av" style="--hc:${hereColor(nm)}">${ph?`<img src="${esc(ph)}" alt="" referrerpolicy="no-referrer">`:esc((nm.trim()[0]||"?").toUpperCase())}<span class="pf-dot"></span></div>
+    <h2 class="pf-name">${esc(nm)}</h2><p class="pf-doing">${esc(presDoing(p))}</p>
+    ${p.hidden?"":`<div class="pf-stats"><div><b>🔥 ${+p.streak||0}</b><span>day streak</span></div><div><b>🏅 ${+p.badges||0}</b><span>badges</span></div></div>`}
+    <button type="button" class="btn pf-nudge" data-pf="nudge" data-uid="${esc(uid)}"><span class="pf-wave">👋</span> Nudge</button>
+    <p class="pf-note mono" id="pf-note">${LIVE.isAdmin?"Your nudges show up as from \"Someone\".":"They'll get a buzz with your name."}</p></div>
+    <div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Close</button></div></div>`)}
+const NUDGE_GAP=3000;let lastNudge=0;
+async function sendNudge(uid,btn){const u=LIVE.user;if(!LIVE.on||!u||uid===u.uid)return;
+  const now=Date.now();if(now-lastNudge<NUDGE_GAP){btn?.classList.remove("shake");void btn?.offsetWidth;btn?.classList.add("shake");return}lastNudge=now;
+  btn?.classList.remove("sent");void btn?.offsetWidth;btn?.classList.add("sent");
+  try{await LIVE.fs.collection("nudges").add({to:uid,from:u.uid,fromName:LIVE.isAdmin?"":(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()});
+    const n=document.getElementById("pf-note");if(n)n.textContent="Nudge sent! 👋"}
+  catch(e){toast("Couldn't send that nudge")}}
+document.addEventListener("click",e=>{const w=e.target.closest("[data-who]");if(w){openProfile(w.dataset.who);return}
+  const b=e.target.closest("[data-pf]");if(!b)return;if(b.dataset.pf==="back")openWho();else if(b.dataset.pf==="nudge")sendNudge(b.dataset.uid,b);else if(b.dataset.pf==="back-nudge")sendNudge(b.dataset.uid,b)});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset?.who)openProfile(e.target.dataset.who)});
+let nudgeEl=null,nudgeT=null;
+function showNudge(n){if(!nudgeEl){nudgeEl=document.createElement("div");nudgeEl.className="nudge-pop";nudgeEl.setAttribute("role","alert");document.body.appendChild(nudgeEl)}
+  const nm=n.fromName?niceName(n.fromName):"Someone",back=n.fromName&&n.from;
+  nudgeEl.innerHTML=`<span class="nudge-hand">👋</span><span><b>${esc(nm)}</b> nudged you!</span>${back?`<button type="button" class="btn small" data-pf="back-nudge" data-uid="${esc(n.from)}">Nudge back</button>`:""}`;
+  nudgeEl.classList.remove("on");void nudgeEl.offsetWidth;nudgeEl.classList.add("on");
+  document.body.classList.remove("nudged");void document.body.offsetWidth;document.body.classList.add("nudged");setTimeout(()=>document.body.classList.remove("nudged"),700);
+  try{navigator.vibrate&&navigator.vibrate([80,60,80])}catch(e){}
+  clearTimeout(nudgeT);nudgeT=setTimeout(()=>nudgeEl.classList.remove("on"),5000)}
+function startNudges(u){LIVE.unsubs.push(LIVE.fs.collection("nudges").where("to","==",u.uid).onSnapshot(snap=>{
+  snap.docChanges().forEach(ch=>{if(ch.type!=="added")return;const d=ch.doc.data({serverTimestamps:"estimate"}),fresh=d.at&&Date.now()-d.at.toMillis()<60000;
+    if(fresh)showNudge(d);ch.doc.ref.delete().catch(()=>{})})},()=>{}))}
 function setShareActive(on){store("share-active",on?"1":"0");document.querySelectorAll("[data-act=share-active]").forEach(b=>b.setAttribute("aria-checked",String(on)));beat();paintOnline();paintHere();if(!sheet.hidden&&document.getElementById("who-list"))openWho();toast(on?"You're visible, and you can see who's online":"You're hidden. You'll only see how many people are online.")}
 function startPresence(u){stopPresence();beat();beatTimer=setInterval(beat,BEAT_MS);tickTimer=setInterval(paintOnline,15000);
   LIVE.unsubs.push(LIVE.fs.collection("presence").orderBy("at","desc").limit(300).onSnapshot(snap=>{
