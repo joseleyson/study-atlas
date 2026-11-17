@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Study Atlas</title>
@@ -276,7 +277,7 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="data.js"></script>
+<script>/* always fetch the newest notes list, never a cached copy */document.write('<script src="data.js?v='+Date.now()+'"><\/script>')</script>
 <script>
 (function(){
 const STAINS=[
