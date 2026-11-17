@@ -689,5 +689,98 @@ window.STUDY_DATA = {
    "updated": 1794880000000
   }
  ],
- "questions": []
+ "questions": [],
+ "docs": [
+  {
+   "id": "ne-intellectual-functions",
+   "subject": "neurophysiology",
+   "title": "Intellectual Functions",
+   "desc": "Dr. Maria Cecilia A. Alvarez-Espino · Guyton & Hall 13th ed.",
+   "file": "pdfs/neurophysiology/intellectual-functions.pdf",
+   "thumb": "pdfs/neurophysiology/intellectual-functions.jpg",
+   "pages": 7,
+   "size": 2454405,
+   "lab": false,
+   "order": 1,
+   "srcPages": "2-8"
+  },
+  {
+   "id": "ne-cerebellum-basal-ganglia",
+   "subject": "neurophysiology",
+   "title": "Cerebellum & Basal Ganglia",
+   "desc": "Dr. Maria Cecilia Alvarez-Espino · Guyton & Hall 13th ed.",
+   "file": "pdfs/neurophysiology/cerebellum-basal-ganglia.pdf",
+   "thumb": "pdfs/neurophysiology/cerebellum-basal-ganglia.jpg",
+   "pages": 8,
+   "size": 70395,
+   "lab": false,
+   "order": 2,
+   "srcPages": "9-16"
+  },
+  {
+   "id": "ne-vision",
+   "subject": "neurophysiology",
+   "title": "Vision",
+   "desc": "Dr. Maria Cecilia A. Alvarez-Espino · lecture slides",
+   "file": "pdfs/neurophysiology/vision.pdf",
+   "thumb": "pdfs/neurophysiology/vision.jpg",
+   "pages": 5,
+   "size": 864144,
+   "lab": false,
+   "order": 3,
+   "srcPages": "17-21"
+  },
+  {
+   "id": "ne-hearing",
+   "subject": "neurophysiology",
+   "title": "Hearing",
+   "desc": "Ma. Noemi E. Jiao, MD · lecture slides, PPT audio & class recording",
+   "file": "pdfs/neurophysiology/hearing.pdf",
+   "thumb": "pdfs/neurophysiology/hearing.jpg",
+   "pages": 4,
+   "size": 1032354,
+   "lab": false,
+   "order": 4,
+   "srcPages": "22-25"
+  },
+  {
+   "id": "ne-taste-smell",
+   "subject": "neurophysiology",
+   "title": "Taste & Smell",
+   "desc": "Dr. Louise Bernadette Javier-Atillo",
+   "file": "pdfs/neurophysiology/taste-smell.pdf",
+   "thumb": "pdfs/neurophysiology/taste-smell.jpg",
+   "pages": 5,
+   "size": 767587,
+   "lab": false,
+   "order": 5,
+   "srcPages": "26-30"
+  },
+  {
+   "id": "ne-reflex-action-in-the-frog",
+   "subject": "neurophysiology",
+   "title": "Reflex Action in the Frog",
+   "desc": "Experiment 3 · spinal reflexes",
+   "file": "pdfs/neurophysiology/reflex-action-in-the-frog.pdf",
+   "thumb": "pdfs/neurophysiology/reflex-action-in-the-frog.jpg",
+   "pages": 2,
+   "size": 48342,
+   "lab": true,
+   "order": 6,
+   "srcPages": "31-32"
+  },
+  {
+   "id": "ne-experiments-11-13",
+   "subject": "neurophysiology",
+   "title": "Experiments 11 & 13",
+   "desc": "Physiology of the eye · mapping out the blind spot",
+   "file": "pdfs/neurophysiology/experiments-11-13.pdf",
+   "thumb": "pdfs/neurophysiology/experiments-11-13.jpg",
+   "pages": 2,
+   "size": 61209,
+   "lab": true,
+   "order": 7,
+   "srcPages": "33-34"
+  }
+ ]
 };
