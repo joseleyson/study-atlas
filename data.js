@@ -211,7 +211,8 @@ window.STUDY_DATA = {
    "pages": 6,
    "size": 589284,
    "lab": false,
-   "order": 1
+   "order": 1,
+   "added": "2026-11-17"
   },
   {
    "id": "na-diencephalon",
@@ -223,7 +224,8 @@ window.STUDY_DATA = {
    "pages": 9,
    "size": 87596,
    "lab": false,
-   "order": 2
+   "order": 2,
+   "added": "2026-11-17"
   },
   {
    "id": "na-basal-ganglia-limbic-system",
@@ -235,7 +237,8 @@ window.STUDY_DATA = {
    "pages": 4,
    "size": 902674,
    "lab": false,
-   "order": 3
+   "order": 3,
+   "added": "2026-11-17"
   },
   {
    "id": "na-cerebellum",
@@ -247,7 +250,8 @@ window.STUDY_DATA = {
    "pages": 7,
    "size": 1235526,
    "lab": false,
-   "order": 4
+   "order": 4,
+   "added": "2026-11-17"
   },
   {
    "id": "na-fiber-tracts",
@@ -259,7 +263,8 @@ window.STUDY_DATA = {
    "pages": 3,
    "size": 780484,
    "lab": false,
-   "order": 5
+   "order": 5,
+   "added": "2026-11-17"
   }
  ]
 };
