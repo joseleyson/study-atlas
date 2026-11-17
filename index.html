@@ -248,6 +248,16 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 .upd .go{color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
 .upd:hover .go{color:var(--c)}
 @media (max-width:520px){.upd{grid-template-columns:44px minmax(0,1fr)}.upd .pdf-page{width:44px}.upd .go{display:none}}
+.dl-burst{position:fixed;pointer-events:none;z-index:999;width:0;height:0}
+.dl-burst .ring{position:absolute;left:-40px;top:-40px;width:80px;height:80px;border-radius:50%;border:3px solid var(--bc,#e5484d);animation:dlring .55s ease-out forwards}
+.dl-burst .bit{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:3px;background:var(--bc);animation:dlbit .8s cubic-bezier(.15,.7,.3,1) forwards}
+.dl-burst .plus{position:absolute;left:0;top:-14px;transform:translateX(-50%);font:800 18px/1 var(--f-display);color:var(--bc);white-space:nowrap;animation:dlplus .9s ease-out forwards}
+@keyframes dlring{from{transform:scale(.3);opacity:1}to{transform:scale(1.6);opacity:0}}
+@keyframes dlbit{0%{transform:translate(0,0) rotate(0) scale(.6);opacity:1}70%{opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(.4);opacity:0}}
+@keyframes dlplus{0%{transform:translate(-50%,0) scale(.6);opacity:0}25%{transform:translate(-50%,-18px) scale(1.15);opacity:1}100%{transform:translate(-50%,-52px) scale(1);opacity:0}}
+.btn.popping{animation:btnpop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes btnpop{0%{transform:scale(1)}30%{transform:scale(.88)}65%{transform:scale(1.12)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.dl-burst .bit,.dl-burst .ring{display:none}.btn.popping{animation:none}}
 .shelf-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 12px}
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:26px}
 .pdf-card{--c:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:border-color .2s,transform .2s,box-shadow .2s}
@@ -590,7 +600,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="retry-missed"){startQuiz(r.id,shuffle(S.quiz.items.filter(q=>q.picked!==q.answer).map(q=>q.src)),false,true)}
   else if(a==="quit"){S.quiz=null;render()}
   else if(a==="export")exportData();
-  else if(a==="dl-doc"){recordDocDownload(docById(id))}
+  else if(a==="dl-doc"){popBurst(b,e);recordDocDownload(docById(id))}
   else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request"){const c=e.code||"";
     toast(c==="auth/unauthorized-domain"?"Sign-in isn't allowed on this web address yet. The site owner needs to add it in Firebase.":(c==="auth/configuration-not-found"||c==="auth/operation-not-allowed")?"Google sign-in isn't switched on yet. The site owner needs to enable it in Firebase.":c==="auth/network-request-failed"?"No connection. Check your internet and try again.":"Sign-in didn't work ("+c.replace("auth/","")+"). Try again.")}})}
   else if(a==="download")downloadNote(S.notes.find(n=>n.id===id));
@@ -611,6 +621,16 @@ addEventListener("keydown",e=>{
 const docsOf=id=>((window.STUDY_DATA||{}).docs||[]).filter(d=>d.subject===id).sort(byOrder);
 const docById=id=>((window.STUDY_DATA||{}).docs||[]).find(d=>d.id===id);
 const mb=b=>b>=1048576?(b/1048576).toFixed(1)+" MB":Math.max(1,Math.round(b/1024))+" KB";
+function popBurst(el,ev){
+  el.classList.remove("popping");void el.offsetWidth;el.classList.add("popping");
+  const r=el.getBoundingClientRect(),x=ev&&ev.clientX?ev.clientX:r.left+r.width/2,y=ev&&ev.clientY?ev.clientY:r.top+r.height/2;
+  const cols=["#e5484d","#f5a524","#22a861","#3e63dd","#8e4ec6","#e93d82"];
+  const box=document.createElement("div");box.className="dl-burst";box.style.left=x+"px";box.style.top=y+"px";
+  let h=`<span class="ring" style="--bc:${cols[3]}"></span>`;
+  for(let i=0;i<14;i++){const ang=i/14*Math.PI*2+Math.random()*.4,dist=60+Math.random()*45;
+    h+=`<span class="bit" style="--bc:${cols[i%cols.length]};--x:${Math.cos(ang)*dist}px;--y:${Math.sin(ang)*dist}px;--r:${Math.random()*540-270}deg;border-radius:${i%3?"3px":"50%"}"></span>`}
+  h+=`<span class="plus" style="--bc:${cols[2]}">+1</span>`;
+  box.innerHTML=h;document.body.appendChild(box);setTimeout(()=>box.remove(),1000)}
 function dlBtn(d,cls=""){return `<a class="btn ${cls}" href="${esc(d.file)}" download="${esc(d.title.replace(/[\\/:*?"<>|]/g,""))}.pdf" data-act="dl-doc" data-id="${esc(d.id)}"><span aria-hidden="true">⤓</span> Download${LIVE.on?` <span class="dl-n">${dlCount(d.id)}</span>`:""}</a>`}
 function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
