@@ -214,6 +214,71 @@ window.STUDY_DATA = {
    "lab": false,
    "order": 7,
    "added": "2026-11-17"
+  },
+  {
+   "id": "na-cerebrum",
+   "subject": "neuroanatomy",
+   "title": "Cerebrum",
+   "desc": "Snell Ch. 7 + Dr. Klein Lim lecture",
+   "file": "pdfs/neuroanatomy/cerebrum.pdf",
+   "thumb": "pdfs/neuroanatomy/cerebrum.jpg",
+   "pages": 6,
+   "size": 589284,
+   "lab": false,
+   "order": 1,
+   "added": "2026-11-17"
+  },
+  {
+   "id": "na-diencephalon",
+   "subject": "neuroanatomy",
+   "title": "Diencephalon",
+   "desc": "Dr. Klein Lim lecture + Snell Ch. 7, 12, 13",
+   "file": "pdfs/neuroanatomy/diencephalon.pdf",
+   "thumb": "pdfs/neuroanatomy/diencephalon.jpg",
+   "pages": 9,
+   "size": 87596,
+   "lab": false,
+   "order": 2,
+   "added": "2026-11-17"
+  },
+  {
+   "id": "na-basal-ganglia-limbic-system",
+   "subject": "neuroanatomy",
+   "title": "Basal Ganglia & Limbic System",
+   "desc": "Limbic system + basal nuclei · Snell Ch. 9–10",
+   "file": "pdfs/neuroanatomy/basal-ganglia-limbic-system.pdf",
+   "thumb": "pdfs/neuroanatomy/basal-ganglia-limbic-system.jpg",
+   "pages": 4,
+   "size": 902674,
+   "lab": false,
+   "order": 3,
+   "added": "2026-11-17"
+  },
+  {
+   "id": "na-cerebellum",
+   "subject": "neuroanatomy",
+   "title": "Cerebellum",
+   "desc": "Cerebellum & its connections · Snell + lecture slides",
+   "file": "pdfs/neuroanatomy/cerebellum.pdf",
+   "thumb": "pdfs/neuroanatomy/cerebellum.jpg",
+   "pages": 7,
+   "size": 1235526,
+   "lab": false,
+   "order": 4,
+   "added": "2026-11-17"
+  },
+  {
+   "id": "na-fiber-tracts",
+   "subject": "neuroanatomy",
+   "title": "Fiber Tracts",
+   "desc": "Fiber tracts slides + Sir Dan Te lecture",
+   "file": "pdfs/neuroanatomy/fiber-tracts.pdf",
+   "thumb": "pdfs/neuroanatomy/fiber-tracts.jpg",
+   "pages": 3,
+   "size": 780484,
+   "lab": false,
+   "order": 5,
+   "added": "2026-11-17"
   }
  ]
 };
