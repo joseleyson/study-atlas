@@ -374,6 +374,13 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sugg-list .hd{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 .sugg-list .tx{white-space:pre-wrap;overflow-wrap:anywhere}
 .sugg-cat{font:700 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;background:var(--soft);color:var(--ink)}
+.share-cta{margin-top:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 18px;border-radius:var(--r);border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--line));
+  background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface) 60%);transition:border-color .25s,transform .25s}
+.share-cta:hover{border-color:var(--accent);transform:translateY(-2px)}
+.share-cta h3{margin:0 0 2px;font-size:17px}.share-cta p{margin:0;color:var(--muted);font-size:14px}
+.share-cta .ic{font-size:26px;margin-right:4px}
+.share-cta .l{display:flex;align-items:center;gap:10px}
+.field input[type=url]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
 .shelf-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 12px}
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:26px}
 .pdf-card{--c:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:border-color .2s,transform .2s,box-shadow .2s}
@@ -517,6 +524,7 @@ function topbar(right=""){const u=LIVE.user;
   const chip=u?`<details class="me"><summary aria-label="Your account">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer" class="who-chip-img" style="width:28px;height:28px;border-radius:50%">`:`<span class="initial">${esc((nm[0]||"?").toUpperCase())}</span>`}<span class="nm who-nm">${esc(nm)}</span><span class="chev" aria-hidden="true">▾</span></summary>
     <div class="me-menu"><div class="who"><b>${esc(u.displayName||"Signed in")}</b>${esc(u.email||"")}</div>
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
+    <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
@@ -557,6 +565,7 @@ function renderHome(){
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
     ${comingUp()}
+    ${LIVE.on&&LIVE.user?`<div class="share-cta"><div class="l"><span class="ic" aria-hidden="true">📤</span><div><h3>Have notes worth sharing?</h3><p>Send a link to your notes or reviewers. If they're good, they might get added here for everyone.</p></div></div><button class="btn primary small" data-act="share-notes">Share your notes</button></div>`:""}
     ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
 `;
 }
@@ -728,6 +737,8 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="quit"){S.quiz=null;render()}
   else if(a==="export")exportData();
   else if(a==="suggest"){openSuggest()}
+  else if(a==="share-notes"){openShare()}
+  else if(a==="share-done"){LIVE.fs.collection("shares").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
   else if(a==="sugg-done"){LIVE.fs.collection("suggestions").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
   else if(a==="ev-open"){openEvent(LIVE.events.find(x=>x.id===id))}
   else if(a==="ev-new"){editEvent(null,b.dataset.date||"")}
@@ -860,6 +871,24 @@ function openSuggest(){if(!LIVE.on||!LIVE.user)return;document.querySelectorAll(
       catch(x){formErr("Couldn't send it. Check your connection and try again.")}
     });
   setTimeout(()=>document.getElementById("f-text")?.focus(),50)}
+/* ---------- share your notes ---------- */
+function openShare(){if(!LIVE.on||!LIVE.user)return;document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
+  const subs=S.subjects.slice().sort(byOrder);
+  openSheet(`<form id="f"><h2>Share your notes</h2><p class="muted">Upload your file to Google Drive (or anywhere), set it to <b>Anyone with the link can view</b>, then paste the link here. Only the site owner sees what you send.</p>
+    <div class="field"><label for="f-link">Link to your notes</label><input type="url" id="f-link" required placeholder="https://drive.google.com/…"></div>
+    <div class="field-row"><div class="field"><label for="f-title">Title</label><input type="text" id="f-title" required maxlength="120" placeholder="e.g. Brainstem reviewer"></div>
+    <div class="field"><label for="f-subj">Subject</label><select id="f-subj">${subs.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("")}<option value="">Other</option></select></div></div>
+    <div class="field"><label for="f-msg">Message <span class="hint">(optional)</span></label><textarea id="f-msg" class="short" maxlength="1000" placeholder="Anything the owner should know?"></textarea></div>
+    <label class="chk"><input type="checkbox" id="f-anon"> Send anonymously (your name won't be attached)</label>
+    <p class="err" id="form-err" hidden></p><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Send</button></div></div></form>`,async f=>{
+      const link=f.querySelector("#f-link").value.trim(),title=f.querySelector("#f-title").value.trim();
+      if(!/^https:\/\/\S+$/.test(link))return formErr("Paste a full link that starts with https://");if(!title)return formErr("Give it a title.");
+      const anon=f.querySelector("#f-anon").checked,u=LIVE.user;
+      try{await LIVE.fs.collection("shares").add({link:link.slice(0,500),title:title.slice(0,120),subject:f.querySelector("#f-subj").value,message:f.querySelector("#f-msg").value.trim().slice(0,1000),name:anon?"":(u.displayName||u.email||"").slice(0,80),uid:anon?"":u.uid,at:firebase.firestore.FieldValue.serverTimestamp()});
+        closeSheet();toast("Thanks for sharing! The owner will take a look.")}
+      catch(x){formErr("Couldn't send it. Check your connection and try again.")}
+    });
+  setTimeout(()=>document.getElementById("f-link")?.focus(),50)}
 /* ---------- support / donate ---------- */
 /* To change the QR: replace support-qr.png in the repo (or change the file name below). */
 const SUPPORT={qr:"support-qr.png",label:""};
@@ -924,11 +953,11 @@ function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d)return;const FV=fireba
   LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:d.id,noteTitle:String(d.title).slice(0,120),subject:String(subj(d.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()}).catch(()=>{})}
 
 /* ---------- live scores (Firebase) ---------- */
-const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[],presence:[],events:[],editors:[],isEditor:false,suggestions:[]};
+const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[],presence:[],events:[],editors:[],isEditor:false,suggestions:[],shares:[]};
 function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase||!firebase.auth)return;
   try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
   firebase.auth().onAuthStateChanged(async u=>{
-    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
+    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
     recordVisit(u);startPresence(u);
     const fs=LIVE.fs;
@@ -939,6 +968,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
     LIVE.unsubs.push(fs.collection("events").orderBy("date").limit(1000).onSnapshot(snap=>{LIVE.events=snap.docs.map(d=>({id:d.id,...d.data()}));const v=route().v;if(v==="schedule"||v==="home")render()},()=>{}));
     try{const a=await fs.collection("admins").doc(u.uid).get();LIVE.isAdmin=a.exists}catch(e){LIVE.isAdmin=false}
     try{const ed=await fs.collection("editors").doc(u.uid).get();LIVE.isEditor=ed.exists}catch(e){LIVE.isEditor=false}
+    if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("shares").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.shares=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("suggestions").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.suggestions=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("editors").onSnapshot(snap=>{LIVE.editors=snap.docs.map(d=>d.id);if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin){
@@ -1001,6 +1031,7 @@ function renderAdmin(){
   app.innerHTML=topbar(back)+`<section class="hero"><span class="mono eyebrow">Only you can see this page</span><h1>Who's visiting</h1></section>
    <p class="notice">Tap <b>Let them edit</b> next to a friend to let them add quizzes, exams and reminders to the Schedule. Only you can change who's an editor.</p>
    <div class="stats"><div><span class="big-n">${LIVE.users.length}</span><span class="mono">people signed in</span></div><div><span class="big-n">${LIVE.users.reduce((a,u)=>a+(u.visits||0),0)}</span><span class="mono">total visits</span></div><div><span class="big-n">${totalDl}</span><span class="mono">downloads</span></div><div><span class="big-n">${LIVE.attempts.length}</span><span class="mono">quiz attempts</span></div></div>
+   <h2 class="sec">Shared notes${LIVE.shares.length?` <span class="mono">(${LIVE.shares.length})</span>`:""}</h2>${LIVE.shares.length?`<ul class="sugg-list">${LIVE.shares.map(x=>`<li><div class="hd"><span><span class="sugg-cat">${esc(subj(x.subject)?.name||"Other")}</span> <b>${esc(x.title)}</b> <span class="muted">from ${esc(x.name||"Anonymous")}</span></span><span class="mono">${fmt(x.at)} <button class="btn small ghost" data-act="share-done" data-id="${esc(x.id)}">Done ✓</button></span></div>${x.message?`<div class="tx">${esc(x.message)}</div>`:""}<div><a class="btn small primary" href="${esc(x.link)}" target="_blank" rel="noopener noreferrer">Open link ↗</a> <span class="mono">${esc(x.link.replace(/^https?:\/\//,"").slice(0,60))}</span></div></li>`).join("")}</ul>`:`<p class="muted">No shared notes yet.</p>`}
    <h2 class="sec">Suggestions${LIVE.suggestions.length?` <span class="mono">(${LIVE.suggestions.length})</span>`:""}</h2>${LIVE.suggestions.length?`<ul class="sugg-list">${LIVE.suggestions.map(x=>`<li><div class="hd"><span><span class="sugg-cat">${esc(SUGG_CATS.find(c=>c[0]===x.category)?.[1]||"Other")}</span> <b>${esc(x.name||"Anonymous")}</b></span><span class="mono">${fmt(x.at)} <button class="btn small ghost" data-act="sugg-done" data-id="${esc(x.id)}">Done ✓</button></span></div><div class="tx">${esc(x.text)}</div></li>`).join("")}</ul>`:`<p class="muted">No suggestions yet.</p>`}
    <h2 class="sec">People</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th class="n">Visits</th><th class="n">Downloads</th><th class="n">Quizzes</th><th>First visit</th><th>Last seen</th><th>Schedule</th></tr></thead><tbody>
    ${LIVE.users.map(u=>`<tr><td><span class="person">${u.photo?`<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">`:""}${esc(u.name||"—")}</span></td><td>${esc(u.email||"")}</td><td class="n">${u.visits||0}</td><td class="n">${LIVE.dlog.filter(d=>d.uid===u.id).length}</td><td class="n">${LIVE.attempts.filter(a=>a.player===u.id).length}</td><td>${fmt(u.firstSeen)}</td><td>${fmt(u.lastSeen)}</td><td>${LIVE.editors.includes(u.id)?`<span class="editor-tag">Editor</span> <button class="btn small ghost" data-act="editor-off" data-id="${esc(u.id)}">Remove</button>`:`<button class="btn small" data-act="editor-on" data-id="${esc(u.id)}">Let them edit</button>`}</td></tr>`).join("")||`<tr><td colspan="7" class="muted">Nobody has signed in yet.</td></tr>`}
