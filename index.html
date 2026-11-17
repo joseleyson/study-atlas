@@ -487,6 +487,8 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
+#greet{transition:opacity .45s ease,transform .45s ease}
+#greet.fade{opacity:0;transform:translateY(4px)}
 .pdf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .pdf-head h4{min-width:0}
 .reacts{position:relative;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px;flex:none;max-width:60%}
@@ -716,6 +718,14 @@ function topbar(right=""){const u=LIVE.user;
   const srch=u||!LIVE.on?`<button type="button" class="search-btn" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lbl">Search</span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
   const th=`<button type="button" class="theme-btn" data-g="theme" aria-label="Switch light or dark mode" title="Light / dark mode">${isDark()?"☀":"☾"}</button>`;
   return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${srch}${sch}${upd}${on}${th}${chip}</div></header>`}
+/* rotating home greeting */
+const GREETS=["What are we reviewing today, {n}?","Ready to study, {n}?","Which topic is it today, {n}?","Let's get some reps in, {n}.","Brain warmed up, {n}?","One topic at a time, {n}.","What's on the review list, {n}?","Small steps, big grades, {n}.","Coffee ready? Let's go, {n}.","Time to make it stick, {n}.","Which notes are we opening, {n}?","You've got this, {n}. Pick a subject."];
+let GREET_I=0;const GREET_MS=20000;
+function firstName(){const u=LIVE.user;const n=niceName((u&&(u.displayName||""))||"").trim().split(/\s+/)[0]||"";return n}
+function greetText(){const n=firstName(),g=GREETS[GREET_I%GREETS.length];return n?g.replace("{n}",n):g.replace(/,? \{n\}/,"")}
+setInterval(()=>{const el=document.getElementById("greet");if(!el||document.hidden)return;GREET_I++;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=greetText();return}
+  el.classList.add("fade");setTimeout(()=>{el.textContent=greetText();el.classList.remove("fade")},450)},GREET_MS);
 function niceName(n){n=String(n||"");return n.includes("@")||/[A-Z]/.test(n)?n:n.replace(/(^|\s)\S/g,c=>c.toUpperCase())}
 function isDark(){const t=document.documentElement.dataset.theme;return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches}
 function toggleTheme(){const t=isDark()?"light":"dark";document.documentElement.dataset.theme=t;store("theme",t);render()}
@@ -767,8 +777,8 @@ function renderHome(){
       <div class="card-foot"><span class="mono">${docsOf(s.id).length?plural(docsOf(s.id).length,"topic"):""}${n?(docsOf(s.id).length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}${best?` · best ${esc(best)}%`:""}</span>
         ${q?"":`<span class="soon-tag" title="Quizzes for this subject are on the way">✎ Quizzes soon</span>`}
         ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
-  app.innerHTML=topbar()+`<section class="hero"><h1>What are we reviewing today?</h1>
-    <p>${S.questions.length?"Pick a subject to flip through your notes, or jump straight into its quiz.":"Pick a subject to open its topic notes. Quizzes are on the way."}</p>${urgentChip()}</section>
+  app.innerHTML=topbar()+`<section class="hero"><h1 id="greet" aria-live="off">${esc(greetText())}</h1>
+    <p>${S.questions.length?"Pick a subject to flip through your notes, or jump straight into its quiz.":"Pick a subject to open its topic notes."}</p>${urgentChip()}</section>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
     ${comingUp()}
