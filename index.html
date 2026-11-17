@@ -1206,7 +1206,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
   });
 }
 /* ---------- emoji reactions (only on PDFs that have an "added" date, i.e. the Leg notes and newer) ---------- */
-const REACTS=["❤️","🔥","😂","😭","💀","🙏"];
+const REACTS=["❤️","🔥","🙏","🧠","🦴","💪","🩺"];
 const canReact=d=>!!(d&&d.added);
 function reactBar(d){if(!LIVE.on||!LIVE.user||!canReact(d))return"";return `<div class="reacts" data-doc="${esc(d.id)}">${reactInner(d.id)}</div>`}
 function reactInner(id){const me=LIVE.user?.uid,mine=(LIVE.reacts.find(r=>r.doc===id&&r.uid===me)||{}).es||[];
