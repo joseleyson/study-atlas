@@ -357,7 +357,7 @@ async function write(fn,okMsg){
 /* Storage: site/data.js holds the main notes (window.STUDY_DATA). Edits made in the browser are kept
    as an overlay in this browser's localStorage, so updates to data.js still show up. */
 const OVERLAY_KEY="study-atlas-edits-v1";
-function loadOverlay(){try{const o=JSON.parse(localStorage.getItem(OVERLAY_KEY)||"null");if(o&&o.up&&o.del)return o}catch(e){}return{up:{subjects:{},notes:{},questions:{}},del:{subjects:{},notes:{},questions:{}}}}
+function loadOverlay(){if(true)return{up:{subjects:{},notes:{},questions:{}},del:{subjects:{},notes:{},questions:{}}};try{const o=JSON.parse(localStorage.getItem(OVERLAY_KEY)||"null");if(o&&o.up&&o.del)return o}catch(e){}return{up:{subjects:{},notes:{},questions:{}},del:{subjects:{},notes:{},questions:{}}}}
 let OV=loadOverlay();
 function saveOverlay(){localStorage.setItem(OVERLAY_KEY,JSON.stringify(OV))}
 function merged(){const base=window.STUDY_DATA||{};const out={};
@@ -400,7 +400,8 @@ function topbar(right=""){const u=LIVE.user;
   const nu=u||!LIVE.on?unseenUpdates().length:0;
   const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
   return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${upd}${on}${chip}</div></header>`}
-const canEdit=()=>S.writable&&S.mode==="live"&&store("edit-mode")==="1"&&(!LIVE.on||LIVE.isAdmin);
+/* In-browser editing is switched off: notes only change when data.js is updated. */
+const canEdit=()=>false;
 
 function render(){
   const r=route();
@@ -428,11 +429,8 @@ function renderHome(){
     <p>Pick a subject to flip through your notes, or jump straight into its quiz.</p></section>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
-    ${!S.writable?`<p class="notice">This browser is blocking site storage (private mode?), so changes can't be saved here.</p>`:""}
     ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
-    <div class="tools">${canEdit()?`<span class="mono">Editing is on. Changes are saved in this browser only.</span><button class="btn small" data-act="export">Download backup (data.js)</button>
-    <label class="btn small" for="import-file">Restore a backup</label><input type="file" id="import-file" accept=".js,.json" hidden>`:`<span class="mono"></span>`}
-    ${LIVE.on&&!LIVE.isAdmin?"":`<button class="btn small ghost" data-act="toggle-edit">`}${LIVE.on&&!LIVE.isAdmin?"":`${canEdit()?"Turn off editing":"Edit notes"}</button>`}</div>`;
+`;
 }
 
 function renderSubject(id){
@@ -604,7 +602,6 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
     toast(c==="auth/unauthorized-domain"?"Sign-in isn't allowed on this web address yet. The site owner needs to add it in Firebase.":(c==="auth/configuration-not-found"||c==="auth/operation-not-allowed")?"Google sign-in isn't switched on yet. The site owner needs to enable it in Firebase.":c==="auth/network-request-failed"?"No connection. Check your internet and try again.":"Sign-in didn't work ("+c.replace("auth/","")+"). Try again.")}})}
   else if(a==="download")downloadNote(S.notes.find(n=>n.id===id));
   else if(a==="sign-out"){leavePresence();firebase.auth().signOut();location.hash=""}
-  else if(a==="toggle-edit"){store("edit-mode",canEdit()?"0":"1");render()}
 });
 addEventListener("keydown",e=>{
   if(!sheet.hidden){if(e.key==="Escape")closeSheet();return}
