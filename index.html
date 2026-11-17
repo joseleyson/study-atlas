@@ -487,6 +487,33 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
+/* top bar button group */
+.sa-group{--sa-bg:var(--surface);--sa-text:#5d6270;--sa-text-hi:var(--ink);--sa-line:rgba(0,0,0,.08);--sa-hover:rgba(0,0,0,.035);position:relative;display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:var(--sa-bg)}
+:root[data-theme="dark"] .sa-group{--sa-bg:#151a23;--sa-text:#9aa0ae;--sa-text-hi:#e8e8ef;--sa-line:rgba(255,255,255,.08);--sa-hover:rgba(255,255,255,.05)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sa-group{--sa-bg:#151a23;--sa-text:#9aa0ae;--sa-text-hi:#e8e8ef;--sa-line:rgba(255,255,255,.08);--sa-hover:rgba(255,255,255,.05)}}
+.sa-group::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(110deg,#a99cff,#6fb3f2,#f07fa6);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.5;pointer-events:none}
+.sa-glide{position:absolute;top:4px;left:0;width:0;height:calc(100% - 8px);border-radius:999px;background:var(--sa-hover);border:1px solid var(--sa-line);opacity:0;pointer-events:none;transition:left .28s cubic-bezier(.3,.7,.2,1),width .28s cubic-bezier(.3,.7,.2,1),opacity .2s}
+.sa-btn{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:999px;background:none;color:var(--sa-text);font:inherit;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;transition:color .2s;white-space:nowrap}
+.sa-btn:hover,.sa-btn:focus-visible{color:var(--sa-text-hi)}
+.sa-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;overflow:visible;flex:none}
+.sa-cal text{fill:currentColor;stroke:none;font:600 8px ui-monospace,monospace}
+.sa-cal text,.sa-pins{transform-box:fill-box;transform-origin:center}
+.sa-btn:hover .sa-cal text{animation:sa-flip .55s cubic-bezier(.3,.7,.2,1)}
+.sa-btn:hover .sa-pins{animation:sa-pins .55s ease}
+@keyframes sa-flip{0%{transform:none;opacity:1}40%{transform:translateY(5px) scaleY(.4);opacity:0}41%{transform:translateY(-5px) scaleY(.4);opacity:0}100%{transform:none;opacity:1}}
+@keyframes sa-pins{0%,100%{transform:none}35%{transform:translateY(-1.5px)}}
+.sa-bell{transform-origin:50% 12%}
+.sa-btn:hover .sa-bell{animation:sa-ring .7s ease}
+@keyframes sa-ring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(7deg)}80%{transform:rotate(-4deg)}}
+.sa-badge{position:absolute;top:3px;left:24px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#e5383b;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--sa-bg)}
+.sa-online{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 16px;color:var(--sa-text);font-size:13px;font-family:ui-monospace,"JetBrains Mono",monospace;white-space:nowrap;border:0;background:none;border-radius:999px}
+button.sa-online{cursor:pointer}button.sa-online:hover{color:var(--sa-text-hi)}
+.sa-dot{position:relative;width:7px;height:7px;border-radius:50%;background:#3fb950;flex:none}
+.sa-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:#3fb950;animation:sa-ping 2.2s cubic-bezier(0,0,.2,1) infinite}
+@keyframes sa-ping{0%{transform:scale(1);opacity:.6}80%,100%{transform:scale(2.8);opacity:0}}
+@media (max-width:600px){.sa-btn{gap:0;padding:0 10px}.sa-btn .sa-lbl{display:none}.sa-badge{left:20px}.sa-online{padding:0 10px}
+  .me-menu [data-act="share-notes"]{display:none}}
+@media (prefers-reduced-motion: reduce){.sa-dot::after,.sa-btn:hover .sa-bell,.sa-btn:hover .sa-cal text,.sa-btn:hover .sa-pins{animation:none}.sa-glide{transition:opacity .2s}}
 #greet{will-change:opacity,transform}
 .greet-h .hello{display:block;margin-bottom:2px}
 .greet-p{display:block}
@@ -717,13 +744,20 @@ function topbar(right=""){const u=LIVE.user;
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
-  const on=u?(LIVE.isAdmin?`<button type="button" class="online" id="who-online" title="See who is online"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></button>`:`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`):"";
+  const dotOn=`<span class="sa-dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span>`;
+  const on=u?(LIVE.isAdmin?`<button type="button" class="sa-online sa-btn-like" id="who-online" title="See who is online">${dotOn}</button>`:`<span class="sa-online" title="People on Study Atlas right now">${dotOn}</span>`):"";
   const nu=u||!LIVE.on?unseenUpdates().length:0;
-  const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs" aria-label="Updates"><span class="bell" aria-hidden="true">🔔${nu?`<span class="upd-dot">${nu>9?"9+":nu}</span>`:""}</span><span class="lbl">Updates</span>${nu?`<span class="sr-only">, ${nu} new</span>`:""}</a>`:"";
-  const sch=u?`<a class="topnav-btn" href="#schedule" aria-label="Schedule"><span aria-hidden="true">📅</span><span class="lbl">Schedule</span></a>`:"";
+  const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="sa-btn" href="#new" title="Recently added PDFs" aria-label="Updates${nu?`, ${nu} new`:""}"><svg class="sa-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="sa-lbl">Updates</span>${nu?`<span class="sa-badge">${nu>9?"9+":nu}</span>`:""}</a>`:"";
+  const sch=u?`<a class="sa-btn" href="#schedule" aria-label="Schedule"><svg class="sa-cal" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><path class="sa-pins" d="M8 3v3M16 3v3"/><text x="12" y="17.2" text-anchor="middle">${new Date().getDate()}</text></svg><span class="sa-lbl">Schedule</span></a>`:"";
+  const grp=sch||upd||on?`<nav class="sa-group" aria-label="Quick links"><span class="sa-glide" aria-hidden="true"></span>${sch}${upd}${on}</nav>`:"";
   const srch=u||!LIVE.on?`<button type="button" class="search-btn" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lbl">Search</span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
   const th=`<button type="button" class="theme-btn" data-g="theme" aria-label="Switch light or dark mode" title="Light / dark mode">${isDark()?"☀":"☾"}</button>`;
-  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${srch}${sch}${upd}${on}${th}${chip}</div></header>`}
+  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${srch}${grp}${th}${chip}</div></header>`}
+/* glide highlight for the top bar button group */
+function saMove(btn){const g=btn.closest(".sa-group");const gl=g&&g.querySelector(".sa-glide");if(!gl)return;gl.style.left=btn.offsetLeft+"px";gl.style.width=btn.offsetWidth+"px";gl.style.opacity=1}
+document.addEventListener("mouseover",e=>{const b=e.target.closest&&e.target.closest(".sa-group .sa-btn,.sa-group button.sa-online");if(b)saMove(b);else document.querySelectorAll(".sa-glide").forEach(x=>x.style.opacity=0)});
+document.addEventListener("focusin",e=>{const b=e.target.closest&&e.target.closest(".sa-group .sa-btn,.sa-group button.sa-online");if(b)saMove(b)});
+document.addEventListener("focusout",e=>{if(e.target.closest&&e.target.closest(".sa-group"))e.target.closest(".sa-group").querySelector(".sa-glide").style.opacity=0});
 /* rotating home greeting */
 const GREETS=["What are we reviewing today, {n}?","Ready to study, {n}?","Which topic is it today, {n}?","Let's get some reps in, {n}.","Brain warmed up, {n}?","One topic at a time, {n}.","What's on the review list, {n}?","Small steps, big grades, {n}.","Coffee ready? Let's go, {n}.","Time to make it stick, {n}.","Which notes are we opening, {n}?","You've got this, {n}. Pick a subject."];
 let GREET_I=0;const GREET_MS=20000;
