@@ -418,14 +418,13 @@ function render(){
 
 function renderHome(){
   const subs=S.subjects.slice().sort(byOrder);
-  const meta=`<span class="mono">${plural(subs.length,"subject")} · ${plural(S.notes.length,"note")} · ${plural(S.questions.length,"question")}</span>`;
   const cards=subs.map(s=>{const n=notesOf(s.id).length,q=qsOf(s.id).length,best=store("best-"+s.id);
     return `<article class="card" style="--c:${stainVar(s.stain)}">
       <a class="card-main" href="#s-${esc(s.id)}"><div class="slide">${docsOf(s.id).some(isNewDoc)?`<span class="new-pill">New!</span>`:""}<span class="blob"></span></div>
         <h2>${esc(s.name)}</h2>${s.blurb?`<p>${esc(s.blurb)}</p>`:""}</a>
       <div class="card-foot"><span class="mono">${docsOf(s.id).length?plural(docsOf(s.id).length,"topic")+" · ":""}${n?plural(n,"note")+" · ":""}${q} Qs${best?` · best ${esc(best)}%`:""}</span>
         ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
-  app.innerHTML=topbar(meta)+`<section class="hero"><h1>What are we reviewing today?</h1>
+  app.innerHTML=topbar()+`<section class="hero"><h1>What are we reviewing today?</h1>
     <p>Pick a subject to flip through your notes, or jump straight into its quiz.</p></section>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
