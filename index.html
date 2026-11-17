@@ -487,8 +487,7 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
-#greet{transition:opacity .45s ease,transform .45s ease}
-#greet.fade{opacity:0;transform:translateY(4px)}
+#greet{will-change:opacity,transform}
 .pdf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .pdf-head h4{min-width:0}
 .reacts{position:relative;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px;flex:none;max-width:60%}
@@ -723,9 +722,14 @@ const GREETS=["What are we reviewing today, {n}?","Ready to study, {n}?","Which 
 let GREET_I=0;const GREET_MS=20000;
 function firstName(){const u=LIVE.user;const n=niceName((u&&(u.displayName||""))||"").trim().split(/\s+/)[0]||"";return n}
 function greetText(){const n=firstName(),g=GREETS[GREET_I%GREETS.length];return n?g.replace("{n}",n):g.replace(/,? \{n\}/,"")}
-setInterval(()=>{const el=document.getElementById("greet");if(!el||document.hidden)return;GREET_I++;
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=greetText();return}
-  el.classList.add("fade");setTimeout(()=>{el.textContent=greetText();el.classList.remove("fade")},450)},GREET_MS);
+function swapGreet(){const el=document.getElementById("greet");if(!el||document.hidden)return;GREET_I++;const next=greetText();
+  const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!el.animate){el.textContent=next;return}
+  const out=el.animate(still?[{opacity:1},{opacity:0}]:[{opacity:1,transform:"translateY(0)",filter:"blur(0)"},{opacity:0,transform:"translateY(-8px)",filter:"blur(4px)"}],{duration:600,easing:"ease-in",fill:"forwards"});
+  out.onfinish=()=>{const cur=document.getElementById("greet");if(!cur)return;cur.textContent=next;
+    cur.animate(still?[{opacity:0},{opacity:1}]:[{opacity:0,transform:"translateY(8px)",filter:"blur(4px)"},{opacity:1,transform:"translateY(0)",filter:"blur(0)"}],{duration:700,easing:"ease-out",fill:"forwards"});
+    if(cur!==el)el.getAnimations().forEach(x=>x.cancel())}}
+setInterval(swapGreet,GREET_MS);
 function niceName(n){n=String(n||"");return n.includes("@")||/[A-Z]/.test(n)?n:n.replace(/(^|\s)\S/g,c=>c.toUpperCase())}
 function isDark(){const t=document.documentElement.dataset.theme;return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches}
 function toggleTheme(){const t=isDark()?"light":"dark";document.documentElement.dataset.theme=t;store("theme",t);render()}
