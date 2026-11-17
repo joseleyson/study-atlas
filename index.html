@@ -196,11 +196,36 @@ button,input,textarea,select{font:inherit;color:inherit}
 .qcard .field input{width:100%;max-width:340px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
 .top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .who-chip{display:flex;align-items:center;gap:8px}
+.me{position:relative}
+.me>summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 10px 3px 3px;border:1px solid transparent;border-radius:999px;user-select:none}
+.me>summary::-webkit-details-marker{display:none}
+.me>summary:hover,.me[open]>summary{border-color:var(--line);background:var(--surface)}
+.me>summary .chev{font-size:11px;color:var(--muted);transition:transform .2s}
+.me[open]>summary .chev{transform:rotate(180deg)}
+.me .initial{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:13px}
+.me-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:50;min-width:230px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 40px -18px rgba(0,0,0,.35);padding:6px;display:grid;gap:2px;animation:menuin .16s ease-out}
+@keyframes menuin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.me-menu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.me-menu .who b{display:block;color:var(--ink);font-size:14.5px}
+.me-menu a,.me-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border-radius:9px;border:0;background:none;font:inherit;font-size:14.5px;color:var(--ink);text-decoration:none;cursor:pointer}
+.me-menu a:hover,.me-menu button:hover{background:var(--soft)}
+.me-menu .heart{color:#e5484d}
+.me-menu .sup{font-weight:600}
+.support{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:28px;align-items:start;margin-top:8px}
+.support .why{display:grid;gap:12px;color:var(--muted);max-width:56ch}
+.support .why p{margin:0}
+.support .why ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.qr-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:12px;justify-items:center;text-align:center}
+.qr-card img{width:100%;max-width:280px;border-radius:10px;background:#fff}
+.qr-empty{width:100%;max-width:280px;aspect-ratio:1;border:2px dashed var(--line);border-radius:10px;display:grid;place-items:center;color:var(--muted);font-size:14px;padding:20px}
+.qr-card .thanks{font-weight:600;color:var(--ink)}
+@media (max-width:720px){.support{grid-template-columns:1fr}.qr-card{order:-1}}
 .online{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap}
 .online .dot{width:8px;height:8px;border-radius:50%;background:#22a861;box-shadow:0 0 0 0 rgba(34,168,97,.55);animation:pulse 2s infinite}
 @keyframes pulse{70%{box-shadow:0 0 0 7px rgba(34,168,97,0)}100%{box-shadow:0 0 0 0 rgba(34,168,97,0)}}
 @media (prefers-reduced-motion: reduce){.online .dot{animation:none}}
 .who-chip img{width:28px;height:28px;border-radius:50%}
+.who-nm{font-weight:500;font-size:14px;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who-chip .nm{font-weight:500;font-size:14px;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .signin{display:grid;place-items:center;padding-block:8vh}
 .signin-card{max-width:440px;text-align:center;display:grid;gap:14px;justify-items:center;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:36px 28px}
@@ -390,12 +415,18 @@ function route(){const h=decodeURIComponent(location.hash.slice(1));
   if(h.startsWith("d-"))return{v:"doc",id:h.slice(2)};
   if(h==="admin")return{v:"admin"};
   if(h==="new")return{v:"new"};
+  if(h==="support")return{v:"support"};
   return{v:"home"}}
 addEventListener("hashchange",()=>{S.noteId=null;S.tab=null;closePdf();S.quiz=null;render();scrollTo(0,0)});
 
 /* ---------- views ---------- */
 function topbar(right=""){const u=LIVE.user;
-  const chip=u?`<div class="who-chip">${LIVE.isAdmin?`<a class="btn small ghost" href="#admin">Visitors</a>`:""}${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:""}<span class="nm">${esc(u.displayName||u.email||"")}</span><button class="btn small ghost" data-act="sign-out">Sign out</button></div>`:"";
+  const nm=u?(u.displayName||u.email||""):"";
+  const chip=u?`<details class="me"><summary aria-label="Your account">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer" class="who-chip-img" style="width:28px;height:28px;border-radius:50%">`:`<span class="initial">${esc((nm[0]||"?").toUpperCase())}</span>`}<span class="nm who-nm">${esc(nm)}</span><span class="chev" aria-hidden="true">▾</span></summary>
+    <div class="me-menu"><div class="who"><b>${esc(u.displayName||"Signed in")}</b>${esc(u.email||"")}</div>
+    <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
+    ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
+    <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
   const on=u?`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`:"";
   const nu=u||!LIVE.on?unseenUpdates().length:0;
   const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
@@ -414,6 +445,7 @@ function render(){
   if(r.v==="quiz")return renderQuiz(r.id);
   if(r.v==="doc")return renderDoc(r.id);
   if(r.v==="new")return renderUpdates();
+  if(r.v==="support")return renderSupport();
   renderHome();
 }
 
@@ -636,6 +668,18 @@ function shelf(docs,s){
     <span class="mono">${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
     <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}</div></div></article>`).join("")}</div>`).join("");
 }
+/* ---------- support / donate ---------- */
+/* To change the QR: replace support-qr.png in the repo (or change the file name below). */
+const SUPPORT={qr:"support-qr.png",label:""};
+function renderSupport(){
+  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">Support the site</span><h1>Help keep Study Atlas running</h1></section>
+  <div class="support"><div class="why"><p>Study Atlas is free for everyone. If it's helped you review, you can chip in to keep it going. Any amount helps, and it's completely optional.</p>
+    <p>Donations go toward:</p><ul><li>Keeping the site and database online</li><li>Adding more notes, topics and quizzes</li><li>New features and improvements</li></ul>
+    <p>Thank you for studying with us! ♥</p></div>
+  <div class="qr-card"><img src="${esc(SUPPORT.qr)}?v=${Date.now()}" alt="Donation QR code" onerror="this.outerHTML='<div class=&quot;qr-empty&quot;>QR code coming soon</div>'">
+    ${SUPPORT.label?`<span class="mono">${esc(SUPPORT.label)}</span>`:""}<span class="thanks">Scan to donate. Any amount helps!</span></div></div>`;
+}
+document.addEventListener("click",e=>{document.querySelectorAll("details.me[open]").forEach(d=>{if(!d.contains(e.target))d.open=false})});
 /* ---------- updates ("New!") ---------- */
 const NEW_DAYS=1;
 const addedMs=d=>d&&d.added?Date.parse(d.added+"T00:00:00+08:00"):NaN;
