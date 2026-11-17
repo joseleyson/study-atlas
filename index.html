@@ -487,6 +487,15 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .sx-list .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sx-list .t small{display:block;font-weight:400;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis}
 .sx-empty{color:var(--muted);padding:18px 4px;text-align:center}
+.reacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.react{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font:inherit;font-size:13px;transition:transform .12s}
+.react .em{font-size:17px;line-height:1}
+.react b{font-weight:650}
+.react.zero{opacity:.7}
+.react.zero:hover{opacity:1}
+.react.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));opacity:1}
+.react:active{transform:scale(.92)}
+.viewer-bar .reacts{margin-top:8px}
 .inapp{border:1px solid #e5383b55;background:#e5383b12;border-radius:14px;padding:14px 16px;margin:4px 0 16px;text-align:left}
 .inapp b{display:block;margin-bottom:4px}
 .inapp p{margin:0 0 12px;font-size:14px}
@@ -904,6 +913,7 @@ sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet()});
 app.addEventListener("input",e=>{if(e.target.id==="note-search")filterNotes(e.target.value)});
 app.addEventListener("change",e=>{if(e.target.id==="import-file"&&e.target.files[0]){importData(e.target.files[0]);e.target.value=""}});
 app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act,id=b.dataset.id,r=route();
+  if(a==="react"){toggleReact(b.dataset.doc,b.dataset.e);return}
   if(a==="new-subject")editSubject(null);
   else if(a==="edit-subject")editSubject(subj(id));
   else if(a==="tab"){S.tab=b.dataset.tab;render()}
@@ -974,7 +984,7 @@ function shelf(docs,s){
     <a class="pdf-thumb" href="#d-${esc(d.id)}" aria-label="Preview ${esc(d.title)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"><span class="pdf-tag">PDF</span></span>`:`<span class="pdf-page"><span class="pdf-tag">PDF</span><span class="pdf-lines"></span></span>`}</a>
     <div class="pdf-meta"><h4><a href="#d-${esc(d.id)}">${esc(d.title)}</a>${isNewDoc(d)?` <span class="new-pill">New!</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</h4>${d.desc?`<p>${esc(d.desc)}</p>`:""}
     <span class="mono">${d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:""}${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
-    <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}${revBtn(d)}</div></div></article>`).join("")}</div>`).join("");
+    <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}${revBtn(d)}</div>${reactBar(d)}</div></article>`).join("")}</div>`).join("");
 }
 /* ---------- schedule ---------- */
 const EV_TYPES=[["quiz","Quiz"],["exam","Exam"],["lecture","Lecture"],["deadline","Deadline"],["reminder","Reminder"],["other","Other"]];
@@ -1138,7 +1148,7 @@ function renderDoc(id){
   closePdf();PDF.id=id;markSeen([id]);
   const sib=docsOf(d.subject),nx=sib[sib.findIndex(x=>x.id===id)+1];
   app.innerHTML=topbar(`<a class="back" href="#s-${esc(d.subject)}">← ${esc(s?s.name:"Back")}</a>`)+`<div class="viewer" style="--c:${stainVar(s?.stain)}">
-    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${revBtn(d)}<div id="dl-slot">${dlBtn(d,"primary")}</div></div></div>
+    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span>${reactBar(d)}</div><div class="vb-r">${revBtn(d)}<div id="dl-slot">${dlBtn(d,"primary")}</div></div></div>
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div>
     <nav class="next-topic"><a class="btn small" href="#s-${esc(d.subject)}">← All ${esc(s?s.name:"")} topics</a>${revBtn(d)}${nx?`<a class="go" href="#d-${esc(nx.id)}"><span class="mono">Next topic →</span><b>${esc(nx.title)}</b></a>`:`<a class="go" href="#"><span class="mono">You've reached the end →</span><b>Back to all subjects</b></a>`}</nav></div>
     <div class="pg-ind" id="pg-ind" aria-live="off"></div>`;
@@ -1169,17 +1179,18 @@ function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d)return;const FV=fireba
   LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:d.id,noteTitle:String(d.title).slice(0,120),subject:String(subj(d.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()}).catch(()=>{})}
 
 /* ---------- live scores (Firebase) ---------- */
-const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[],presence:[],events:[],editors:[],isEditor:false,suggestions:[],shares:[]};
+const LIVE={on:false,reacts:[],attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[],presence:[],events:[],editors:[],isEditor:false,suggestions:[],shares:[]};
 function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase||!firebase.auth)return;
   try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
   firebase.auth().onAuthStateChanged(async u=>{
-    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
+    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
     recordVisit(u);startPresence(u);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
       e=>{LIVE.err=e.code||"error";renderLive()}));
+    LIVE.unsubs.push(fs.collection("reactions").limit(3000).onSnapshot(snap=>{LIVE.reacts=snap.docs.map(d=>({id:d.id,...d.data()}));paintReacts()},()=>{}));
     LIVE.unsubs.push(fs.collection("downloads").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data().count||0);LIVE.downloads=m;if(route().v==="subject"||route().v==="doc")render()},()=>{}));
     LIVE.unsubs.push(fs.collection("events").orderBy("date").limit(1000).onSnapshot(snap=>{LIVE.events=snap.docs.map(d=>({id:d.id,...d.data()}));const v=route().v;if(v==="schedule"||v==="home")render()},()=>{}));
     try{const a=await fs.collection("admins").doc(u.uid).get();LIVE.isAdmin=a.exists}catch(e){LIVE.isAdmin=false}
@@ -1194,6 +1205,21 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
     render();
   });
 }
+/* ---------- emoji reactions (only on PDFs that have an "added" date, i.e. the Leg notes and newer) ---------- */
+const REACTS=["❤️","🔥","😂","😭","💀","🙏"];
+const canReact=d=>!!(d&&d.added);
+function reactBar(d){if(!LIVE.on||!LIVE.user||!canReact(d))return"";return `<div class="reacts" data-doc="${esc(d.id)}">${reactInner(d.id)}</div>`}
+function reactInner(id){const me=LIVE.user?.uid,mine=(LIVE.reacts.find(r=>r.doc===id&&r.uid===me)||{}).es||[];
+  return REACTS.map(e=>{const who=LIVE.reacts.filter(r=>r.doc===id&&Array.isArray(r.es)&&r.es.includes(e)),n=who.length,on=mine.includes(e);
+    const tip=n?who.map(r=>r.uid===me?"You":niceName(r.name||"Someone")).join(", "):"React with "+e;
+    return `<button type="button" class="react${on?" on":""}${n?"":" zero"}" data-act="react" data-doc="${esc(id)}" data-e="${e}" title="${esc(tip)}" aria-label="${esc(tip)}" aria-pressed="${on}"><span class="em">${e}</span>${n?`<b>${n}</b>`:""}</button>`}).join("")}
+function paintReacts(){document.querySelectorAll(".reacts[data-doc]").forEach(el=>{el.innerHTML=reactInner(el.dataset.doc)})}
+function toggleReact(id,e){const u=LIVE.user;if(!u||!LIVE.fs||!REACTS.includes(e))return;
+  const prev=LIVE.reacts.find(r=>r.doc===id&&r.uid===u.uid),cur=prev?.es||[],es=cur.includes(e)?cur.filter(x=>x!==e):[...cur,e];
+  const rid=id+"__"+u.uid,ref=LIVE.fs.collection("reactions").doc(rid),name=(u.displayName||u.email||"").slice(0,80);
+  LIVE.reacts=LIVE.reacts.filter(r=>r.id!==rid);if(es.length)LIVE.reacts.push({id:rid,doc:id,uid:u.uid,name,es});paintReacts();
+  (es.length?ref.set({doc:id,uid:u.uid,name,es,at:firebase.firestore.FieldValue.serverTimestamp()}):ref.delete()).catch(()=>{
+    LIVE.reacts=LIVE.reacts.filter(r=>r.id!==rid);if(prev)LIVE.reacts.push(prev);paintReacts();toast("Couldn't save your reaction. Try again in a bit.")})}
 /* ---------- who's online ---------- */
 const ONLINE_MS=2*60*1000,BEAT_MS=45*1000;let beatTimer=null,tickTimer=null;
 function onlineCount(){const now=Date.now(),me=LIVE.user?.uid;
