@@ -283,6 +283,46 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 .btn.popping{animation:btnpop .45s cubic-bezier(.3,1.6,.5,1)}
 @keyframes btnpop{0%{transform:scale(1)}30%{transform:scale(.88)}65%{transform:scale(1.12)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion: reduce){.dl-burst .bit,.dl-burst .ring{display:none}.btn.popping{animation:none}}
+.topnav-btn{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13.5px;font-weight:500;text-decoration:none;color:var(--ink);white-space:nowrap}
+.topnav-btn:hover{border-color:var(--ink)}
+.ev-t{--t:#6b7280}.ev-t.t-quiz{--t:#3e63dd}.ev-t.t-exam{--t:#e5484d}.ev-t.t-reminder{--t:#d98a00}.ev-t.t-lecture{--t:#1f9d55}.ev-t.t-deadline{--t:#8e4ec6}
+.week-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
+.week-nav .grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.week-nav h2{font-size:20px;margin:0}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-height:170px;display:flex;flex-direction:column;overflow:hidden}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.day.past{opacity:.6}
+.day-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:9px 10px 6px;border-bottom:1px solid var(--line)}
+.day-h .dw{font:600 11.5px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.day-h .dn{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1}
+.day.today .dn{color:var(--accent)}
+.day-h .add-ev{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:0 2px;border-radius:6px}
+.day-h .add-ev:hover{color:var(--ink);background:var(--soft)}
+.day-evs{display:grid;gap:6px;padding:8px;align-content:start}
+.day .none{font-size:12.5px;color:var(--muted);padding:2px 2px}
+.ev{display:grid;gap:2px;text-align:left;width:100%;border:0;border-left:4px solid var(--t);background:color-mix(in srgb,var(--t) 10%,var(--surface));border-radius:8px;padding:7px 8px;cursor:pointer;font:inherit;color:var(--ink)}
+.ev:hover{background:color-mix(in srgb,var(--t) 18%,var(--surface))}
+.ev .k{font:700 10.5px/1.2 var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--t)}
+.ev .ti{font-weight:600;font-size:13.5px;line-height:1.3;overflow-wrap:anywhere}
+.ev .su{font-size:12px;color:var(--muted)}
+.sched-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--muted)}
+.sched-legend span{display:inline-flex;align-items:center;gap:6px}
+.sched-legend i{width:10px;height:10px;border-radius:3px;background:var(--t);display:inline-block}
+.coming{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:22px;display:grid;gap:10px}
+.coming-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.coming-h h3{margin:0;font-size:17px}
+.coming-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.coming .ev .when{font-size:12px;color:var(--muted);font-weight:500}
+.ev-detail{display:grid;gap:10px}
+.ev-detail .meta{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:14.5px}
+.ev-detail .nt{white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:10px 12px;font-size:14.5px}
+.ev-detail .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.field select,.field input[type=date],.field input[type=time]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
+.field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+textarea.short{min-height:90px!important;font-family:var(--f-body)!important}
+.editor-tag{font:600 11px/1 var(--f-mono);padding:3px 7px;border-radius:999px;background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+@media (max-width:860px){.week{grid-template-columns:1fr}.day{min-height:0}.day-h{justify-content:flex-start}.day-h .add-ev{margin-left:auto}.day.past{display:none}}
 .shelf-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 12px}
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:26px}
 .pdf-card{--c:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:border-color .2s,transform .2s,box-shadow .2s}
@@ -416,6 +456,7 @@ function route(){const h=decodeURIComponent(location.hash.slice(1));
   if(h==="admin")return{v:"admin"};
   if(h==="new")return{v:"new"};
   if(h==="support")return{v:"support"};
+  if(h==="schedule"||h.startsWith("schedule-"))return{v:"schedule",id:h.slice(9)};
   return{v:"home"}}
 addEventListener("hashchange",()=>{S.noteId=null;S.tab=null;closePdf();S.quiz=null;render();scrollTo(0,0)});
 
@@ -430,7 +471,8 @@ function topbar(right=""){const u=LIVE.user;
   const on=u?`<span class="online" title="People on Study Atlas right now"><span class="dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span></span>`:"";
   const nu=u||!LIVE.on?unseenUpdates().length:0;
   const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="updates-btn" href="#new" title="Recently added PDFs">Updates${nu?`<span class="new-pill">New! ${nu}</span>`:""}</a>`:"";
-  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${upd}${on}${chip}</div></header>`}
+  const sch=u?`<a class="topnav-btn" href="#schedule"><span aria-hidden="true">📅</span>Schedule</a>`:"";
+  return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${sch}${upd}${on}${chip}</div></header>`}
 /* In-browser editing is switched off: notes only change when data.js is updated. */
 const canEdit=()=>false;
 
@@ -446,6 +488,7 @@ function render(){
   if(r.v==="doc")return renderDoc(r.id);
   if(r.v==="new")return renderUpdates();
   if(r.v==="support")return renderSupport();
+  if(r.v==="schedule")return renderSchedule(r.id);
   renderHome();
 }
 
@@ -459,6 +502,7 @@ function renderHome(){
         ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1>What are we reviewing today?</h1>
     <p>Pick a subject to flip through your notes, or jump straight into its quiz.</p></section>
+    ${comingUp()}
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
     ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
@@ -604,6 +648,8 @@ function editQuestion(q,subjectId){
 }
 
 /* ---------- events ---------- */
+panel.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;
+  if(b.dataset.act==="ev-edit"){editEvent(LIVE.events.find(x=>x.id===b.dataset.id))}});
 panel.addEventListener("submit",e=>{e.preventDefault();sheetSubmit&&sheetSubmit(e.target)});
 let armT;
 panel.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;
@@ -629,6 +675,9 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="retry-missed"){startQuiz(r.id,shuffle(S.quiz.items.filter(q=>q.picked!==q.answer).map(q=>q.src)),false,true)}
   else if(a==="quit"){S.quiz=null;render()}
   else if(a==="export")exportData();
+  else if(a==="ev-open"){openEvent(LIVE.events.find(x=>x.id===id))}
+  else if(a==="ev-new"){editEvent(null,b.dataset.date||"")}
+  else if(a==="editor-on"||a==="editor-off"){setEditor(id,a==="editor-on")}
   else if(a==="dl-doc"){popBurst(b,e);recordDocDownload(docById(id))}
   else if(a==="sign-in"){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr);else if(e&&e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request"){const c=e.code||"";
     toast(c==="auth/unauthorized-domain"?"Sign-in isn't allowed on this web address yet. The site owner needs to add it in Firebase.":(c==="auth/configuration-not-found"||c==="auth/operation-not-allowed")?"Google sign-in isn't switched on yet. The site owner needs to enable it in Firebase.":c==="auth/network-request-failed"?"No connection. Check your internet and try again.":"Sign-in didn't work ("+c.replace("auth/","")+"). Try again.")}})}
@@ -668,6 +717,75 @@ function shelf(docs,s){
     <span class="mono">${d.pages?plural(d.pages,"page")+" · ":""}${d.size?mb(d.size)+" · ":""}${LIVE.on?`⤓ ${plural(dlCount(d.id),"download")}`:""}</span>
     <div class="pdf-actions"><a class="btn small primary" href="#d-${esc(d.id)}">Preview</a>${dlBtn(d,"small")}</div></div></article>`).join("")}</div>`).join("");
 }
+/* ---------- schedule ---------- */
+const EV_TYPES=[["quiz","Quiz"],["exam","Exam"],["lecture","Lecture"],["deadline","Deadline"],["reminder","Reminder"],["other","Other"]];
+const evLabel=t=>(EV_TYPES.find(x=>x[0]===t)||EV_TYPES[5])[1];
+const canSchedule=()=>LIVE.isAdmin||LIVE.isEditor;
+const pad2=n=>String(n).padStart(2,"0");
+const ymd=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const parseYmd=k=>{const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const weekStart=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());return addDays(x,-((x.getDay()+6)%7))};
+const fmtTime=t=>{if(!t)return"";let[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";h=h%12||12;return `${h}:${pad2(m)} ${ap}`};
+const evSort=(a,b)=>a.date.localeCompare(b.date)||(a.time||"99").localeCompare(b.time||"99")||a.title.localeCompare(b.title);
+function evChip(e,withDay){const s=e.subject?subj(e.subject):null;
+  return `<button class="ev ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}</span><span class="ti">${esc(e.title)}</span>${withDay?`<span class="when">${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span>`:""}${s?`<span class="su">${esc(s.name)}</span>`:""}</button>`}
+function comingUp(){if(!LIVE.on||!LIVE.user)return"";
+  const today=ymd(new Date()),end=ymd(addDays(new Date(),7));
+  const list=LIVE.events.filter(e=>e.date>=today&&e.date<=end).sort(evSort).slice(0,6);
+  if(!list.length&&!canSchedule())return"";
+  return `<section class="coming"><div class="coming-h"><h3>Coming up this week</h3><a class="btn small" href="#schedule">Full schedule →</a></div>
+    ${list.length?`<div class="coming-list">${list.map(e=>evChip(e,true)).join("")}</div>`:`<p class="muted" style="margin:0">Nothing scheduled in the next 7 days.${canSchedule()?` <a href="#schedule">Add something</a>.`:""}</p>`}</section>`}
+function renderSchedule(startKey){
+  const start=/^\d{4}-\d{2}-\d{2}$/.test(startKey||"")?weekStart(parseYmd(startKey)):weekStart(new Date());
+  const today=ymd(new Date()),days=[...Array(7)].map((_,i)=>addDays(start,i));
+  const end=days[6],thisWeek=ymd(weekStart(new Date()))===ymd(start);
+  const md=d=>d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const rng=`${md(start)} – ${start.getMonth()===end.getMonth()?end.getDate():md(end)}, ${end.getFullYear()}`;
+  const cols=days.map(d=>{const k=ymd(d),evs=LIVE.events.filter(e=>e.date===k).sort(evSort);
+    return `<div class="day${k===today?" today":""}${k<today?" past":""}"><div class="day-h"><span class="dw">${d.toLocaleDateString(undefined,{weekday:"short"})}</span><span class="dn">${d.getDate()}</span>${canSchedule()?`<button class="add-ev" data-act="ev-new" data-date="${k}" title="Add on this day" aria-label="Add on ${esc(d.toDateString())}">+</button>`:""}</div>
+      <div class="day-evs">${evs.length?evs.map(e=>evChip(e)).join(""):`<span class="none">—</span>`}</div></div>`}).join("");
+  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">Schedule</span><h1>This week's quizzes &amp; exams</h1>
+    <p>Tap anything to see details or add it to your Google Calendar so your phone reminds you.${canSchedule()?"":" Only the site owner and their chosen editors can add to the schedule."}</p></section>
+    <div class="week-nav"><div class="grp"><a class="btn small" href="#schedule-${ymd(addDays(start,-7))}" aria-label="Previous week">←</a>${thisWeek?"":`<a class="btn small" href="#schedule">This week</a>`}<a class="btn small" href="#schedule-${ymd(addDays(start,7))}" aria-label="Next week">→</a><h2>${esc(rng)}</h2></div>
+    ${canSchedule()?`<button class="btn primary small" data-act="ev-new">+ Add to schedule</button>`:""}</div>
+    <div class="week">${cols}</div>
+    <div class="sched-legend">${EV_TYPES.map(([k,l])=>`<span class="ev-t t-${k}"><i></i>${l}</span>`).join("")}</div>`;
+}
+function gcalLink(e){const d=e.date.replace(/-/g,"");let dates;
+  if(e.time){const t=e.time.replace(":","")+"00";const[h,m]=e.time.split(":").map(Number);const end=new Date(2000,0,1,h+1,m);dates=`${d}T${t}/${(h+1>=24?ymd(addDays(parseYmd(e.date),1)).replace(/-/g,""):d)}T${pad2(end.getHours())}${pad2(end.getMinutes())}00`}
+  else dates=`${d}/${ymd(addDays(parseYmd(e.date),1)).replace(/-/g,"")}`;
+  const s=e.subject?subj(e.subject):null;
+  const q=new URLSearchParams({action:"TEMPLATE",text:`${evLabel(e.type)}: ${e.title}`,dates,details:[s?s.name:"",e.notes||"","From Study Atlas"].filter(Boolean).join("\n\n"),ctz:"Asia/Manila"});
+  return "https://calendar.google.com/calendar/render?"+q}
+function openEvent(e){if(!e)return;const s=e.subject?subj(e.subject):null;
+  openSheet(`<div class="ev-detail"><span class="ev-t t-${esc(e.type)}" style="display:block;font:700 12px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t)">${esc(evLabel(e.type))}</span><h2>${esc(e.title)}</h2>
+    <div class="meta"><span>📅 ${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}))}</span>${e.time?`<span>🕒 ${esc(fmtTime(e.time))}</span>`:""}${s?`<span>📚 ${esc(s.name)}</span>`:""}</div>
+    ${e.notes?`<div class="nt">${esc(e.notes)}</div>`:""}${e.byName?`<span class="mono">Added by ${esc(e.byName)}</span>`:""}
+    <div class="acts">${canSchedule()?`<button class="btn" data-act="ev-edit" data-id="${esc(e.id)}">Edit</button>`:""}<a class="btn primary" href="${esc(gcalLink(e))}" target="_blank" rel="noopener">Add to Google Calendar</a><button class="btn ghost" data-act="close">Close</button></div></div>`)}
+function editEvent(e,date){if(!canSchedule())return;
+  delHandler=e?async()=>{closeSheet();try{await LIVE.fs.collection("events").doc(e.id).delete();toast("Removed from the schedule")}catch(x){toast("Couldn't delete. Check your connection.")}}:null;
+  const subs=S.subjects.slice().sort(byOrder);
+  openSheet(`<form id="f"><h2>${e?"Edit":"Add to schedule"}</h2>
+    <div class="field-row"><div class="field"><label for="f-type">Type</label><select id="f-type">${EV_TYPES.map(([k,l])=>`<option value="${k}"${(e?.type||"quiz")===k?" selected":""}>${l}</option>`).join("")}</select></div>
+    <div class="field"><label for="f-subj">Subject</label><select id="f-subj"><option value="">None</option>${subs.map(x=>`<option value="${esc(x.id)}"${e?.subject===x.id?" selected":""}>${esc(x.name)}</option>`).join("")}</select></div></div>
+    <div class="field"><label for="f-title">What is it?</label><input type="text" id="f-title" required maxlength="120" value="${esc(e?.title||"")}" placeholder="e.g. Brainstem quiz, Midterm exam, Submit lab sheet"></div>
+    <div class="field-row"><div class="field"><label for="f-date">Date</label><input type="date" id="f-date" required value="${esc(e?.date||date||ymd(new Date()))}"></div>
+    <div class="field"><label for="f-time">Time <span class="hint">(optional)</span></label><input type="time" id="f-time" value="${esc(e?.time||"")}"></div></div>
+    <div class="field"><label for="f-notes">Notes <span class="hint">(optional)</span></label><textarea id="f-notes" class="short" maxlength="1000" placeholder="Coverage, room, what to bring…">${esc(e?.notes||"")}</textarea></div>
+    ${foot(e?"Delete":"")}</form>`,async f=>{
+      const title=f.querySelector("#f-title").value.trim(),dt=f.querySelector("#f-date").value;
+      if(!title)return formErr("Say what it is.");if(!/^\d{4}-\d{2}-\d{2}$/.test(dt))return formErr("Pick a date.");
+      const u=LIVE.user,data={title:title.slice(0,120),type:f.querySelector("#f-type").value,subject:f.querySelector("#f-subj").value,date:dt,time:f.querySelector("#f-time").value||"",notes:f.querySelector("#f-notes").value.trim().slice(0,1000),by:u.uid,byName:(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()};
+      try{if(e)await LIVE.fs.collection("events").doc(e.id).set(data);else await LIVE.fs.collection("events").add(data);
+        closeSheet();toast(e?"Schedule updated":"Added to the schedule");if(!e&&route().v==="schedule")location.hash="schedule-"+dt}
+      catch(x){formErr(x&&x.code==="permission-denied"?"You don't have permission to edit the schedule yet. Ask the site owner (and make sure the new database rules are published).":"Couldn't save. Check your connection and try again.")}
+    })}
+async function setEditor(uid,on){const u=LIVE.users.find(x=>x.id===uid);
+  try{const ref=LIVE.fs.collection("editors").doc(uid);
+    if(on)await ref.set({name:(u?.name||"").slice(0,80),email:(u?.email||"").slice(0,120),at:firebase.firestore.FieldValue.serverTimestamp()});else await ref.delete();
+    toast(on?`${u?.name||"They"} can now edit the schedule`:"Editor removed")}
+  catch(x){toast("Couldn't change that. Make sure the new database rules are published.")}}
 /* ---------- support / donate ---------- */
 /* To change the QR: replace support-qr.png in the repo (or change the file name below). */
 const SUPPORT={qr:"support-qr.png",label:""};
@@ -732,11 +850,11 @@ function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d)return;const FV=fireba
   LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:d.id,noteTitle:String(d.title).slice(0,120),subject:String(subj(d.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()}).catch(()=>{})}
 
 /* ---------- live scores (Firebase) ---------- */
-const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[],presence:[]};
+const LIVE={on:false,attempts:[],err:null,fs:null,user:null,authReady:false,isAdmin:false,downloads:{},users:[],dlog:[],unsubs:[],presence:[],events:[],editors:[],isEditor:false};
 function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase||!firebase.auth)return;
   try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
   firebase.auth().onAuthStateChanged(async u=>{
-    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];stopPresence();LIVE.presence=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
+    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
     recordVisit(u);startPresence(u);
     const fs=LIVE.fs;
@@ -744,7 +862,10 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
       e=>{LIVE.err=e.code||"error";renderLive()}));
     LIVE.unsubs.push(fs.collection("downloads").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data().count||0);LIVE.downloads=m;if(route().v==="subject"||route().v==="doc")render()},()=>{}));
+    LIVE.unsubs.push(fs.collection("events").orderBy("date").limit(1000).onSnapshot(snap=>{LIVE.events=snap.docs.map(d=>({id:d.id,...d.data()}));const v=route().v;if(v==="schedule"||v==="home")render()},()=>{}));
     try{const a=await fs.collection("admins").doc(u.uid).get();LIVE.isAdmin=a.exists}catch(e){LIVE.isAdmin=false}
+    try{const ed=await fs.collection("editors").doc(u.uid).get();LIVE.isEditor=ed.exists}catch(e){LIVE.isEditor=false}
+    if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("editors").onSnapshot(snap=>{LIVE.editors=snap.docs.map(d=>d.id);if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin){
       LIVE.unsubs.push(fs.collection("users").orderBy("lastSeen","desc").limit(500).onSnapshot(snap=>{LIVE.users=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
       LIVE.unsubs.push(fs.collection("downloadLog").orderBy("at","desc").limit(500).onSnapshot(snap=>{LIVE.dlog=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
@@ -803,9 +924,10 @@ function renderAdmin(){
   const notesRows=Object.entries(byNote).map(([id,v])=>({id,...v,total:LIVE.downloads[id]||[...v.people.values()].reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
   const totalDl=Object.values(LIVE.downloads).reduce((a,b)=>a+b,0);
   app.innerHTML=topbar(back)+`<section class="hero"><span class="mono eyebrow">Only you can see this page</span><h1>Who's visiting</h1></section>
+   <p class="notice">Tap <b>Let them edit</b> next to a friend to let them add quizzes, exams and reminders to the Schedule. Only you can change who's an editor.</p>
    <div class="stats"><div><span class="big-n">${LIVE.users.length}</span><span class="mono">people signed in</span></div><div><span class="big-n">${LIVE.users.reduce((a,u)=>a+(u.visits||0),0)}</span><span class="mono">total visits</span></div><div><span class="big-n">${totalDl}</span><span class="mono">downloads</span></div><div><span class="big-n">${LIVE.attempts.length}</span><span class="mono">quiz attempts</span></div></div>
-   <h2 class="sec">People</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th class="n">Visits</th><th class="n">Downloads</th><th class="n">Quizzes</th><th>First visit</th><th>Last seen</th></tr></thead><tbody>
-   ${LIVE.users.map(u=>`<tr><td><span class="person">${u.photo?`<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">`:""}${esc(u.name||"—")}</span></td><td>${esc(u.email||"")}</td><td class="n">${u.visits||0}</td><td class="n">${LIVE.dlog.filter(d=>d.uid===u.id).length}</td><td class="n">${LIVE.attempts.filter(a=>a.player===u.id).length}</td><td>${fmt(u.firstSeen)}</td><td>${fmt(u.lastSeen)}</td></tr>`).join("")||`<tr><td colspan="7" class="muted">Nobody has signed in yet.</td></tr>`}
+   <h2 class="sec">People</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th class="n">Visits</th><th class="n">Downloads</th><th class="n">Quizzes</th><th>First visit</th><th>Last seen</th><th>Schedule</th></tr></thead><tbody>
+   ${LIVE.users.map(u=>`<tr><td><span class="person">${u.photo?`<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">`:""}${esc(u.name||"—")}</span></td><td>${esc(u.email||"")}</td><td class="n">${u.visits||0}</td><td class="n">${LIVE.dlog.filter(d=>d.uid===u.id).length}</td><td class="n">${LIVE.attempts.filter(a=>a.player===u.id).length}</td><td>${fmt(u.firstSeen)}</td><td>${fmt(u.lastSeen)}</td><td>${LIVE.editors.includes(u.id)?`<span class="editor-tag">Editor</span> <button class="btn small ghost" data-act="editor-off" data-id="${esc(u.id)}">Remove</button>`:`<button class="btn small" data-act="editor-on" data-id="${esc(u.id)}">Let them edit</button>`}</td></tr>`).join("")||`<tr><td colspan="7" class="muted">Nobody has signed in yet.</td></tr>`}
    </tbody></table></div>
    <h2 class="sec">Downloads by note</h2>${notesRows.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Note</th><th>Subject</th><th class="n">Downloads</th><th>Who</th></tr></thead><tbody>
    ${notesRows.map(r=>`<tr><td>${esc(r.title)}</td><td>${esc(r.subject)}</td><td class="n">${r.total}</td><td>${[...r.people.entries()].map(([uid,c])=>esc(nameOf(uid))+(c>1?` ×${c}`:"")).join(", ")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">No downloads yet.</p>`}
