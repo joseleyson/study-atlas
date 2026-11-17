@@ -936,8 +936,7 @@ function renderHome(){
     return `<a class="subj" href="#s-${esc(s.id)}" style="--c:${stainVar(s.stain)}">${ds.some(isNewDoc)?`<span class="new-pill">New!</span>`:""}
       <div class="sj-head"><span class="subj-ico">${iconSvg(SUBJ_ICON[s.id]||s.icon)}</span><div><p class="subj-name">${esc(s.name)}</p><span class="subj-count">${ds.length?plural(ds.length,"topic"):""}${n?(ds.length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}</span></div></div>
       ${chips?`<div class="subj-chips">${chips}</div>`:s.blurb?`<p class="muted" style="font-size:13.5px">${esc(s.blurb)}</p>`:""}
-      ${ds.length?`<div class="subj-prog" title="${nr} of ${ds.length} topics marked reviewed">${ds.map(d=>`<i class="${r.has(d.id)?"on":""}"></i>`).join("")}<b>${nr}/${ds.length} reviewed</b></div>`:""}
-      <div class="subj-foot"><span>${last?updatedLabel(last):""}</span><span>${q?`best ${best?esc(best)+"%":"–"}`:"✎ Quizzes soon"}</span></div></a>`}).join("");
+      ${last||q?`<div class="subj-foot"><span>${last?updatedLabel(last):""}</span><span>${q?`best ${best?esc(best)+"%":"–"}`:""}</span></div>`:""}</a>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1 class="greet-h">${helloLine()}<span id="greet" class="greet-p" aria-live="off">${esc(greetText())}</span></h1>
     <p>${S.questions.length?"Pick a subject to flip through your notes, or jump straight into its quiz.":"Pick a subject to open its topic notes."}</p>${urgentChip()}</section>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
