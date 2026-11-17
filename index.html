@@ -323,6 +323,38 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 textarea.short{min-height:90px!important;font-family:var(--f-body)!important}
 .editor-tag{font:600 11px/1 var(--f-mono);padding:3px 7px;border-radius:999px;background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
 @media (max-width:860px){.week{grid-template-columns:1fr}.day{min-height:0}.day-h{justify-content:flex-start}.day-h .add-ev{margin-left:auto}.day.past{display:none}}
+.home-split{display:grid;grid-template-columns:290px minmax(0,1fr);gap:22px;align-items:start}
+.home-split.solo{grid-template-columns:1fr}
+.home-split .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.upnext{position:sticky;top:16px;background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--r) + 4px);padding:16px 14px 12px;display:grid;gap:4px;
+  background-image:radial-gradient(120% 60% at 0% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%)}
+.upnext-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px 8px}
+.upnext-h h3{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}
+.upnext-h .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent);animation:upulse 2.4s infinite}
+@keyframes upulse{70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.upnext-h .mono{font-size:11.5px}
+.un-day{font:600 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 6px 6px;display:flex;gap:8px;align-items:center}
+.un-day.today{color:var(--accent)}
+.un-day::after{content:"";flex:1;height:1px;background:var(--line)}
+.un-list{position:relative;display:grid;gap:2px}
+.un-list::before{content:"";position:absolute;left:15px;top:16px;bottom:16px;width:2px;border-radius:2px;background:var(--line)}
+.un{position:relative;display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:start;width:100%;text-align:left;border:0;background:none;font:inherit;color:var(--ink);padding:8px 8px 8px 6px;border-radius:12px;cursor:pointer;
+  transition:background .25s ease,transform .25s cubic-bezier(.2,.9,.3,1.2),box-shadow .25s ease}
+.un .un-dot{margin-top:4px;width:12px;height:12px;justify-self:center;border-radius:50%;background:var(--surface);border:3px solid var(--t);position:relative;z-index:1;transition:transform .25s cubic-bezier(.2,.9,.3,1.4),background .25s,box-shadow .25s}
+.un .bd{display:grid;gap:2px;min-width:0}
+.un .k{font:700 10.5px/1.2 var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--t);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.un .soon{font:600 10px/1 var(--f-mono);letter-spacing:.03em;text-transform:none;padding:3px 6px;border-radius:999px;background:color-mix(in srgb,var(--t) 16%,transparent)}
+.un .ti{font-weight:600;font-size:14.5px;line-height:1.3;overflow-wrap:anywhere}
+.un .su{font-size:12.5px;color:var(--muted)}
+.un:hover,.un:focus-visible{background:color-mix(in srgb,var(--t) 10%,var(--surface));transform:translateX(4px);box-shadow:inset 3px 0 0 var(--t),0 10px 24px -18px var(--t);outline:none}
+.un:hover .un-dot,.un:focus-visible .un-dot{transform:scale(1.35);background:var(--t);box-shadow:0 0 0 4px color-mix(in srgb,var(--t) 22%,transparent)}
+.un:active{transform:translateX(4px) scale(.98)}
+.upnext-empty{padding:14px 8px;color:var(--muted);font-size:14px;display:grid;gap:6px;text-align:center}
+.upnext-empty .big{font-size:26px}
+.upnext-foot{display:flex;gap:6px;padding:10px 4px 2px;border-top:1px solid var(--line);margin-top:8px}
+.upnext-foot a,.upnext-foot button{flex:1;justify-content:center}
+@media (prefers-reduced-motion: reduce){.un,.un .un-dot{transition:none}.un:hover{transform:none}.upnext-h .pulse{animation:none}}
+@media (max-width:860px){.home-split{grid-template-columns:1fr}.upnext{position:static}}
 .shelf-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 12px}
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:26px}
 .pdf-card{--c:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:border-color .2s,transform .2s,box-shadow .2s}
@@ -502,9 +534,9 @@ function renderHome(){
         ${q?`<a class="btn small" href="#q-${esc(s.id)}">Quiz</a>`:""}</div></article>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1>What are we reviewing today?</h1>
     <p>Pick a subject to flip through your notes, or jump straight into its quiz.</p></section>
-    ${comingUp()}
+    ${(()=>{const side=comingUp();return `<div class="home-split${side?"":" solo"}">${side?`<aside aria-label="Up next">${side}</aside>`:""}<div>
     ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
-      :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
+      :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}</div></div>`})()}
     ${LIVE.on?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
 `;
 }
@@ -731,11 +763,16 @@ const evSort=(a,b)=>a.date.localeCompare(b.date)||(a.time||"99").localeCompare(b
 function evChip(e,withDay){const s=e.subject?subj(e.subject):null;
   return `<button class="ev ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}</span><span class="ti">${esc(e.title)}</span>${withDay?`<span class="when">${esc(parseYmd(e.date).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span>`:""}${s?`<span class="su">${esc(s.name)}</span>`:""}</button>`}
 function comingUp(){if(!LIVE.on||!LIVE.user)return"";
-  const today=ymd(new Date()),end=ymd(addDays(new Date(),7));
-  const list=LIVE.events.filter(e=>e.date>=today&&e.date<=end).sort(evSort).slice(0,6);
-  if(!list.length&&!canSchedule())return"";
-  return `<section class="coming"><div class="coming-h"><h3>Coming up this week</h3><a class="btn small" href="#schedule">Full schedule →</a></div>
-    ${list.length?`<div class="coming-list">${list.map(e=>evChip(e,true)).join("")}</div>`:`<p class="muted" style="margin:0">Nothing scheduled in the next 7 days.${canSchedule()?` <a href="#schedule">Add something</a>.`:""}</p>`}</section>`}
+  const now=new Date(),today=ymd(now),tmr=ymd(addDays(now,1)),end=ymd(addDays(now,7));
+  const list=LIVE.events.filter(e=>e.date>=today&&e.date<=end).sort(evSort).slice(0,10);
+  const dayLabel=k=>k===today?"Today":k===tmr?"Tomorrow":parseYmd(k).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+  const soon=e=>{if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d===0?"today":d===1?"tomorrow":`in ${d} days`};
+  const groups=[];list.forEach(e=>{let g=groups.find(x=>x[0]===e.date);if(!g)groups.push(g=[e.date,[]]);g[1].push(e)});
+  const body=groups.length?groups.map(([k,es])=>`<div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?subj(e.subject):null,sn=soon(e);
+    return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div>`).join("")
+    :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>Nothing due in the next 7 days.</div>`;
+  return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Up next</h3><span class="mono">next 7 days</span></div>${body}
+    <div class="upnext-foot"><a class="btn small" href="#schedule">Full schedule →</a>${canSchedule()?`<button class="btn small primary" data-act="ev-new">+ Add</button>`:""}</div></section>`}
 function renderSchedule(startKey){
   const start=/^\d{4}-\d{2}-\d{2}$/.test(startKey||"")?weekStart(parseYmd(startKey)):weekStart(new Date());
   const today=ymd(new Date()),days=[...Array(7)].map((_,i)=>addDays(start,i));
