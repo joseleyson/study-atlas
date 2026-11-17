@@ -3,6 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function isEditor() { return signedIn() && exists(/databases/$(database)/documents/editors/$(request.auth.uid)); }
 
     // Site owner(s): add a document here with your account ID, from the Firebase console only.
     match /admins/{uid} {
@@ -18,6 +19,30 @@ service cloud.firestore {
         && request.resource.data.lastSeen == request.time
         && request.resource.data.visits is int;
       allow delete: if false;
+    }
+
+    // Friends the owner lets edit the schedule. Only the owner can add or remove them.
+    match /editors/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if isAdmin() && request.resource.data.keys().hasOnly(['name','email','at']);
+      allow delete: if isAdmin();
+    }
+
+    // Weekly schedule: everyone signed in can see it; the owner and editors can change it.
+    match /events/{id} {
+      allow read: if signedIn();
+      allow create, update: if (isAdmin() || isEditor())
+        && request.resource.data.keys().hasOnly(['title','type','subject','date','time','notes','by','byName','at'])
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 120
+        && request.resource.data.type in ['quiz','exam','lecture','deadline','reminder','other']
+        && request.resource.data.subject is string && request.resource.data.subject.size() <= 80
+        && request.resource.data.date is string && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.time is string && request.resource.data.time.size() <= 5
+        && request.resource.data.notes is string && request.resource.data.notes.size() <= 1000
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.byName is string && request.resource.data.byName.size() <= 80
+        && request.resource.data.at == request.time;
+      allow delete: if isAdmin() || isEditor();
     }
 
     // Who's online: each signed-in person keeps one heartbeat document fresh.
