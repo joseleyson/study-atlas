@@ -81,7 +81,8 @@ service cloud.firestore {
     match /presence/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name','at','doc'])
+        && request.resource.data.keys().hasOnly(['name','at','doc','hidden'])
+        && (!('hidden' in request.resource.data) || request.resource.data.hidden is bool)
         && request.resource.data.name is string && request.resource.data.name.size() <= 80
         && (!('doc' in request.resource.data) || (request.resource.data.doc is string && request.resource.data.doc.size() <= 100))
         && request.resource.data.at == request.time;

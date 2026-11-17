@@ -826,6 +826,16 @@ body.cram .cram-far{opacity:.18;filter:grayscale(1);transition:opacity .4s,filte
 
 .app-tag{display:inline-flex;align-items:center;gap:3px;margin-left:8px;padding:1px 8px;border-radius:999px;font:11px var(--f-mono);white-space:nowrap;color:#3fb950;border:1px solid color-mix(in srgb,#3fb950 45%,transparent);background:color-mix(in srgb,#3fb950 10%,transparent)}
 .prog-tag{color:#f0997b;border-color:color-mix(in srgb,#f0997b 45%,transparent);background:color-mix(in srgb,#f0997b 10%,transparent)}
+
+/* active status */
+.sw-row{display:flex;align-items:center;white-space:nowrap}
+.mini-sw{position:relative;width:30px;height:18px;margin-left:auto;border-radius:999px;background:var(--soft);flex:none;transition:background .25s}
+.mini-sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .25s}
+.sw-row[aria-checked=true] .mini-sw{background:#3fb950}
+.sw-row[aria-checked=true] .mini-sw::after{transform:translateX(12px)}
+.who-hid{margin-left:6px;padding:0 6px;border-radius:999px;font:10px var(--f-mono);color:var(--muted);border:1px solid var(--line)}
+.who-more{color:var(--muted)}
+.dot.off{background:var(--muted)!important;box-shadow:none!important;animation:none!important}
 </style>
 <style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -972,6 +982,7 @@ function topbar(right=""){const u=LIVE.user;
   const chip=u?`<details class="me"><summary aria-label="Your account">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer" class="who-chip-img" style="width:28px;height:28px;border-radius:50%">`:`<span class="initial">${esc((nm[0]||"?").toUpperCase())}</span>`}<span class="nm who-nm">${esc(nm)}</span><span class="chev" aria-hidden="true">▾</span></summary>
     <div class="me-menu"><div class="who"><b>${esc(u.displayName?niceName(u.displayName):"Signed in")}</b>${esc(u.email||"")}</div>
     <button data-act="my-progress"><span aria-hidden="true">🔥</span>My progress</button>
+    ${LIVE.isAdmin?"":`<button data-act="share-active" role="switch" aria-checked="${shareActive()}" class="sw-row"><span aria-hidden="true">🟢</span>Show me as online<span class="mini-sw" aria-hidden="true"></span></button>`}
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
     <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
@@ -979,7 +990,7 @@ function topbar(right=""){const u=LIVE.user;
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
   const dotOn=`<span class="sa-dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span>`;
-  const on=u?(LIVE.isAdmin?`<button type="button" class="sa-online sa-btn-like" id="who-online" title="See who is online">${dotOn}</button>`:`<span class="sa-online" title="People on Study Atlas right now">${dotOn}</span>`):"";
+  const on=u?`<button type="button" class="sa-online sa-btn-like" id="who-online" title="See who is online">${dotOn}</button>`:"";
   const nu=u||!LIVE.on?unseenUpdates().length:0;
   const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="sa-btn" href="#new" title="Recently added PDFs" aria-label="Updates${nu?`, ${nu} new`:""}"><svg class="sa-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="sa-lbl">Updates</span>${nu?`<span class="sa-badge">${nu>9?"9+":nu}</span>`:""}</a>`:"";
   const sch=u?`<a class="sa-btn" href="#schedule" aria-label="Schedule"><svg class="sa-cal" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><path class="sa-pins" d="M8 3v3M16 3v3"/><text x="12" y="17.2" text-anchor="middle">${new Date().getDate()}</text></svg><span class="sa-lbl">Schedule</span></a>`:"";
@@ -1253,6 +1264,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="share-notes"){openShare()}
   else if(a==="a2hs-help"){openA2HSHelp()}
   else if(a==="my-progress"){openProgress()}
+  else if(a==="share-active"){setShareActive(!shareActive())}
   else if(a==="share-done"){LIVE.fs.collection("shares").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
   else if(a==="sugg-done"){LIVE.fs.collection("suggestions").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
   else if(a==="ev-open"){openEvent(LIVE.events.find(x=>x.id===id))}
@@ -1388,7 +1400,7 @@ const HERE_COLORS=["#7f77dd","#378add","#d4537e","#1d9e75","#ba7517","#993c1d"];
 function hereColor(n){let h=0;for(const ch of String(n))h=(h*31+ch.charCodeAt(0))|0;return HERE_COLORS[Math.abs(h)%HERE_COLORS.length]}
 function hereFor(key){const now=Date.now(),me=LIVE.user?.uid,subj=key.startsWith("s:")?key.slice(2):null;
   const hit=p=>subj?!!p.doc&&(p.doc===key||docById(p.doc)?.subject===subj):p.doc===key;
-  return LIVE.presence.filter(p=>p.id!==me&&hit(p)&&p.at&&now-p.at.toMillis()<ONLINE_MS).map(p=>niceName(p.name||"Someone"))}
+  return LIVE.presence.filter(p=>p.id!==me&&visiblePres(p)&&hit(p)&&p.at&&now-p.at.toMillis()<ONLINE_MS).map(p=>niceName(presName(p)||"Someone"))}
 function hereInner(docId){const ppl=hereFor(docId);if(!ppl.length)return"";
   return `<span class="here-dot"></span><span class="here-av">${ppl.slice(0,3).map(n=>`<span style="background:${hereColor(n)}" title="${esc(n)}">${esc((n.trim()[0]||"?").toUpperCase())}</span>`).join("")}</span><span class="here-txt">${ppl.length} here now</span>`}
 function paintHere(){document.querySelectorAll(".here[data-here]").forEach(b=>{const h=hereInner(b.dataset.here);b.innerHTML=h;b.classList.toggle("on",!!h);b.closest(".nc")?.classList.toggle("has-here",!!h);b.closest(".subj")?.querySelector(".subj-ico")?.classList.toggle("ico-here",!!h)})}
@@ -1608,7 +1620,7 @@ const LIVE={on:false,reacts:[],attempts:[],err:null,fs:null,user:null,authReady:
 function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase||!firebase.auth)return;
   try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
   firebase.auth().onAuthStateChanged(async u=>{
-    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
+    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.adminKnown=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
     recordVisit(u);startPresence(u);track("visit");setTimeout(maybeA2HS,6000);
     const fs=LIVE.fs;
@@ -1619,6 +1631,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
     LIVE.unsubs.push(fs.collection("downloads").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data().count||0);LIVE.downloads=m;if(route().v==="subject"||route().v==="doc")render()},()=>{}));
     LIVE.unsubs.push(fs.collection("events").orderBy("date").limit(1000).onSnapshot(snap=>{LIVE.events=snap.docs.map(d=>({id:d.id,...d.data()}));const v=route().v;if(v==="schedule"||v==="home")render()},()=>{}));
     try{const a=await fs.collection("admins").doc(u.uid).get();LIVE.isAdmin=a.exists}catch(e){LIVE.isAdmin=false}
+    LIVE.adminKnown=true;beat();
     try{const ed=await fs.collection("editors").doc(u.uid).get();LIVE.isEditor=ed.exists}catch(e){LIVE.isEditor=false}
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("shares").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.shares=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("suggestions").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.suggestions=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
@@ -1653,6 +1666,12 @@ function toggleReact(id,e){const u=LIVE.user;if(!u||!LIVE.fs||!REACTS.includes(e
   (es.length?ref.set({doc:id,uid:u.uid,name,es,at:firebase.firestore.FieldValue.serverTimestamp()}):ref.delete()).catch(()=>{
     LIVE.reacts=LIVE.reacts.filter(r=>r.id!==rid);if(prev)LIVE.reacts.push(prev);paintReacts();toast("Couldn't save your reaction. Try again in a bit.")})}
 /* ---------- who's online ---------- */
+/* Active status: everyone counts in the number; only people sharing their status are named to others.
+   The owner is always hidden (name not even written), but the owner can see everyone. */
+const shareActive=()=>store("share-active")!=="0";
+const iAmHidden=()=>LIVE.isAdmin||!shareActive();
+const presName=p=>p.name||(LIVE.isAdmin?(LIVE.users.find(x=>x.id===p.id)?.name||""):"")||"";
+const visiblePres=p=>LIVE.isAdmin||!p.hidden;
 const ONLINE_MS=2*60*1000,BEAT_MS=45*1000;let beatTimer=null,tickTimer=null;
 function onlineCount(){const now=Date.now(),me=LIVE.user?.uid;
   const n=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS).length;
@@ -1662,11 +1681,13 @@ function paintOnline(){const el=document.getElementById("online-count");if(el)el
   const w=document.getElementById("who-list");if(w&&!sheet.hidden)w.innerHTML=whoRows()}
 function onlineNow(){const now=Date.now(),me=LIVE.user?.uid;
   const list=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS);
-  if(LIVE.user)list.unshift({id:me,name:LIVE.user.displayName||LIVE.user.email||"You",at:{toMillis:()=>now},you:true});
+  if(LIVE.user)list.unshift({id:me,name:LIVE.user.displayName||LIVE.user.email||"You",at:{toMillis:()=>now},you:true,hidden:iAmHidden()});
   return list}
-function whoRows(){const now=Date.now();return onlineNow().map(p=>{const s=Math.max(0,Math.round((now-p.at.toMillis())/1000));
-  return `<li><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(p.name||"Someone")}${p.you?' <span class="mono">(you)</span>':""}</span><span class="mono">${p.you||s<20?"active now":s<60?s+"s ago":Math.round(s/60)+" min ago"}</span></li>`}).join("")}
-function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-4px 0 14px">Signed-in people active in the last 2 minutes. Only you can see this.</p>
+function whoRows(){const now=Date.now(),all=onlineNow(),shown=all.filter(p=>p.you||visiblePres(p)),hid=all.length-shown.length;
+  return shown.map(p=>{const s=Math.max(0,Math.round((now-p.at.toMillis())/1000));
+  return `<li><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(niceName(p.you?p.name:presName(p))||"Someone")}${p.you?' <span class="mono">(you)</span>':""}${p.hidden&&(LIVE.isAdmin||p.you)?' <span class="who-hid">hidden</span>':""}</span><span class="mono">${p.you||s<20?"active now":s<60?s+"s ago":Math.round(s/60)+" min ago"}</span></li>`}).join("")
+  +(hid?`<li class="who-more"><span class="dot off" aria-hidden="true"></span><span class="who-name">${hid} more ${hid===1?"person":"people"} online</span><span class="mono">status hidden</span></li>`:"")}
+function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-4px 0 14px">${LIVE.isAdmin?"Everyone active in the last 2 minutes, including people who hid their status. You're always hidden from others.":"People active in the last 2 minutes who share their status."}</p>
   <ul class="who" id="who-list">${whoRows()}</ul><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Close</button></div></div>`)}
 document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho();
   const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search"){const t=g.querySelector(".sa-sx-txt"),qe=g.querySelector(".sa-sx-q");const q=t&&qe&&getComputedStyle(t).display!=="none"?qe.textContent.trim():"";openSearch();if(q)setTimeout(()=>{const i=document.getElementById("sx-q");if(i){i.value=q;i.focus();i.select();i.dispatchEvent(new Event("input",{bubbles:true}))}},0)}else if(g.dataset.g==="theme")toggleTheme()}
@@ -1675,10 +1696,12 @@ document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList?.contains("nc")&&e.target.dataset.id){location.hash="#d-"+e.target.dataset.id}});
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&(e.key==="k"||e.key==="K")){if(LIVE.on&&!LIVE.user)return;e.preventDefault();if(sheet.hidden||!document.getElementById("sx-q"))openSearch();else document.getElementById("sx-q").focus()}});
 let PRES_NODOC=false;
-function beat(){const u=LIVE.user;if(!LIVE.on||!u||document.visibilityState==="hidden")return;
-  const base={name:(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()},r=route(),ref=LIVE.fs.collection("presence").doc(u.uid);
+function beat(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.adminKnown||document.visibilityState==="hidden")return;
+  const hid=iAmHidden(),base={name:hid?"":(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()},r=route(),ref=LIVE.fs.collection("presence").doc(u.uid);
+  const full={...base,doc:r.v==="doc"?String(r.id).slice(0,100):r.v==="subject"?("s:"+r.id).slice(0,100):"",hidden:hid};
   if(PRES_NODOC){ref.set(base).catch(()=>{});return}
-  ref.set({...base,doc:r.v==="doc"?String(r.id).slice(0,100):r.v==="subject"?("s:"+r.id).slice(0,100):""}).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}
+  ref.set(full).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}
+function setShareActive(on){store("share-active",on?"1":"0");document.querySelectorAll("[data-act=share-active]").forEach(b=>b.setAttribute("aria-checked",String(on)));beat();paintOnline();toast(on?"Others can see you're online":"You're hidden. You still count in the online number.")}
 function startPresence(u){stopPresence();beat();beatTimer=setInterval(beat,BEAT_MS);tickTimer=setInterval(paintOnline,15000);
   LIVE.unsubs.push(LIVE.fs.collection("presence").orderBy("at","desc").limit(300).onSnapshot(snap=>{
     LIVE.presence=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));paintOnline();paintHere()},()=>{}))}
