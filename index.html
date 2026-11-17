@@ -1382,7 +1382,7 @@ function openProgress(){document.querySelectorAll("details.me[open]").forEach(d=
 const HERE_COLORS=["#7f77dd","#378add","#d4537e","#1d9e75","#ba7517","#993c1d"];
 function hereColor(n){let h=0;for(const ch of String(n))h=(h*31+ch.charCodeAt(0))|0;return HERE_COLORS[Math.abs(h)%HERE_COLORS.length]}
 function hereFor(key){const now=Date.now(),me=LIVE.user?.uid,subj=key.startsWith("s:")?key.slice(2):null;
-  const hit=p=>subj?!!p.doc&&docById(p.doc)?.subject===subj:p.doc===key;
+  const hit=p=>subj?!!p.doc&&(p.doc===key||docById(p.doc)?.subject===subj):p.doc===key;
   return LIVE.presence.filter(p=>p.id!==me&&hit(p)&&p.at&&now-p.at.toMillis()<ONLINE_MS).map(p=>niceName(p.name||"Someone"))}
 function hereInner(docId){const ppl=hereFor(docId);if(!ppl.length)return"";
   return `<span class="here-dot"></span><span class="here-av">${ppl.slice(0,3).map(n=>`<span style="background:${hereColor(n)}" title="${esc(n)}">${esc((n.trim()[0]||"?").toUpperCase())}</span>`).join("")}</span><span class="here-txt">${ppl.length} here now</span>`}
@@ -1673,7 +1673,7 @@ let PRES_NODOC=false;
 function beat(){const u=LIVE.user;if(!LIVE.on||!u||document.visibilityState==="hidden")return;
   const base={name:(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()},r=route(),ref=LIVE.fs.collection("presence").doc(u.uid);
   if(PRES_NODOC){ref.set(base).catch(()=>{});return}
-  ref.set({...base,doc:r.v==="doc"?String(r.id).slice(0,100):""}).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}
+  ref.set({...base,doc:r.v==="doc"?String(r.id).slice(0,100):r.v==="subject"?("s:"+r.id).slice(0,100):""}).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}
 function startPresence(u){stopPresence();beat();beatTimer=setInterval(beat,BEAT_MS);tickTimer=setInterval(paintOnline,15000);
   LIVE.unsubs.push(LIVE.fs.collection("presence").orderBy("at","desc").limit(300).onSnapshot(snap=>{
     LIVE.presence=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));paintOnline();paintHere()},()=>{}))}
