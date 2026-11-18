@@ -2127,10 +2127,12 @@ async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   tx.classList.remove("lr-on");ov.classList.remove("lr-on");LR_SFX.shrink();
   const hd2=document.getElementById("lr-die"),hr2=hd2.getBoundingClientRect();
   big.style.transform=`translate(${hr2.left}px,${hr2.top}px) scale(${hr2.width/58})`;
-  if(pick.id!==LR.eq){LR_PREVIEW=pick.id;applySkin(pick.id)}
+  if(!dupe&&pick.id!==LR.eq){LR_PREVIEW=pick.id;applySkin(pick.id)}
   await lrWait(560);big.style.opacity="0";big.classList.remove("lr-landed","lr-slam");$("lr-aura").className="lr-aura";ov.classList.remove("lr-busy");
   document.getElementById("lr-die")?.classList.remove("lr-hide");LR_BUSY=false;
+  /* only brand-new designs ask; a repeat never asks again (equip it any time from My designs) */
   if(pick.id===LR.eq){toast(`${pick.ico} You're already using ${pick.name}`);return}
+  if(dupe){toast(`${pick.ico} ${pick.name} again. It's in My designs if you want to use it.`);return}
   lrAskKeep(pick)}
 function lrCelebrate(r,rc){const $=id=>document.getElementById(id),ov=$("lr-ov");ov.style.setProperty("--rc",rc);
   const rays=$("lr-rays"),r1=$("lr-ring1"),r2=$("lr-ring2"),sp=$("lr-sparks"),fl=$("lr-flash");
