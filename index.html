@@ -573,6 +573,8 @@ button.sa-online{cursor:pointer}button.sa-online:hover{color:var(--sa-text-hi)}
 @media (prefers-reduced-motion: reduce){.sa-dot::after,.sa-btn:hover .sa-bell,.sa-btn:hover .sa-cal text,.sa-btn:hover .sa-pins{animation:none}.sa-glide{transition:opacity .2s}}
 #greet{will-change:opacity,transform}
 .greet-h .hello{display:block;margin-bottom:2px}
+.nick-btn{font:inherit;letter-spacing:inherit;border:0;padding:0;cursor:pointer;line-height:inherit}
+.nick-btn:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 .greet-p{display:block}
 .shine{background-image:linear-gradient(90deg,#7f77dd 0%,#378add 25%,#534ab7 50%,#d4537e 75%,#7f77dd 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:shine 6s linear infinite}
 :root[data-theme="dark"] .shine{background-image:linear-gradient(90deg,#a99cff 0%,#6fb3f2 25%,#e6e1ff 50%,#f07fa6 75%,#a99cff 100%)}
@@ -1015,6 +1017,7 @@ function topbar(right=""){const u=LIVE.user;
     ${LIVE.isAdmin?"":`<button data-act="share-active" role="switch" aria-checked="${shareActive()}" class="sw-row"><span aria-hidden="true">🟢</span>Show me as online<span class="mini-sw" aria-hidden="true"></span></button>`}
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
     <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
+    <button data-act="edit-nick"><span aria-hidden="true">✏️</span>Change my name</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${IS_STANDALONE?"":`<button data-act="a2hs-help"><span aria-hidden="true">📲</span>Add to Home Screen</button>`}
     ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
@@ -1043,10 +1046,11 @@ document.addEventListener("focusout",e=>{if(e.target.closest&&e.target.closest("
 /* rotating home greeting */
 const GREETS=["What are we reviewing today, {n}?","Ready to study, {n}?","Which topic is it today, {n}?","Let's get some reps in, {n}.","Brain warmed up, {n}?","One topic at a time, {n}.","What's on the review list, {n}?","Small steps, big grades, {n}.","Coffee ready? Let's go, {n}.","Time to make it stick, {n}.","Which notes are we opening, {n}?","You've got this, {n}. Pick a subject."];
 let GREET_I=0;const GREET_MS=20000;
-function firstName(){const u=LIVE.user;const n=niceName((u&&(u.displayName||""))||"").trim().split(/\s+/)[0]||"";return n}
+function myNick(){const u=LIVE.user;if(!u)return"";return (LIVE.nick!=null?LIVE.nick:(store("nick-"+u.uid)||"")).trim()}
+function firstName(){const u=LIVE.user;const nk=myNick();if(nk)return nk;const n=niceName((u&&(u.displayName||""))||"").trim().split(/\s+/)[0]||"";return n}
 function helloLine(){const n=firstName();if(!n)return"";const h=new Date().getHours();
   const part=h<5?"Hi":h<12?"Good morning":h<18?"Good afternoon":"Good evening";
-  return `<span class="hello">${part}, <span class="shine">${esc(n)}</span>.</span>`}
+  return `<span class="hello">${part}, <button type="button" class="shine nick-btn" data-act="edit-nick" title="Change the name shown here">${esc(n)}</button>.</span>`}
 function greetText(){const n="",g=GREETS[GREET_I%GREETS.length];return n?g.replace("{n}",n):g.replace(/,? \{n\}/,"")}
 function swapGreet(){const el=document.getElementById("greet");if(!el||document.hidden)return;GREET_I++;const next=greetText();
   const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1293,6 +1297,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="suggest"){openSuggest()}
   else if(a==="share-notes"){openShare()}
   else if(a==="a2hs-help"){openA2HSHelp()}
+  else if(a==="edit-nick"){openNick()}
   else if(a==="my-progress"){openProgress()}
   else if(a==="share-done"){LIVE.fs.collection("shares").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
   else if(a==="sugg-done"){LIVE.fs.collection("suggestions").doc(id).delete().then(()=>toast("Marked as done")).catch(()=>toast("Couldn't remove it."))}
@@ -1784,6 +1789,7 @@ async function recordVisit(u){
   const FV=firebase.firestore.FieldValue,ref=LIVE.fs.collection("users").doc(u.uid);
   const base={name:(u.displayName||"").slice(0,80),email:(u.email||"").slice(0,120),photo:(u.photoURL||"").slice(0,500),lastSeen:FV.serverTimestamp()};
   try{const d=await ref.get(),appNew=IS_STANDALONE&&!(d.exists&&d.data().app),extra=appNew?{app:FV.serverTimestamp()}:{};
+    if(d.exists&&typeof d.data().nick==="string"){LIVE.nick=d.data().nick;store("nick-"+u.uid,LIVE.nick);if(route().v==="home")render()}
     const write=x=>d.exists?ref.update({...base,...x,visits:FV.increment(1)}):ref.set({...base,...x,firstSeen:FV.serverTimestamp(),visits:1});
     try{await write(extra)}catch(e){if(!appNew)throw e;await write({})}
   }catch(e){console.warn("visit not recorded",e)}}
@@ -1828,6 +1834,16 @@ function maybeA2HS(force){try{
     if(b.dataset.a2hs==="install"&&A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted")store("a2hs",JSON.stringify({done:1}));else{const s2=a2hsState();store("a2hs",JSON.stringify({n:(s2.n||0)+1,at:Date.now()}))}}
     else{const s2=a2hsState();store("a2hs",JSON.stringify({n:(s2.n||0)+1,at:Date.now()}))}
     el.classList.remove("in");setTimeout(()=>el.remove(),350)})}catch(e){}}
+/* custom name for the home greeting */
+function openNick(){const u=LIVE.user;if(!u)return;document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
+  const g=niceName(u.displayName||"").trim().split(/\s+/)[0]||"";
+  openSheet(`<form id="f"><h2>What should we call you?</h2><p class="muted">This name shows in your greeting on the home page.</p>
+    <div class="field"><label for="f-nick">Your name</label><input type="text" id="f-nick" maxlength="20" autocomplete="nickname" value="${esc(myNick())}" placeholder="${esc(g||"Your name")}"></div>
+    <p class="mono" style="margin:0">Leave it empty to use your Google name${g?` (${esc(g)})`:""}.</p>
+    <p class="err" id="form-err" hidden></p><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></div></form>`,async f=>{
+      const v=f.querySelector("#f-nick").value.replace(/\s+/g," ").trim().slice(0,20);
+      LIVE.nick=v;store("nick-"+u.uid,v);closeSheet();render();toast(v?`Hi, ${v}!`:"Using your Google name");
+      try{const FV=firebase.firestore.FieldValue;await LIVE.fs.collection("users").doc(u.uid).update({nick:v,lastSeen:FV.serverTimestamp()})}catch(e){console.warn("nick saved on this device only",e)}})}
 /* always-available how-to, from the profile menu */
 async function openA2HSHelp(){document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
   if(A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted"){store("a2hs",JSON.stringify({done:1}));toast("Study Atlas was added to your Home Screen")}return}
