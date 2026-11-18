@@ -2169,8 +2169,8 @@ async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   if(huge){ov.style.setProperty("--rc",rc);const au=$("lr-aura");au.className="lr-aura"+(r==="mythic"?" lr-rainbow":"");void au.offsetWidth;au.classList.add("lr-charge");
     if(d3){d3.setColor(rc,700);d3.spin(true)}else spin.innerHTML=lrDieSvg("?",rc,"#1d2331","b");big.classList.remove("lr-rolling");big.classList.add("lr-charge");if(r==="mythic")big.classList.add("lr-m");
     LR_SFX.riser(r==="mythic"?1.4:1);await lrWait(r==="mythic"?1400:1000);big.classList.remove("lr-charge","lr-m")}
-  if(d3){await d3.roll(n,rc,{big:huge,duration:huge?1300:1000});ov.classList.remove("lr-rolling")}else spin.innerHTML=lrDieSvg(n,rc,"#1d2331","b");
-  big.classList.remove("lr-rolling");void big.offsetWidth;big.classList.add(huge?"lr-slam":"lr-landed");
+  if(d3){await d3.roll(n,rc,{big:huge,duration:huge?1400:1200});ov.classList.remove("lr-rolling")}else spin.innerHTML=lrDieSvg(n,rc,"#1d2331","b");
+  big.classList.remove("lr-rolling");void big.offsetWidth;if(huge)big.classList.add("lr-slam");else if(!d3)big.classList.add("lr-landed");
   LR_SFX.thud();setTimeout(()=>LR_SFX.win(r),120);lrCelebrate(r,rc);try{navigator.vibrate&&navigator.vibrate(huge?[60,40,120]:30)}catch(e){}
   const dupe=LR.owned.includes(pick.id);if(!dupe){LR.owned.push(pick.id);lrSave()}
   const tx=$("lr-text");if(huge)await lrWait(r==="mythic"?900:700);

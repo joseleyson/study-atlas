@@ -214,7 +214,7 @@ window.D20 = (function () {
     die.mesh.rotateY(0.5); die.mesh.rotateX(-0.25);         // a nice idle angle
 
     let mode = "idle", anim = null, raf = 0, last = performance.now(), alive = true;
-    const spinAxis = new T.Vector3(0.4, 1, 0.25).normalize();
+    const spinAxis = new T.Vector3(0.4, 1, 0.25).normalize(), FAST = 9;
     const tmpQ = new T.Quaternion();
 
     function frame(now) {
@@ -224,8 +224,8 @@ window.D20 = (function () {
       if (mode === "idle") {
         die.mesh.quaternion.premultiply(tmpQ.setFromAxisAngle(spinAxis, dt * 0.5));
       } else if (mode === "fast") {
-        die.mesh.quaternion.premultiply(tmpQ.setFromAxisAngle(spinAxis, dt * 14));
-        die.mesh.position.y = 0.12 * Math.sin(now / 90);
+        die.mesh.quaternion.premultiply(tmpQ.setFromAxisAngle(spinAxis, dt * FAST));
+        die.mesh.position.y = 0.08 * Math.sin(now / 160);
       } else if (mode === "roll" && anim) anim(now);
       if (colorT < 1) {                                      // smooth colour fade
         colorT = Math.min(1, colorT + dt / colorDur);
@@ -260,41 +260,47 @@ window.D20 = (function () {
       setLabel(null);                                        // blank while it tumbles
       const dur = o.duration || 1700;
       const target = faceQuat(die.faces, n, view);
-      const start = die.mesh.quaternion.clone();
-      const axis = new T.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
-      const turns = Math.PI * 2 * (2.5 + Math.random());
+      const y0 = die.mesh.position.y;
+      // physics-style landing: keep the spin it already has, and let a spring pull it onto the rolled face.
+      // speed and angle change continuously, so there are no jumps.
+      const w = new T.Vector3();
+      if (mode === "fast") w.copy(spinAxis).multiplyScalar(FAST); else if (mode === "idle") w.copy(spinAxis).multiplyScalar(0.5);
       const big = o.big || n >= 17;                          // epic and up land harder and glow
       const t0 = performance.now();
-      const path = new T.Quaternion(), wob = new T.Quaternion();
-      const wobAxis = new T.Vector3(1, 0, 0);
+      let lastNow = t0, landed = false, t1 = 0;
+      const qd = new T.Quaternion(), dq = new T.Quaternion(), err = new T.Vector3(), ax = new T.Vector3();
       mode = "roll";
       return new Promise(resolve => {
-        let landed = false;
         anim = now => {
           const t = Math.min(1, (now - t0) / dur);
-          // tumble that slows down and ends exactly on the target face
-          path.setFromAxisAngle(axis, turns * (1 - easeOut(t))).multiply(target);
-          die.mesh.quaternion.copy(start).slerp(path, Math.min(1, t / 0.18));
-          // drop and bounce (3 bounces, smaller each time)
-          die.mesh.position.y = 1.1 * Math.abs(Math.cos(Math.PI * 2.5 * t)) * Math.pow(1 - t, 2.2);
-          // squash a little on each impact
-          const hit = Math.max(0, 1 - die.mesh.position.y * 6) * (1 - t);
-          die.mesh.scale.set(1 + hit * 0.06, 1 - hit * 0.08, 1 + hit * 0.06);
+          let dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
+          const k = 18 + 150 * t * t, c = 1.7 * Math.sqrt(k);      // the pull gets stronger as it slows down
+          const steps = 4; dt /= steps;
+          for (let i = 0; i < steps; i++) {
+            qd.copy(target).multiply(dq.copy(die.mesh.quaternion).invert());
+            if (qd.w < 0) { qd.x = -qd.x; qd.y = -qd.y; qd.z = -qd.z; qd.w = -qd.w; }
+            const ang = 2 * Math.acos(Math.min(1, qd.w)), sn = Math.sqrt(Math.max(1e-9, 1 - qd.w * qd.w));
+            err.set(qd.x / sn, qd.y / sn, qd.z / sn).multiplyScalar(ang);
+            w.addScaledVector(err, k * dt).multiplyScalar(Math.max(0, 1 - c * dt));
+            const sp = w.length();
+            if (sp > 1e-6) die.mesh.quaternion.premultiply(dq.setFromAxisAngle(ax.copy(w).divideScalar(sp), sp * dt)).normalize();
+          }
+          // small, soft hops that start from where it already is (no sudden drop)
+          const settle = Math.min(1, t / 0.25), sE = settle * settle * (3 - 2 * settle);
+          die.mesh.position.y = y0 * (1 - sE) + 0.2 * Math.abs(Math.sin(Math.PI * 2 * t)) * Math.pow(1 - t, 1.6) * sE;
+          const hit = Math.max(0, 1 - die.mesh.position.y * 10) * (1 - t) * sE;
+          die.mesh.scale.set(1 + hit * 0.03, 1 - hit * 0.04, 1 + hit * 0.03);
           if (t >= 1 && !landed) {
-            landed = true;
+            landed = true; t1 = now;
             die.mesh.scale.set(1, 1, 1); die.mesh.position.y = 0;
             setLabel(n);                                       // number appears on the landed face
-            const t1 = performance.now();
-            anim = now2 => {                               // settle wobble + rarity glow
-              const s = (now2 - t1) / 1000;
-              const w = 0.09 * Math.sin(s * 22) * Math.exp(-s * 6);
-              die.mesh.quaternion.copy(wob.setFromAxisAngle(wobAxis, w)).multiply(target);
-              const pulse = big ? 0.55 * Math.exp(-s * 2.2) + 0.12 : 0.18 * Math.exp(-s * 3);
-              die.mat.emissiveIntensity = NUM_GLOW + pulse;
-              glow.intensity = (big ? 14 : 4) * Math.exp(-s * 2.5);
-              if (s > 2.5) { die.mesh.quaternion.copy(target); anim = null; mode = "still"; }
-            };
             resolve(n);
+          }
+          if (landed) {                                        // rarity glow, and finish settling exactly on the face
+            const s2 = (now - t1) / 1000;
+            die.mat.emissiveIntensity = NUM_GLOW + (big ? 0.55 * Math.exp(-s2 * 2.2) + 0.12 : 0.18 * Math.exp(-s2 * 3));
+            glow.intensity = (big ? 14 : 4) * Math.exp(-s2 * 2.5);
+            if (s2 > 2.5) { die.mesh.quaternion.copy(target); w.set(0, 0, 0); anim = null; mode = "still"; }
           }
         };
       });
@@ -310,7 +316,7 @@ window.D20 = (function () {
         die.faces.forEach(f => { const d = f.normal.clone().applyQuaternion(die.mesh.quaternion).dot(view); if (d > bd) { bd = d; best = f.n; } });
         return best;
       },
-      canvas: renderer.domElement,
+      canvas: renderer.domElement, mesh: die.mesh,
       dispose() {
         alive = false; cancelAnimationFrame(raf);
         die.tex.dispose(); die.ntex.dispose(); die.mat.dispose(); die.mesh.geometry.dispose();
