@@ -36,6 +36,7 @@ window.D20 = (function () {
 
   /* ---------- the number sheet (one triangle per face) ---------- */
   const CELL = 256, COLS = 5, ROWS = 4;
+  const NEUTRAL = "#f6f6fb", NUM_GLOW = 0.85;          // faces are painted light grey and tinted by the material colour
   const TRI = { ax: 0.5, ay: 0.08, lx: 0.04, ly: 0.877, rx: 0.96, ry: 0.877 };   // equilateral in a cell
 
   function paintAtlas(canvas, color, only) {           // only: undefined = all numbers, null = none, n = just n
@@ -63,6 +64,20 @@ window.D20 = (function () {
       c.lineWidth = 10; c.strokeStyle = "rgba(10,10,30,.45)"; c.strokeText(String(n), cx, cy);
       c.fillStyle = "#ffffff"; c.fillText(String(n), cx, cy);
       if (!one && (n === 6 || n === 9)) { c.fillRect(cx - 18, cy + 40, 36, 7); }        // so 6 and 9 aren't confused
+    }
+  }
+
+  function paintNumbers(canvas, only) {
+    const c = canvas.getContext("2d");
+    c.fillStyle = "#000"; c.fillRect(0, 0, canvas.width, canvas.height);
+    for (let n = 1; n <= 20; n++) {
+      if (only !== undefined && only !== n) continue;
+      const i = n - 1, ox = (i % COLS) * CELL, oy = Math.floor(i / COLS) * CELL;
+      const cx = ox + (TRI.ax + TRI.lx + TRI.rx) / 3 * CELL, cy = oy + (TRI.ay + TRI.ly + TRI.ry) / 3 * CELL + 4;
+      const one = only !== undefined;
+      c.font = "800 " + (one ? (n >= 10 ? 92 : 104) : (n >= 10 ? 74 : 86)) + "px system-ui, -apple-system, Segoe UI, sans-serif";
+      c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#fff"; c.fillText(String(n), cx, cy);
+      if (!one && (n === 6 || n === 9)) { c.fillRect(cx - 18, cy + 40, 36, 7); }
     }
   }
 
@@ -97,22 +112,27 @@ window.D20 = (function () {
 
     const canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
-    paintAtlas(canvas, color, label);
+    paintAtlas(canvas, NEUTRAL, label);
     const tex = new T.CanvasTexture(canvas);
     tex.colorSpace = T.SRGBColorSpace;
     tex.anisotropy = 8;
+    const ncanvas = document.createElement("canvas");
+    ncanvas.width = W; ncanvas.height = H;
+    paintNumbers(ncanvas, label);
+    const ntex = new T.CanvasTexture(ncanvas);
+    ntex.colorSpace = T.SRGBColorSpace;
 
     const mat = new T.MeshPhysicalMaterial({
-      map: tex, roughness: 0.28, metalness: 0.05,
+      map: tex, color: new T.Color(color), roughness: 0.28, metalness: 0.05,
       clearcoat: 1, clearcoatRoughness: 0.08,
-      emissive: new T.Color(color), emissiveIntensity: 0
+      emissive: new T.Color(0xffffff), emissiveMap: ntex, emissiveIntensity: NUM_GLOW
     });
     const mesh = new T.Mesh(geo, mat);
     const edges = new T.LineSegments(new T.EdgesGeometry(geo),
       new T.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.28 }));
     edges.scale.setScalar(1.002);
     mesh.add(edges);
-    return { mesh, mat, tex, canvas, faces };
+    return { mesh, mat, tex, canvas, ntex, ncanvas, faces };
   }
 
   /* soft studio lighting for the glossy reflections (no image files needed) */
@@ -207,6 +227,12 @@ window.D20 = (function () {
         die.mesh.quaternion.premultiply(tmpQ.setFromAxisAngle(spinAxis, dt * 14));
         die.mesh.position.y = 0.12 * Math.sin(now / 90);
       } else if (mode === "roll" && anim) anim(now);
+      if (colorT < 1) {                                      // smooth colour fade
+        colorT = Math.min(1, colorT + dt / colorDur);
+        const e = colorT * colorT * (3 - 2 * colorT);
+        die.mat.color.copy(colorFrom).lerp(colorTo, e);
+        glow.color.copy(die.mat.color);
+      }
       const h = die.mesh.position.y;
       shadow.scale.setScalar(1 - Math.min(0.45, Math.max(0, h) * 0.35));
       shadow.material.opacity = 1 - Math.min(0.6, Math.max(0, h) * 0.45);
@@ -214,19 +240,23 @@ window.D20 = (function () {
     }
     raf = requestAnimationFrame(frame);
 
-    function repaint() { paintAtlas(die.canvas, color, label); die.tex.needsUpdate = true; }
+    function repaint() {
+      paintAtlas(die.canvas, NEUTRAL, label); die.tex.needsUpdate = true;
+      paintNumbers(die.ncanvas, label); die.ntex.needsUpdate = true;
+    }
     function setLabel(n) { if (oneNumber) { label = n; repaint(); } }
-    function setColor(c) {
+    const colorFrom = new T.Color(), colorTo = new T.Color(color);
+    let colorT = 1, colorDur = 0.45;
+    function setColor(c, ms) {
       color = c;
-      paintAtlas(die.canvas, c, label);
-      die.tex.needsUpdate = true;
-      die.mat.emissive.set(c);
-      glow.color.set(c);
+      colorTo.set(c);
+      if (ms === 0) { die.mat.color.copy(colorTo); glow.color.copy(colorTo); colorT = 1; return; }
+      colorFrom.copy(die.mat.color); colorDur = (ms || 450) / 1000; colorT = 0;
     }
 
     function roll(n, c, o) {
       o = o || {};
-      if (c) setColor(c);
+      if (c) setColor(c, 500);
       setLabel(null);                                        // blank while it tumbles
       const dur = o.duration || 1700;
       const target = faceQuat(die.faces, n, view);
@@ -260,7 +290,7 @@ window.D20 = (function () {
               const w = 0.09 * Math.sin(s * 22) * Math.exp(-s * 6);
               die.mesh.quaternion.copy(wob.setFromAxisAngle(wobAxis, w)).multiply(target);
               const pulse = big ? 0.55 * Math.exp(-s * 2.2) + 0.12 : 0.18 * Math.exp(-s * 3);
-              die.mat.emissiveIntensity = pulse;
+              die.mat.emissiveIntensity = NUM_GLOW + pulse;
               glow.intensity = (big ? 14 : 4) * Math.exp(-s * 2.5);
               if (s > 2.5) { die.mesh.quaternion.copy(target); anim = null; mode = "still"; }
             };
@@ -272,9 +302,9 @@ window.D20 = (function () {
 
     return {
       roll, setColor,
-      spin(on) { if (on) setLabel(null); mode = on ? "fast" : "idle"; if (!on) die.mesh.position.y = 0; die.mat.emissiveIntensity = 0; },
-      show(n, c) { if (c) setColor(c); setLabel(n); mode = "still"; anim = null; die.mesh.position.y = 0; die.mesh.quaternion.copy(faceQuat(die.faces, n, view)); },
-      idle() { mode = "idle"; die.mat.emissiveIntensity = 0; glow.intensity = 0; },
+      spin(on) { if (on) setLabel(null); mode = on ? "fast" : "idle"; if (!on) die.mesh.position.y = 0; die.mat.emissiveIntensity = NUM_GLOW; },
+      show(n, c) { if (c) setColor(c, 0); setLabel(n); mode = "still"; anim = null; die.mesh.position.y = 0; die.mesh.quaternion.copy(faceQuat(die.faces, n, view)); },
+      idle() { mode = "idle"; die.mat.emissiveIntensity = NUM_GLOW; glow.intensity = 0; },
       facing() {                                            // which number is facing you right now
         let best = null, bd = -2;
         die.faces.forEach(f => { const d = f.normal.clone().applyQuaternion(die.mesh.quaternion).dot(view); if (d > bd) { bd = d; best = f.n; } });
@@ -283,7 +313,7 @@ window.D20 = (function () {
       canvas: renderer.domElement,
       dispose() {
         alive = false; cancelAnimationFrame(raf);
-        die.tex.dispose(); die.mat.dispose(); die.mesh.geometry.dispose();
+        die.tex.dispose(); die.ntex.dispose(); die.mat.dispose(); die.mesh.geometry.dispose();
         renderer.dispose(); renderer.domElement.remove();
       }
     };

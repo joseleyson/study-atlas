@@ -2153,7 +2153,7 @@ async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   const ov=lrOverlay(),$=id=>document.getElementById(id),hd=document.getElementById("lr-die");lrPaintDie();
   const hr=hd.getBoundingClientRect(),big=$("lr-big"),spin=$("lr-spin");
   const d3=await lrDie3D();ov.classList.add("lr-busy");
-  if(d3){d3.setColor("#b9aeff");d3.spin(true)}else spin.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","b");
+  if(d3){d3.setColor("#b9aeff",0);d3.spin(true)}else spin.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","b");
   big.style.transition="none";big.style.transform=`translate(${hr.left}px,${hr.top}px) scale(${hr.width/58})`;big.style.opacity="1";
   hd.classList.add("lr-hide");void big.offsetWidth;
   const sw=innerWidth,sh=innerHeight,S=Math.min(2.8,Math.max(2.2,sw/160)),size=58*S;
@@ -2167,7 +2167,7 @@ async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   await lrWait(d3?500:1200);clearInterval(tk);if(!d3)ov.classList.remove("lr-rolling");
   const huge=r==="legendary"||r==="mythic";
   if(huge){ov.style.setProperty("--rc",rc);const au=$("lr-aura");au.className="lr-aura"+(r==="mythic"?" lr-rainbow":"");void au.offsetWidth;au.classList.add("lr-charge");
-    if(d3){d3.setColor(rc);d3.spin(true)}else spin.innerHTML=lrDieSvg("?",rc,"#1d2331","b");big.classList.remove("lr-rolling");big.classList.add("lr-charge");if(r==="mythic")big.classList.add("lr-m");
+    if(d3){d3.setColor(rc,700);d3.spin(true)}else spin.innerHTML=lrDieSvg("?",rc,"#1d2331","b");big.classList.remove("lr-rolling");big.classList.add("lr-charge");if(r==="mythic")big.classList.add("lr-m");
     LR_SFX.riser(r==="mythic"?1.4:1);await lrWait(r==="mythic"?1400:1000);big.classList.remove("lr-charge","lr-m")}
   if(d3){await d3.roll(n,rc,{big:huge,duration:huge?1300:1000});ov.classList.remove("lr-rolling")}else spin.innerHTML=lrDieSvg(n,rc,"#1d2331","b");
   big.classList.remove("lr-rolling");void big.offsetWidth;big.classList.add(huge?"lr-slam":"lr-landed");
