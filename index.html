@@ -1035,6 +1035,7 @@ body.nudged #app{animation:nudge-shake .55s}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <script src="firebase-config.js"></script>
+<script src="d20-3d.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>/* always fetch the newest notes list, never a cached copy */document.write('<script src="data.js?v='+Date.now()+'"><\/script>')</script>
 <script>
@@ -1813,7 +1814,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
   firebase.auth().onAuthStateChanged(async u=>{
     LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;try{lrStart(u)}catch(e){console.warn(e)}LIVE.isAdmin=false;LIVE.adminKnown=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
-    recordVisit(u);startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);setTimeout(()=>{try{checkNotify()}catch(e){}},2500);setTimeout(()=>{try{maybeAskNotify()}catch(e){}},11000);setTimeout(()=>{try{maybeFeature()}catch(e){}},3500);
+    recordVisit(u);startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);setTimeout(()=>{try{checkNotify()}catch(e){}},2500);setTimeout(()=>{try{maybeAskNotify()}catch(e){}},11000);setTimeout(()=>{try{maybeFeature()}catch(e){}},3500);setTimeout(()=>{try{lrWarm3D()}catch(e){}},2000);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
@@ -2135,13 +2136,24 @@ function lrSetAuto(on){LR_AUTO=!!on;const b=document.getElementById("lr-auto");i
   document.querySelectorAll("[data-lr=auto]").forEach(x=>{x.setAttribute("aria-pressed",String(LR_AUTO));x.textContent=LR_AUTO?"■ Stop auto roll":"↻ Auto roll"});
   if(LR_AUTO){if(!sheet.hidden)closeSheet();toast("↻ Auto roll on. Tap the red Stop button any time.");if(!LR_BUSY)lrRoll()}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&LR_AUTO)lrSetAuto(false)});
+/* the 3D d20 (d20-3d.js, Three.js); the SVG dice stays as the fallback */
+let LR_3D=null;
+function lrDie3D(){if(!window.D20)return Promise.resolve(null);
+  if(!LR_3D){const spin=document.getElementById("lr-spin");
+    LR_3D=D20.mount(spin,{size:58,scale:2.8,style:"one"}).then(d=>{spin.querySelectorAll("svg").forEach(x=>x.remove());return d})
+      .catch(()=>{spin.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","b");return null})}
+  /* don't hold up a roll on a slow connection: use the flat dice this time if 3D isn't ready in 2.5 s */
+  return Promise.race([LR_3D,lrWait(2500).then(()=>null)])}
+function lrWarm3D(){if(!window.D20||!LIVE.user)return;(window.requestIdleCallback||setTimeout)(()=>{D20.load().then(()=>{lrOverlay();lrDie3D();
+  const b=document.getElementById("lr-die");if(b&&!b.dataset.d3)D20.snapshot(20,"#b9aeff",116,"one").then(url=>{b.dataset.d3="1";b.innerHTML='<img src="'+url+'" alt="" style="width:100%;height:100%;display:block">'}).catch(()=>{})}).catch(()=>{})})}
 async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   if(route().v!=="home"){location.hash="";await lrWait(350)}
   if(!sheet.hidden)closeSheet();
   LR_BUSY=true;if(!force){LR.rolls++;lrSave()}
   const ov=lrOverlay(),$=id=>document.getElementById(id),hd=document.getElementById("lr-die");lrPaintDie();
-  const hr=hd.getBoundingClientRect(),big=$("lr-big"),spin=$("lr-spin");ov.classList.add("lr-busy");
-  spin.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","b");
+  const hr=hd.getBoundingClientRect(),big=$("lr-big"),spin=$("lr-spin");
+  const d3=await lrDie3D();ov.classList.add("lr-busy");
+  if(d3){d3.setColor("#b9aeff");d3.spin(true)}else spin.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","b");
   big.style.transition="none";big.style.transform=`translate(${hr.left}px,${hr.top}px) scale(${hr.width/58})`;big.style.opacity="1";
   hd.classList.add("lr-hide");void big.offsetWidth;
   const sw=innerWidth,sh=innerHeight,S=Math.min(2.8,Math.max(2.2,sw/160)),size=58*S;
@@ -2150,14 +2162,15 @@ async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   await lrWait(560);
   const n=force==="mythic"?20:force==="legendary"?19:luckyNum(),r=lrRarity(n),rc=LR_R[r].c;
   const pool=LR_T.filter(t=>t.r===r&&t.id!=="default"),pick=pool[Math.floor(Math.random()*pool.length)];
-  ov.classList.add("lr-rolling");LR_SFX.rattle(1150);big.classList.remove("lr-landed","lr-slam");big.classList.add("lr-rolling");
+  ov.classList.add("lr-rolling");LR_SFX.rattle(1150);big.classList.remove("lr-landed","lr-slam");if(!d3)big.classList.add("lr-rolling");
   const tk=setInterval(()=>{const e=spin.querySelector(".lr-die-num");if(e)e.textContent=1+Math.floor(Math.random()*20)},70);
-  await lrWait(1200);clearInterval(tk);ov.classList.remove("lr-rolling");
+  await lrWait(d3?500:1200);clearInterval(tk);if(!d3)ov.classList.remove("lr-rolling");
   const huge=r==="legendary"||r==="mythic";
   if(huge){ov.style.setProperty("--rc",rc);const au=$("lr-aura");au.className="lr-aura"+(r==="mythic"?" lr-rainbow":"");void au.offsetWidth;au.classList.add("lr-charge");
-    spin.innerHTML=lrDieSvg("?",rc,"#1d2331","b");big.classList.remove("lr-rolling");big.classList.add("lr-charge");if(r==="mythic")big.classList.add("lr-m");
+    if(d3){d3.setColor(rc);d3.spin(true)}else spin.innerHTML=lrDieSvg("?",rc,"#1d2331","b");big.classList.remove("lr-rolling");big.classList.add("lr-charge");if(r==="mythic")big.classList.add("lr-m");
     LR_SFX.riser(r==="mythic"?1.4:1);await lrWait(r==="mythic"?1400:1000);big.classList.remove("lr-charge","lr-m")}
-  spin.innerHTML=lrDieSvg(n,rc,"#1d2331","b");big.classList.remove("lr-rolling");void big.offsetWidth;big.classList.add(huge?"lr-slam":"lr-landed");
+  if(d3){await d3.roll(n,rc,{big:huge,duration:huge?1300:1000});ov.classList.remove("lr-rolling")}else spin.innerHTML=lrDieSvg(n,rc,"#1d2331","b");
+  big.classList.remove("lr-rolling");void big.offsetWidth;big.classList.add(huge?"lr-slam":"lr-landed");
   LR_SFX.thud();setTimeout(()=>LR_SFX.win(r),120);lrCelebrate(r,rc);try{navigator.vibrate&&navigator.vibrate(huge?[60,40,120]:30)}catch(e){}
   const dupe=LR.owned.includes(pick.id);if(!dupe){LR.owned.push(pick.id);lrSave()}
   const tx=$("lr-text");if(huge)await lrWait(r==="mythic"?900:700);
