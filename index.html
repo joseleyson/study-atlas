@@ -868,6 +868,144 @@ body.nudged #app{animation:nudge-shake .55s}
 .nudge-hand{font-size:22px;display:inline-block;transform-origin:70% 80%}
 .nudge-pop.on .nudge-hand{animation:poke .45s ease 4}
 @media (prefers-reduced-motion: reduce){body.nudged #app,.nudge-pop.on .nudge-hand,.pf-nudge.sent .pf-wave,.pf-nudge.shake{animation:none}}
+.notif-tag{color:#e3b341;border-color:color-mix(in srgb,#e3b341 45%,transparent);background:color-mix(in srgb,#e3b341 10%,transparent)}
+.notif-tag.no{color:var(--muted);border-color:var(--line);background:transparent}
+.ask-bell{font-size:40px;line-height:1;display:block;margin-bottom:6px;transform-origin:50% 0;animation:bellRing 1.4s ease-in-out 2}
+@keyframes bellRing{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(16deg)}20%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}40%{transform:rotate(-8deg)}50%{transform:rotate(4deg)}}
+@media (prefers-reduced-motion: reduce){.ask-bell{animation:none}}
+/* ---------- Lucky Roll ---------- */
+.lr-die-num{font:700 30px var(--f-display);fill:#fff}
+@keyframes lrBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-6deg)}}
+#lr-ov{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden;visibility:hidden}
+#lr-ov.lr-on,#lr-ov.lr-busy{visibility:visible}
+.lr-ov-dim{position:absolute;inset:0;background:rgba(5,6,12,.72);backdrop-filter:blur(8px);opacity:0;transition:opacity .45s}
+#lr-ov.lr-on .lr-ov-dim{opacity:1}
+.lr-big-die{opacity:0;position:fixed;left:0;top:0;width:58px;height:58px;transform-origin:0 0;transition:transform .55s cubic-bezier(.2,.9,.25,1);z-index:2;filter:drop-shadow(0 18px 30px rgba(0,0,0,.6))}
+.lr-big-die svg{width:100%;height:100%;overflow:visible}
+.lr-big-die .lr-spin{width:100%;height:100%}
+.lr-big-die.lr-rolling .lr-spin{animation:lrTumble 1.2s cubic-bezier(.3,.7,.4,1)}
+@keyframes lrTumble{0%{transform:rotate(0) scale(1)}25%{transform:rotate(260deg) scale(.86) translateY(-10px)}55%{transform:rotate(620deg) scale(1.06)}80%{transform:rotate(700deg) scale(.98)}100%{transform:rotate(720deg) scale(1)}}
+.lr-big-die.lr-landed .lr-spin{animation:lrLand .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes lrLand{0%{transform:scale(1.25)}100%{transform:scale(1)}}
+.lr-rays{position:absolute;left:50%;top:44%;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;opacity:0;background:repeating-conic-gradient(from 0deg,var(--rc) 0 6deg,transparent 6deg 20deg);-webkit-mask:radial-gradient(circle,#000 0 18%,transparent 62%);mask:radial-gradient(circle,#000 0 18%,transparent 62%);z-index:1}
+.lr-rays.lr-go{animation:lrRays 2.6s ease-out forwards}
+.lr-rays.lr-rainbow{background:repeating-conic-gradient(from 0deg,#ff7eb3 0 6deg,transparent 6deg 14deg,#ffd36e 14deg 20deg,transparent 20deg 28deg,#7affc1 28deg 34deg,transparent 34deg 42deg,#6ec8ff 42deg 48deg,transparent 48deg 56deg,#c58bff 56deg 62deg,transparent 62deg 72deg)}
+@keyframes lrRays{0%{opacity:0;transform:rotate(0) scale(.4)}20%{opacity:.9}100%{opacity:0;transform:rotate(80deg) scale(1.1)}}
+.lr-ring{position:absolute;left:50%;top:44%;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:3px solid var(--rc);opacity:0;z-index:1}
+.lr-ring.lr-go{animation:lrRing .9s ease-out forwards}
+.lr-ring.lr-go.lr-r2{animation-delay:.18s}
+@keyframes lrRing{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(3.2)}}
+.lr-flash{position:absolute;inset:0;background:var(--rc);opacity:0;z-index:4;pointer-events:none}
+.lr-flash.lr-go{animation:lrFlash .6s ease-out}
+@keyframes lrFlash{0%{opacity:.75}100%{opacity:0}}
+.lr-sparks{position:absolute;left:50%;top:44%;width:0;height:0;z-index:3}
+.lr-sparks span{position:absolute;width:var(--s,7px);height:var(--s,7px);border-radius:2px;background:var(--col);opacity:0}
+.lr-sparks.lr-go span{animation:lrSpark var(--d,1s) cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes lrSpark{0%{opacity:1;transform:translate(-50%,-50%) rotate(0)}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r))}}
+.lr-ov-text{position:absolute;left:16px;right:16px;top:61%;text-align:center;display:grid;gap:8px;justify-items:center;z-index:5;opacity:0;transform:translateY(12px);transition:opacity .35s,transform .45s cubic-bezier(.3,1.4,.5,1)}
+.lr-ov-text.lr-on{opacity:1;transform:none}
+.lr-ov-text .chip{font-size:10px}
+.lr-ov-name{margin:0;font:700 24px/1.15 var(--f-display);color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+.lr-ov-sub{margin:0;font-size:12px;color:#ffffffb3}
+.lr-ov-hint{position:absolute;bottom:26px;left:0;right:0;text-align:center;font:11px var(--f-mono);color:#ffffff80;z-index:5;opacity:0;transition:opacity .3s}
+#lr-ov.lr-rolling .lr-ov-hint{opacity:1}
+/* ---- big moments: legendary + mythic ---- */
+.lr-big-die.lr-charge .lr-spin{animation:lrCharge 1s ease-in forwards}
+@keyframes lrCharge{0%{transform:scale(1)}20%{transform:scale(1.04) translate(-2px,1px)}40%{transform:scale(1.08) translate(2px,-1px)}60%{transform:scale(1.12) translate(-3px,2px)}80%{transform:scale(1.18) translate(3px,-2px)}100%{transform:scale(1.22)}}
+.lr-big-die.lr-charge.lr-m .lr-spin{animation:lrChargeM 1.4s ease-in forwards}
+@keyframes lrChargeM{0%{transform:scale(1) rotate(0);filter:hue-rotate(0)}25%{transform:scale(1.06) rotate(-6deg) translate(-3px,2px);filter:hue-rotate(90deg)}50%{transform:scale(1.14) rotate(6deg) translate(3px,-2px);filter:hue-rotate(180deg)}75%{transform:scale(1.22) rotate(-8deg) translate(-4px,3px);filter:hue-rotate(270deg)}100%{transform:scale(1.32) rotate(0);filter:hue-rotate(360deg)}}
+.lr-big-die.lr-slam .lr-spin{animation:lrSlam .7s cubic-bezier(.2,1.8,.4,1)}
+@keyframes lrSlam{0%{transform:scale(1.6)}40%{transform:scale(.85)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+.lr-aura{position:absolute;left:50%;top:44%;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;background:radial-gradient(circle,var(--rc) 0,transparent 65%);opacity:0;z-index:1;pointer-events:none}
+.lr-aura.lr-charge{animation:lrAuraC 1.2s ease-in forwards}
+@keyframes lrAuraC{0%{opacity:0;transform:scale(.4)}100%{opacity:.9;transform:scale(1.1)}}
+.lr-aura.lr-burst{animation:lrAuraB 3.2s ease-out forwards}
+@keyframes lrAuraB{0%{opacity:1;transform:scale(1.2)}15%{opacity:.85;transform:scale(1.9)}100%{opacity:.35;transform:scale(1.4)}}
+.lr-aura.lr-rainbow{background:conic-gradient(from 0deg,#ff7eb3,#ffd36e,#7affc1,#6ec8ff,#c58bff,#ff7eb3);-webkit-mask:radial-gradient(circle,#000 0,transparent 65%);mask:radial-gradient(circle,#000 0,transparent 65%)}
+.lr-aura.lr-rainbow.lr-burst{animation:lrAuraB 3.6s ease-out forwards,lrSpinr 3.6s linear}
+@keyframes lrSpinr{to{rotate:360deg}}
+.lr-rays.lr-go.lr-big{animation:lrRaysBig 3.6s ease-out forwards}
+@keyframes lrRaysBig{0%{opacity:0;transform:rotate(0) scale(.3)}12%{opacity:1;transform:rotate(20deg) scale(1.15)}100%{opacity:0;transform:rotate(200deg) scale(1.35)}}
+.lr-rays2{position:absolute;left:50%;top:44%;width:620px;height:620px;margin:-310px 0 0 -310px;border-radius:50%;opacity:0;z-index:1;background:repeating-conic-gradient(from 10deg,#ffffff 0 2deg,transparent 2deg 15deg);-webkit-mask:radial-gradient(circle,#000 0 12%,transparent 58%);mask:radial-gradient(circle,#000 0 12%,transparent 58%)}
+.lr-rays2.lr-go{animation:lrRays2 3.4s ease-out forwards}
+@keyframes lrRays2{0%{opacity:0;transform:rotate(0)}15%{opacity:.6}100%{opacity:0;transform:rotate(-160deg)}}
+.lr-ring.lr-r3,.lr-ring.lr-r4{border-width:5px}
+.lr-ring.lr-go.lr-r3{animation:lrRing 1.1s ease-out .35s forwards}
+.lr-ring.lr-go.lr-r4{animation:lrRing 1.3s ease-out .55s forwards}
+.lr-rain{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+.lr-rain span{position:absolute;top:-24px;width:var(--w);height:var(--h);border-radius:var(--br);background:var(--col);opacity:0;animation:lrRain var(--d) cubic-bezier(.3,.1,.6,1) var(--dl) forwards}
+@keyframes lrRain{0%{opacity:1;transform:translate(0,0) rotate(0) rotateY(0)}100%{opacity:1;transform:translate(var(--dx),110vh) rotate(var(--r)) rotateY(720deg)}}
+.lr-rain .lr-coin{background:radial-gradient(circle at 35% 35%,#fff6c8,#f0b64f 45%,#a9741a);box-shadow:inset 0 0 0 1.5px #ffe08a}
+.lr-slam-title{position:absolute;left:0;right:0;top:15%;text-align:center;z-index:7;pointer-events:none;font:800 44px/1 var(--f-display);letter-spacing:.06em;opacity:0;color:var(--rc);text-shadow:0 0 24px var(--rc),0 4px 0 #0008}
+.lr-slam-title.lr-go{animation:lrSlamT 2.8s cubic-bezier(.2,1.6,.4,1) forwards}
+.lr-slam-title.lr-rainbow{background:linear-gradient(90deg,#ff7eb3,#ffd36e,#7affc1,#6ec8ff,#c58bff,#ff7eb3);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 14px #ff9cd0);animation:lrSlamT 3.4s cubic-bezier(.2,1.6,.4,1) forwards,lrHoloText 1.2s linear infinite}
+@keyframes lrSlamT{0%{opacity:0;transform:scale(3.2) rotate(-8deg)}14%{opacity:1;transform:scale(.92) rotate(2deg)}22%{transform:scale(1.05) rotate(0)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.15) translateY(-10px)}}
+@keyframes lrHoloText{to{background-position:200% 0}}
+#lr-frame.lr-glow-l{animation:lrGlowL 3.2s ease-out}
+@keyframes lrGlowL{0%,100%{box-shadow:inset 0 0 0 0 transparent}15%{box-shadow:inset 0 0 0 4px #f0b64f,inset 0 0 70px 18px #f0b64faa}}
+#lr-frame.lr-glow-m{animation:lrGlowM 3.8s ease-out}
+@keyframes lrGlowM{0%,100%{box-shadow:inset 0 0 0 0 transparent}10%{box-shadow:inset 0 0 0 4px #ff7eb3,inset 0 0 80px 22px #ff7eb3aa}30%{box-shadow:inset 0 0 0 4px #ffd36e,inset 0 0 80px 22px #ffd36eaa}50%{box-shadow:inset 0 0 0 4px #7affc1,inset 0 0 80px 22px #7affc1aa}70%{box-shadow:inset 0 0 0 4px #6ec8ff,inset 0 0 80px 22px #6ec8ffaa}90%{box-shadow:inset 0 0 0 4px #c58bff,inset 0 0 60px 14px #c58bff88}}
+#lr-ov.lr-quake-big{animation:lrQuakeBig .9s}
+@keyframes lrQuakeBig{0%,100%{transform:none}10%{transform:translate(-9px,4px) rotate(-1.5deg)}20%{transform:translate(9px,-4px) rotate(1.5deg)}30%{transform:translate(-8px,3px) rotate(-1deg)}40%{transform:translate(8px,-3px) rotate(1deg)}55%{transform:translate(-5px,2px)}70%{transform:translate(5px,-2px)}85%{transform:translate(-2px,1px)}}
+.lr-ov-name.lr-big{font-size:28px;animation:lrNameIn .8s cubic-bezier(.2,1.6,.4,1)}
+@keyframes lrNameIn{0%{transform:scale(.4);opacity:0;letter-spacing:.4em}100%{transform:scale(1);opacity:1;letter-spacing:0}}
+/* rarity effects on themes */
+.lr-shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);background-size:250% 100%;animation:lrShine 3.2s linear infinite;mix-blend-mode:overlay}
+@keyframes lrShine{from{background-position:150% 0}to{background-position:-100% 0}}
+.lr-holo{position:absolute;inset:0;background:linear-gradient(120deg,#ff7eb3,#ffd36e,#7affc1,#6ec8ff,#c58bff,#ff7eb3);background-size:300% 300%;mix-blend-mode:soft-light;opacity:.55;animation:lrHolo 6s ease infinite}
+@keyframes lrHolo{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+.lr-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:lrTwinkle 2.4s ease-in-out infinite}
+@keyframes lrTwinkle{0%,100%{opacity:.15}50%{opacity:1}}
+.lr-petal{position:absolute;top:-10px;width:8px;height:8px;border-radius:8px 0;background:#ffc4dc;animation:lrFall linear infinite;opacity:.8}
+@keyframes lrFall{to{transform:translate(-30px,110vh) rotate(540deg)}}
+#lr-fx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+#lr-die{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:15;width:58px;height:58px;padding:0;border:0;background:none;cursor:pointer;animation:lrBob 3s ease-in-out infinite;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));-webkit-tap-highlight-color:transparent}
+#lr-die svg{width:100%;height:100%;overflow:visible}
+#lr-die:hover{animation-play-state:paused;transform:scale(1.08) rotate(-8deg)}
+#lr-die:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:12px}
+#lr-die.lr-hide{visibility:hidden}
+#lr-frame{position:fixed;inset:0;z-index:201;pointer-events:none}
+.lr-chip{display:inline-flex;align-items:center;gap:6px;width:max-content;padding:3px 10px;border-radius:999px;font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--rc);border:1px solid color-mix(in srgb,var(--rc) 55%,transparent);background:color-mix(in srgb,var(--rc) 12%,transparent)}
+.lr-ov-text .lr-chip{font-size:10px}
+.lr-sw{position:relative;display:block;aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:var(--t-bg);border:1px solid #ffffff1f}
+.lr-sw::before{content:"";position:absolute;inset:0;background:var(--t-pattern,none)}
+.lr-sw i{position:absolute;left:10px;bottom:10px;width:24px;height:24px;border-radius:50%;background:var(--t-accent);box-shadow:0 0 0 2px #0006,0 0 0 4px var(--t-accent)}
+.lr-sw u{position:absolute;right:10px;bottom:12px;left:44px;height:8px;border-radius:4px;background:var(--t-card);border:1px solid var(--t-line)}
+.lr-keep{display:flex;gap:14px;align-items:center}
+.lr-small{font-size:12px;margin-top:6px!important}
+.lr-link{border:0;background:none;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
+@media (max-width:480px){.lr-keep{flex-direction:column;align-items:stretch;text-align:left}.lr-keep .lr-sw{width:100%;max-height:120px}}
+.lr-keep .lr-sw{width:88px;flex:none}
+.lr-keep h2{margin:0 0 4px}
+.lr-keep p{margin:0}
+.lr-keep-btn{background:var(--rc,var(--accent));border-color:var(--rc,var(--accent));color:#120f1f}
+.lr-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.lr-head h2{margin:0}.lr-head p{margin:2px 0 0}
+.lr-odds{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.lr-odds .lr-chip{font-size:10px;padding:2px 8px}
+.lr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(140px,100%),1fr));gap:10px;max-height:min(52vh,460px);overflow:auto;padding:2px}
+.lr-tile{position:relative;min-width:0;display:grid;gap:6px;padding:7px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lr-tile:hover,.lr-tile:focus-visible{border-color:var(--rc);outline:none}
+.lr-tile[aria-pressed=true]{border-color:var(--rc);box-shadow:0 0 0 1px var(--rc)}
+.lr-tile-meta{display:flex;justify-content:space-between;align-items:center;gap:6px;min-width:0}
+.lr-tile-name{font-weight:600;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr-tile .lr-chip{font-size:8.5px;padding:1px 6px;flex:none}
+.lr-locked .lr-sw{filter:grayscale(.6) brightness(.55)}
+.lr-locked .lr-sw::after{content:"🔒";position:absolute;inset:0;display:grid;place-items:center;font-size:18px}
+.lr-using{position:absolute;top:12px;right:12px;font:600 10px var(--f-mono);padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff}
+.feat{text-align:center;display:grid;justify-items:center;gap:6px;padding-top:4px}
+.feat h2{margin:4px 0 0;font-size:26px}
+.feat p{margin:0;max-width:40ch}
+.feat-tag{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.feat-die{width:84px;height:84px;margin:6px 0 2px;animation:lrBob 3s ease-in-out infinite;filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
+.feat-die svg{width:100%;height:100%;overflow:visible}
+.pf-av.lr-ringed::before{content:"";position:absolute;inset:-5px;border-radius:50%;background:var(--t-ring);z-index:-1}
+.pf-av.lr-ringed{isolation:isolate}
+.pf.lr-pf{padding-top:0}
+.pf-banner{height:84px;margin:-4px -4px -46px;border-radius:16px;background:var(--t-banner);position:relative;overflow:hidden}
+.pf-skin{margin:10px auto 0}
+.lr-tag{color:#b9aeff;border-color:color-mix(in srgb,#b9aeff 45%,transparent);background:color-mix(in srgb,#b9aeff 10%,transparent)}
+@media (prefers-reduced-motion: reduce){#lr-die,.feat-die,#lr-fx *{animation:none}}
 </style>
 <style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -882,6 +1020,7 @@ body.nudged #app{animation:nudge-shake .55s}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>/* always fetch the newest notes list, never a cached copy */document.write('<script src="data.js?v='+Date.now()+'"><\/script>')</script>
@@ -1014,7 +1153,9 @@ function topbar(right=""){const u=LIVE.user;
   const chip=u?`<details class="me"><summary aria-label="Your account">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer" class="who-chip-img" style="width:28px;height:28px;border-radius:50%">`:`<span class="initial">${esc((nm[0]||"?").toUpperCase())}</span>`}<span class="nm who-nm">${esc(nm)}</span><span class="chev" aria-hidden="true">▾</span></summary>
     <div class="me-menu"><div class="who"><b>${esc(u.displayName?niceName(u.displayName):"Signed in")}</b>${esc(u.email||"")}</div>
     <button data-act="my-progress"><span aria-hidden="true">🔥</span>My progress</button>
+    <button data-lr="designs"><span aria-hidden="true">🎲</span>My designs</button>
     ${LIVE.isAdmin?"":`<button data-act="share-active" role="switch" aria-checked="${shareActive()}" class="sw-row"><span aria-hidden="true">🟢</span>Show me as online<span class="mini-sw" aria-hidden="true"></span></button>`}
+    <button data-act="notify-toggle" role="switch" aria-checked="${notifyState()==="on"}" class="sw-row"><span aria-hidden="true">🔔</span>Notifications<span class="mini-sw" aria-hidden="true"></span></button>
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
     <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="edit-nick"><span aria-hidden="true">✏️</span>Change my name</button>
@@ -1029,7 +1170,7 @@ function topbar(right=""){const u=LIVE.user;
   const sch=u?`<a class="sa-btn" href="#schedule" aria-label="Schedule"><svg class="sa-cal" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><path class="sa-pins" d="M8 3v3M16 3v3"/><text x="12" y="17.2" text-anchor="middle">${new Date().getDate()}</text></svg><span class="sa-lbl">Schedule</span></a>`:"";
   const grp=sch||upd||on?`<nav class="sa-group" aria-label="Quick links"><span class="sa-glide" aria-hidden="true"></span>${sch}${upd}${on}</nav>`:"";
   const srch=u||!LIVE.on?`<button type="button" class="sa-search" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="sa-sx-txt"><span class="sa-sx-try">Try</span> <span class="sa-sx-q">${esc(searchSuggest())}</span></span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
-  const th=`<button type="button" class="theme-btn" data-g="theme" aria-label="Switch light or dark mode" title="Light / dark mode">${isDark()?"☀":"☾"}</button>`;
+  const th=skinOn()?"":`<button type="button" class="theme-btn" data-g="theme" aria-label="Switch light or dark mode" title="Light / dark mode">${isDark()?"☀":"☾"}</button>`;
   return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${srch}${grp}${th}${chip}</div></header>`}
 /* search pill suggestions */
 let SX_I=0,SX_T=null;
@@ -1087,7 +1228,7 @@ panel.addEventListener("click",e=>{const a=e.target.closest("#sx-list a");if(!a)
 const canEdit=()=>false;
 
 function render(){
-  const r=route();document.body.classList.toggle("cram",cramOn()&&r.v==="home");const fl=document.getElementById("foot-links");if(fl)fl.hidden=!(LIVE.on&&LIVE.user);
+  const r=route();try{lrPaintDie()}catch(e){}document.body.classList.toggle("cram",cramOn()&&r.v==="home");const fl=document.getElementById("foot-links");if(fl)fl.hidden=!(LIVE.on&&LIVE.user);
   if(LIVE.on&&!LIVE.authReady){app.innerHTML=topbar()+`<div class="loading">Checking your sign-in…</div>`;return}
   if(LIVE.on&&!LIVE.user)return renderSignIn();
   if(r.v==="admin")return renderAdmin();
@@ -1206,7 +1347,7 @@ function startQuiz(id,items,full,retry){
 /* ---------- editors ---------- */
 let sheetSubmit=null;
 function openSheet(html,onSubmit){panel.innerHTML=html;sheetSubmit=onSubmit;sheet.hidden=false;dtSync(panel);const f=panel.querySelector("input[type=text],textarea");f&&f.focus()}
-function closeSheet(){sheet.hidden=true;panel.innerHTML="";sheetSubmit=null}
+function closeSheet(){sheet.hidden=true;panel.innerHTML="";sheetSubmit=null;try{lrSheetClosed()}catch(e){}}
 function foot(delLabel){return `<p class="err" id="form-err" hidden></p><div class="form-foot">${delLabel?`<button type="button" class="btn danger" data-act="del">${delLabel}</button>`:""}
   <div class="right"><button type="button" class="btn ghost" data-act="close">Cancel</button><button type="submit" class="btn primary">Save</button></div></div>`}
 function formErr(m){const e=document.getElementById("form-err");e.textContent=m;e.hidden=false}
@@ -1655,9 +1796,9 @@ const LIVE={on:false,reacts:[],attempts:[],err:null,fs:null,user:null,authReady:
 function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!window.firebase||!firebase.auth)return;
   try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
   firebase.auth().onAuthStateChanged(async u=>{
-    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;LIVE.isAdmin=false;LIVE.adminKnown=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
+    LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;try{lrStart(u)}catch(e){console.warn(e)}LIVE.isAdmin=false;LIVE.adminKnown=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
-    recordVisit(u);startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);
+    recordVisit(u);startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);setTimeout(()=>{try{checkNotify()}catch(e){}},2500);setTimeout(()=>{try{maybeAskNotify()}catch(e){}},11000);setTimeout(()=>{try{maybeFeature()}catch(e){}},3500);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
@@ -1738,7 +1879,7 @@ let PRES_NODOC=false;
 function beat(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.adminKnown||document.visibilityState==="hidden")return;
   const hid=iAmHidden(),base={name:hid?"":(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()},r=route(),ref=LIVE.fs.collection("presence").doc(u.uid);
   const full={...base,doc:r.v==="doc"?String(r.id).slice(0,100):r.v==="subject"?("s:"+r.id).slice(0,100):"",hidden:hid,
-    photo:hid?"":(u.photoURL||"").slice(0,500),streak:hid?0:progStreak(),badges:hid?0:Object.keys(PROG.badges).length};
+    photo:hid?"":(u.photoURL||"").slice(0,500),streak:hid?0:progStreak(),badges:hid?0:Object.keys(PROG.badges).length,skin:hid?"":String(LR.eq||"").slice(0,20)};
   if(PRES_NODOC){ref.set(base).catch(()=>{});return}
   ref.set(full).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}
 document.addEventListener("click",e=>{if(e.target.closest("[data-act=share-active]"))setShareActive(!shareActive())});
@@ -1748,9 +1889,10 @@ function presDoing(p){if(!p.doc)return"Browsing Study Atlas";if(p.doc.startsWith
 function openProfile(uid){const now=Date.now(),p=LIVE.presence.find(x=>x.id===uid&&x.at&&now-x.at.toMillis()<ONLINE_MS&&visiblePres(x));
   if(!p||!canSeeNames()){toast("They're not online anymore");openWho();return}
   const nm=niceName(presName(p)||"Someone"),ph=p.photo||(LIVE.isAdmin?LIVE.users.find(x=>x.id===uid)?.photo:"")||"";
-  openSheet(`<div class="pf"><button type="button" class="pf-back" data-pf="back" aria-label="Back to Online now">‹</button>
-    <div class="pf-av" style="--hc:${hereColor(nm)}">${ph?`<img src="${esc(ph)}" alt="" referrerpolicy="no-referrer">`:esc((nm.trim()[0]||"?").toUpperCase())}<span class="pf-dot"></span></div>
-    <h2 class="pf-name">${esc(nm)}</h2><p class="pf-doing">${esc(presDoing(p))}</p>
+  const sk=!p.hidden&&p.skin&&p.skin!=="default"?lrSkin(p.skin):null;
+  openSheet(`<div class="pf${sk?" lr-pf":""}"${sk?` style="${lrVars(sk)}"`:""}>${sk?`<div class="pf-banner">${lrFxHtml(sk)}</div>`:""}<button type="button" class="pf-back" data-pf="back" aria-label="Back to Online now">‹</button>
+    <div class="pf-av${sk?" lr-ringed":""}" style="--hc:${sk?sk.v.accent:hereColor(nm)}">${ph?`<img src="${esc(ph)}" alt="" referrerpolicy="no-referrer">`:esc((nm.trim()[0]||"?").toUpperCase())}<span class="pf-dot"></span></div>
+    <h2 class="pf-name">${esc(nm)}</h2><p class="pf-doing">${esc(presDoing(p))}</p>${sk?`<span class="lr-chip pf-skin" style="--rc:${LR_R[sk.r].c}">${sk.ico} ${esc(sk.name)} · ${LR_R[sk.r].name}</span>`:""}
     ${p.hidden?"":`<div class="pf-stats"><div><b>🔥 ${+p.streak||0}</b><span>day streak</span></div><div><b>🏅 ${+p.badges||0}</b><span>badges</span></div></div>`}
     <button type="button" class="btn pf-nudge" data-pf="nudge" data-uid="${esc(uid)}"><span class="pf-wave">👉</span> Nudge</button>
     <p class="pf-note mono" id="pf-note">${LIVE.isAdmin?"Your nudges show up as from \"Someone\".":"They'll get a buzz with your name."}</p></div>
@@ -1834,6 +1976,267 @@ function maybeA2HS(force){try{
     if(b.dataset.a2hs==="install"&&A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted")store("a2hs",JSON.stringify({done:1}));else{const s2=a2hsState();store("a2hs",JSON.stringify({n:(s2.n||0)+1,at:Date.now()}))}}
     else{const s2=a2hsState();store("a2hs",JSON.stringify({n:(s2.n||0)+1,at:Date.now()}))}
     el.classList.remove("in");setTimeout(()=>el.remove(),350)})}catch(e){}}
+
+const LR_R={
+  common:{name:"Common",c:"#9aa3b5",odds:"1 in 1.2",w:0,range:[1,11]},
+  rare:{name:"Rare",c:"#5ea8f0",odds:"1 in 8",w:1/8,range:[12,16]},
+  epic:{name:"Epic",c:"#b77cf2",odds:"1 in 75",w:1/75,range:[17,18]},
+  legendary:{name:"Legendary",c:"#f0b64f",odds:"1 in 1,000",w:1/1000,range:[19,19]},
+  mythic:{name:"Mythic",c:"#f07fa6",odds:"1 in 10,000",w:1/10000,range:[20,20]}
+};
+const LR_T=[
+  {id:"default",name:"Study Atlas",r:"common",ico:"🧠",desc:"The standard look.",v:{bg:"#0d1117",ink:"#e8ecf4",accent:"#a99cff",card:"#161b25cc",line:"#2a3142",banner:"linear-gradient(135deg,#2b2850,#16324a)",ring:"#a99cff"}},
+  {id:"graph",name:"Graph Paper",r:"common",ico:"📐",desc:"Faint blue grid, like a lab notebook.",v:{bg:"#f4f7fb",ink:"#1b2433",accent:"#3b6fd8",card:"#ffffffd9",line:"#cdd8ea",banner:"repeating-linear-gradient(0deg,#dfe8f7 0 1px,transparent 1px 14px),repeating-linear-gradient(90deg,#dfe8f7 0 1px,#f4f7fb 1px 14px)",ring:"#3b6fd8",pattern:"repeating-linear-gradient(0deg,#3b6fd81a 0 1px,transparent 1px 18px),repeating-linear-gradient(90deg,#3b6fd81a 0 1px,transparent 1px 18px)"}},
+  {id:"chalk",name:"Chalkboard",r:"common",ico:"✏️",desc:"Green board with chalk dust.",v:{bg:"#1f3a30",ink:"#eef3ea",accent:"#f3e9b5",card:"#ffffff12",line:"#ffffff2a",banner:"linear-gradient(160deg,#2a4b3e,#183028)",ring:"#f3e9b5",pattern:"radial-gradient(#ffffff10 1px,transparent 1.5px)"}},
+  {id:"highlighter",name:"Highlighter",r:"common",ico:"🖍️",desc:"Neon yellow marks on white.",v:{bg:"#fffef4",ink:"#24231c",accent:"#d9a800",card:"#ffffffe6",line:"#ece6b8",banner:"linear-gradient(100deg,#fff36b 0 60%,#fffef4 60%)",ring:"#fff36b"}},
+  {id:"index",name:"Index Card",r:"common",ico:"🗂️",desc:"Ruled cream card with a red margin.",v:{bg:"#fbf6ea",ink:"#2c2a25",accent:"#d0454c",card:"#ffffffd9",line:"#e7dcc2",banner:"repeating-linear-gradient(180deg,#fbf6ea 0 17px,#9cc0e6 17px 18px)",ring:"#d0454c",pattern:"linear-gradient(90deg,transparent 30px,#d0454c55 30px 31px,transparent 31px)"}},
+  {id:"lavender",name:"Lavender Lab",r:"rare",ico:"🧪",desc:"Soft violet with glassy cards.",v:{bg:"linear-gradient(170deg,#2a2346,#171427)",ink:"#f1edff",accent:"#c9b8ff",card:"#ffffff14",line:"#ffffff26",banner:"linear-gradient(135deg,#8f7cf0,#4c3d9e)",ring:"conic-gradient(#c9b8ff,#8f7cf0,#c9b8ff)"}},
+  {id:"scrubs",name:"Mint Scrubs",r:"rare",ico:"🩺",desc:"Hospital mint and clean white.",v:{bg:"linear-gradient(170deg,#e9f8f3,#cfeee3)",ink:"#173a31",accent:"#1f9a77",card:"#ffffffcc",line:"#b6e2d3",banner:"linear-gradient(135deg,#5cc9a7,#1f9a77)",ring:"#1f9a77"}},
+  {id:"sakura",name:"Sakura Notes",r:"rare",ico:"🌸",desc:"Pink dusk with falling petals.",fx:"petals",v:{bg:"linear-gradient(175deg,#3a2033,#1c1220)",ink:"#ffeaf3",accent:"#ff9cc6",card:"#ffffff12",line:"#ffffff24",banner:"linear-gradient(135deg,#ff9cc6,#a2577f)",ring:"#ff9cc6"}},
+  {id:"ocean",name:"Deep Sea",r:"rare",ico:"🌊",desc:"Midnight blue with a soft glow.",v:{bg:"radial-gradient(circle at 70% 0,#1d4f78,#0a1626 65%)",ink:"#e6f3ff",accent:"#5fd0ff",card:"#ffffff10",line:"#ffffff22",banner:"linear-gradient(135deg,#1d6fa5,#0b2a47)",ring:"#5fd0ff"}},
+  {id:"blueprint",name:"Anatomy Blueprint",r:"epic",ico:"🦴",desc:"Blueprint grid with a sheen.",fx:"shine",v:{bg:"#0f3a6b",ink:"#e5f0ff",accent:"#9fd2ff",card:"#ffffff12",line:"#9fd2ff40",banner:"repeating-linear-gradient(0deg,#9fd2ff22 0 1px,transparent 1px 12px),repeating-linear-gradient(90deg,#9fd2ff22 0 1px,#0f3a6b 1px 12px)",ring:"conic-gradient(#9fd2ff,#ffffff,#9fd2ff)",pattern:"repeating-linear-gradient(0deg,#9fd2ff18 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,#9fd2ff18 0 1px,transparent 1px 22px)"}},
+  {id:"synapse",name:"Synapse Storm",r:"epic",ico:"⚡",desc:"Electric purple with a sheen.",fx:"shine",v:{bg:"radial-gradient(circle at 20% 10%,#5b2bb5,#140a2a 60%)",ink:"#f3ecff",accent:"#d18bff",card:"#ffffff12",line:"#d18bff40",banner:"radial-gradient(circle at 30% 30%,#d18bff,#3a1780)",ring:"conic-gradient(#d18bff,#6ec8ff,#d18bff)"}},
+  {id:"aurora",name:"Aurora",r:"epic",ico:"🌌",desc:"Green and teal northern lights.",fx:"shine",v:{bg:"linear-gradient(180deg,#071a1e,#0b2c2a 45%,#0a1420)",ink:"#e8fff7",accent:"#5ef2b7",card:"#ffffff10",line:"#5ef2b740",banner:"linear-gradient(120deg,#0f5b4d,#5ef2b7 45%,#4b7bd8)",ring:"conic-gradient(#5ef2b7,#4b7bd8,#5ef2b7)"}},
+  {id:"golden",name:"Golden Skeleton",r:"legendary",ico:"💀",desc:"Black and gold with a moving shine.",fx:"shine",v:{bg:"radial-gradient(circle at 50% 0,#3a2b0c,#0d0a05 70%)",ink:"#fff4d9",accent:"#f0b64f",card:"#f0b64f14",line:"#f0b64f55",banner:"linear-gradient(120deg,#5c430f,#f0b64f 50%,#5c430f)",ring:"conic-gradient(#fff1b8,#f0b64f,#8a5d12,#f0b64f,#fff1b8)"}},
+  {id:"galaxy",name:"Galaxy Brain",r:"legendary",ico:"🪐",desc:"Deep space with twinkling stars.",fx:"stars",v:{bg:"radial-gradient(circle at 80% 10%,#3b1f6b,#080616 60%)",ink:"#f0ecff",accent:"#ffd36e",card:"#ffffff10",line:"#ffffff22",banner:"radial-gradient(circle at 70% 40%,#7a4fd8,#1a0f3c 70%)",ring:"conic-gradient(#ffd36e,#c58bff,#6ec8ff,#ffd36e)"}},
+  {id:"prism",name:"Prism",r:"mythic",ico:"💎",desc:"Holographic rainbow that shifts as you look.",fx:"holo",v:{bg:"linear-gradient(135deg,#1a1430,#101826)",ink:"#ffffff",accent:"#ff9cd0",card:"#ffffff14",line:"#ffffff30",banner:"linear-gradient(120deg,#ff7eb3,#ffd36e,#7affc1,#6ec8ff,#c58bff)",ring:"conic-gradient(#ff7eb3,#ffd36e,#7affc1,#6ec8ff,#c58bff,#ff7eb3)"}},
+  {id:"nat20",name:"Natural 20",r:"mythic",ico:"🎲",desc:"Only from rolling a 20. Stars, holo and gold.",fx:"holo+stars",v:{bg:"radial-gradient(circle at 50% 0,#4a1d4f,#0c0716 65%)",ink:"#fff",accent:"#ffd36e",card:"#ffffff12",line:"#ffd36e55",banner:"conic-gradient(from 200deg,#ffd36e,#ff7eb3,#c58bff,#6ec8ff,#ffd36e)",ring:"conic-gradient(#ffd36e,#ff7eb3,#c58bff,#6ec8ff,#ffd36e)"}}
+];
+
+/* ---- sounds, made in the browser (no files) ---- */
+let LR_AC=null;
+function lrAc(){if(!LR.snd)return null;try{LR_AC=LR_AC||new (window.AudioContext||window.webkitAudioContext)();if(LR_AC.state==="suspended")LR_AC.resume();return LR_AC}catch(e){return null}}
+function lrTone(f,t0,dur,type="sine",vol=.18,f2){const c=lrAc();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime+t0);
+  if(f2)o.frequency.exponentialRampToValueAtTime(f2,c.currentTime+t0+dur);
+  g.gain.setValueAtTime(0,c.currentTime+t0);g.gain.linearRampToValueAtTime(vol,c.currentTime+t0+.01);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+t0+dur);
+  o.connect(g).connect(c.destination);o.start(c.currentTime+t0);o.stop(c.currentTime+t0+dur+.05)}
+function lrNoise(t0,dur,vol=.25,freq=2500,q=1.2){const c=lrAc();if(!c)return;const len=Math.ceil(c.sampleRate*dur),b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
+  const src=c.createBufferSource(),bp=c.createBiquadFilter(),g=c.createGain();src.buffer=b;bp.type="bandpass";bp.frequency.value=freq;bp.Q.value=q;g.gain.value=vol;src.connect(bp).connect(g).connect(c.destination);src.start(c.currentTime+t0)}
+const LR_SFX={
+  /* everything sits high (2–8 kHz): small, glassy, "dinky" */
+  plink(f,t0=0,vol=.12,dur=.18){lrTone(f,t0,dur,"sine",vol);lrTone(f*2.01,t0,dur*.6,"sine",vol*.35)},
+  whoosh(){lrNoise(0,.3,.1,5200,1.4);lrTone(1800,0,.28,"sine",.05,4200)},
+  rattle(ms){for(let t=0;t<ms/1000;t+=.05+Math.random()*.045){lrNoise(t,.025,.22,5000+Math.random()*3000,6);if(Math.random()<.5)LR_SFX.plink(2600+Math.random()*2400,t,.04,.06)}},
+  thud(){LR_SFX.plink(3136,0,.16,.22);lrNoise(0,.03,.2,6500,3)},
+  win(r){const scale={common:[2093],rare:[2093,3136],epic:[2093,2637,3136,4186],legendary:[2093,2637,3136,4186,5274],mythic:[2093,2637,3136,3951,4699,6272,8372]}[r];
+    scale.forEach((f,i)=>LR_SFX.plink(f,.05+i*.075,.11,.25));
+    if(r==="legendary"||r==="mythic")scale.forEach((f,i)=>LR_SFX.plink(f*1.5,.09+i*.075,.04,.3));
+    if(r==="legendary")for(let i=0;i<14;i++)LR_SFX.plink(3500+Math.random()*3000,.5+i*.07,.035,.1);
+    if(r==="mythic"){for(let i=0;i<30;i++)LR_SFX.plink(4000+Math.random()*4500,.55+i*.045,.04,.12);[2093,2637,3136,4186].forEach((f,i)=>LR_SFX.plink(f,1.5+i*.12,.09,.5));[4186,5274,6272].forEach(f=>LR_SFX.plink(f,2.05,.07,.9))}},
+  riser(sec){for(let i=0;i<14;i++)LR_SFX.plink(1800+i*260,i*sec/14,.05+i*.004,.1);lrNoise(0,sec,.06,6000,2)},
+  shrink(){lrTone(4200,0,.18,"sine",.05,2100)},
+  ask(){LR_SFX.plink(3136,0,.08,.15);LR_SFX.plink(4186,.09,.08,.2)},
+  click(){LR_SFX.plink(4186,0,.06,.06)}
+};
+
+
+function lrDieSvg(n,c1,c2,uid){return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lrg${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
+  <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="url(#lrg${uid})" stroke="#ffffff55" stroke-width="1.5"/>
+  <polygon points="50,22 76,66 24,66" fill="#ffffff22" stroke="#ffffff66" stroke-width="1.2"/>
+  <line x1="50" y1="4" x2="50" y2="22" stroke="#ffffff44"/><line x1="90" y1="27" x2="76" y2="66" stroke="#ffffff44"/><line x1="10" y1="27" x2="24" y2="66" stroke="#ffffff44"/>
+  <line x1="90" y1="73" x2="76" y2="66" stroke="#ffffff44"/><line x1="10" y1="73" x2="24" y2="66" stroke="#ffffff44"/><line x1="50" y1="96" x2="24" y2="66" stroke="#ffffff33"/><line x1="50" y1="96" x2="76" y2="66" stroke="#ffffff33"/>
+  <text x="50" y="58" text-anchor="middle" class="lr-die-num">${n}</text></svg>`}
+
+/* ---------- Lucky Roll ----------
+   A d20 on the home screen. Unlimited rolls with RNG-style odds unlock designs (skins) for the whole site
+   and for your profile card. Saved on this device and in users/{uid} (skins, skin, rolls); your skin shows
+   to others through presence.skin. */
+const LR_DEF=()=>({owned:["default"],eq:"default",rolls:0,snd:true});
+let LR=LR_DEF(),LR_PREVIEW=null,LR_BUSY=false,LR_SYNC_T=null;
+const lrSkin=id=>LR_T.find(t=>t.id===id);
+const lrKey=()=>"lucky-"+(LIVE.user?LIVE.user.uid:"anon");
+function lrLoad(){try{LR={...LR_DEF(),...JSON.parse(store(lrKey())||"{}")}}catch(e){LR=LR_DEF()}
+  LR.owned=[...new Set(["default",...(Array.isArray(LR.owned)?LR.owned:[])].filter(lrSkin))];if(!lrSkin(LR.eq)||!LR.owned.includes(LR.eq))LR.eq="default"}
+function lrSave(sync=true){store(lrKey(),JSON.stringify(LR));if(sync){clearTimeout(LR_SYNC_T);LR_SYNC_T=setTimeout(lrPush,2500)}}
+async function lrPush(){const u=LIVE.user;if(!LIVE.on||!u)return;const FV=firebase.firestore.FieldValue;
+  try{await LIVE.fs.collection("users").doc(u.uid).update({skins:LR.owned.slice(0,40),skin:LR.eq,rolls:LR.rolls|0,lastSeen:FV.serverTimestamp()})}catch(e){console.warn("designs saved on this device only",e)}}
+async function lrPull(u){if(!LIVE.on)return;try{const d=await LIVE.fs.collection("users").doc(u.uid).get();if(!d.exists)return;const x=d.data();
+  const owned=[...new Set([...LR.owned,...(Array.isArray(x.skins)?x.skins:[])])].filter(lrSkin);
+  const changed=owned.length!==LR.owned.length||((x.rolls|0)>LR.rolls)||(LR.eq==="default"&&x.skin&&x.skin!=="default"&&owned.includes(x.skin));
+  LR.owned=owned;LR.rolls=Math.max(LR.rolls,x.rolls|0);if(LR.eq==="default"&&x.skin&&owned.includes(x.skin))LR.eq=x.skin;
+  if(changed){lrSave(false);applySkin(LR.eq);beat()}}catch(e){}}
+function lrStart(u){if(!u){LR=LR_DEF();applySkin("default");lrPaintDie();return}
+  lrLoad();applySkin(LR.eq);lrPaintDie();setTimeout(()=>lrPull(u),1500)}
+
+/* skins restyle the whole site through the colour tokens */
+function lrHex(s){const m=String(s).match(/#[0-9a-f]{6}/gi);return m?m[m.length-1]:"#0d1117"}
+function lrLum(h){const n=parseInt(h.slice(1,7),16),c=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+function lrVars(t){const v=t.v;return `--t-bg:${v.bg};--t-ink:${v.ink};--t-accent:${v.accent};--t-card:${v.card};--t-line:${v.line};--t-banner:${v.banner};--t-ring:${v.ring};--t-pattern:${v.pattern||"none"};--rc:${LR_R[t.r].c}`}
+function lrFxHtml(t){const f=(t&&t.fx)||"";let h="";
+  if(f.includes("stars"))for(let i=0;i<46;i++)h+=`<span class="lr-star" style="left:${(i*37)%100}%;top:${(i*53)%100}%;animation-delay:${(i%7)*.35}s"></span>`;
+  if(f.includes("petals"))for(let i=0;i<14;i++)h+=`<span class="lr-petal" style="left:${4+i*7}%;animation-duration:${9+(i%4)*2}s;animation-delay:${-i*1.3}s"></span>`;
+  if(f.includes("shine"))h+=`<span class="lr-shine"></span>`;
+  if(f.includes("holo"))h+=`<span class="lr-holo"></span>`;
+  return h}
+function applySkin(id){const t=lrSkin(id)||lrSkin("default"),root=document.documentElement;let st=document.getElementById("skin-style"),fx=document.getElementById("lr-fx");
+  if(t.id==="default"){if(root.dataset.skin){delete root.dataset.skin;st&&st.remove();fx&&fx.remove();const th=store("theme");if(th==="light"||th==="dark")root.dataset.theme=th;else delete root.dataset.theme;if(typeof render==="function"&&LIVE.authReady)render()}return}
+  const v=t.v,base=lrHex(v.bg),light=lrLum(base)>.45,ink=v.ink,was=root.dataset.skin;
+  root.dataset.skin=t.id;root.dataset.theme=light?"light":"dark";
+  if(!st){st=document.createElement("style");st.id="skin-style";document.head.appendChild(st)}
+  st.textContent=`html:root[data-skin]{--bg:${base};--surface:${light?`color-mix(in srgb,#ffffff 80%,${base})`:`color-mix(in srgb,${ink} 8%,${base})`};--soft:color-mix(in srgb,${ink} 12%,${base});--muted:color-mix(in srgb,${ink} 66%,${base});--line:color-mix(in srgb,${ink} 18%,${base});--ink:${ink};--accent:${v.accent};--accent-ink:${lrLum(lrHex(v.accent))>.4?"#15122f":"#ffffff"};color-scheme:${light?"light":"dark"}}
+html:root[data-skin] body{background:${v.pattern?v.pattern+",":""}${v.bg};background-color:${base};background-attachment:fixed}`;
+  if(!fx){fx=document.createElement("div");fx.id="lr-fx";fx.setAttribute("aria-hidden","true");document.body.prepend(fx)}
+  fx.innerHTML=lrFxHtml(t);
+  if(was!==t.id&&typeof render==="function"&&LIVE.authReady)render()}
+const skinOn=()=>!!document.documentElement.dataset.skin;
+
+/* the die in the corner of the home page */
+function lrPaintDie(){let b=document.getElementById("lr-die");const show=LIVE.on&&!!LIVE.user&&route().v==="home";
+  if(!show){if(b)b.hidden=true;return}
+  if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the die for a new design");b.title="Lucky Roll";b.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","h");b.addEventListener("click",()=>lrRoll());document.body.appendChild(b)}
+  b.hidden=false}
+function lrOverlay(){let ov=document.getElementById("lr-ov");if(ov)return ov;
+  ov=document.createElement("div");ov.id="lr-ov";ov.setAttribute("aria-live","polite");
+  ov.innerHTML=`<div class="lr-ov-dim"></div><div class="lr-aura" id="lr-aura"></div><div class="lr-rays2" id="lr-rays2"></div><div class="lr-rays" id="lr-rays"></div>
+    <div class="lr-ring" id="lr-ring1"></div><div class="lr-ring lr-r2" id="lr-ring2"></div><div class="lr-ring lr-r3" id="lr-ring3"></div><div class="lr-ring lr-r4" id="lr-ring4"></div>
+    <div class="lr-rain" id="lr-rain"></div><div class="lr-slam-title" id="lr-slam"></div><div class="lr-sparks" id="lr-sparks"></div>
+    <div class="lr-big-die" id="lr-big"><div class="lr-spin" id="lr-spin"></div></div><div class="lr-ov-text" id="lr-text"></div><div class="lr-ov-hint">rolling…</div><div class="lr-flash" id="lr-flash"></div>`;
+  document.body.appendChild(ov);const fr=document.createElement("div");fr.id="lr-frame";fr.setAttribute("aria-hidden","true");document.body.appendChild(fr);return ov}
+const lrWait=ms=>new Promise(r=>setTimeout(r,ms));
+const lrRarity=n=>Object.keys(LR_R).find(k=>n>=LR_R[k].range[0]&&n<=LR_R[k].range[1]);
+function luckyNum(){const x=Math.random();let acc=0;for(const k of ["mythic","legendary","epic","rare"]){acc+=LR_R[k].w;if(x<acc){const[a,b]=LR_R[k].range;return a+Math.floor(Math.random()*(b-a+1))}}return 1+Math.floor(Math.random()*11)}
+async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
+  if(route().v!=="home"){location.hash="";await lrWait(350)}
+  if(!sheet.hidden)closeSheet();
+  LR_BUSY=true;if(!force){LR.rolls++;lrSave()}
+  const ov=lrOverlay(),$=id=>document.getElementById(id),hd=document.getElementById("lr-die");lrPaintDie();
+  const hr=hd.getBoundingClientRect(),big=$("lr-big"),spin=$("lr-spin");ov.classList.add("lr-busy");
+  spin.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","b");
+  big.style.transition="none";big.style.transform=`translate(${hr.left}px,${hr.top}px) scale(${hr.width/58})`;big.style.opacity="1";
+  hd.classList.add("lr-hide");void big.offsetWidth;
+  const sw=innerWidth,sh=innerHeight,S=Math.min(2.8,Math.max(2.2,sw/160)),size=58*S;
+  big.style.transition="";ov.classList.add("lr-on");
+  big.style.transform=`translate(${(sw-size)/2}px,${sh*.44-size/2}px) scale(${S})`;LR_SFX.whoosh();
+  await lrWait(560);
+  const n=force==="mythic"?20:force==="legendary"?19:luckyNum(),r=lrRarity(n),rc=LR_R[r].c;
+  const pool=LR_T.filter(t=>t.r===r&&t.id!=="default"),pick=pool[Math.floor(Math.random()*pool.length)];
+  ov.classList.add("lr-rolling");LR_SFX.rattle(1150);big.classList.remove("lr-landed","lr-slam");big.classList.add("lr-rolling");
+  const tk=setInterval(()=>{const e=spin.querySelector(".lr-die-num");if(e)e.textContent=1+Math.floor(Math.random()*20)},70);
+  await lrWait(1200);clearInterval(tk);ov.classList.remove("lr-rolling");
+  const huge=r==="legendary"||r==="mythic";
+  if(huge){ov.style.setProperty("--rc",rc);const au=$("lr-aura");au.className="lr-aura"+(r==="mythic"?" lr-rainbow":"");void au.offsetWidth;au.classList.add("lr-charge");
+    spin.innerHTML=lrDieSvg("?",rc,"#1d2331","b");big.classList.remove("lr-rolling");big.classList.add("lr-charge");if(r==="mythic")big.classList.add("lr-m");
+    LR_SFX.riser(r==="mythic"?1.4:1);await lrWait(r==="mythic"?1400:1000);big.classList.remove("lr-charge","lr-m")}
+  spin.innerHTML=lrDieSvg(n,rc,"#1d2331","b");big.classList.remove("lr-rolling");void big.offsetWidth;big.classList.add(huge?"lr-slam":"lr-landed");
+  LR_SFX.thud();setTimeout(()=>LR_SFX.win(r),120);lrCelebrate(r,rc);try{navigator.vibrate&&navigator.vibrate(huge?[60,40,120]:30)}catch(e){}
+  const dupe=LR.owned.includes(pick.id);if(!dupe){LR.owned.push(pick.id);lrSave()}
+  const tx=$("lr-text");if(huge)await lrWait(r==="mythic"?900:700);
+  tx.innerHTML=`<span class="lr-chip" style="--rc:${rc}">${LR_R[r].name} · rolled ${n}</span><p class="lr-ov-name${huge?" lr-big":""}">${pick.ico} ${esc(pick.name)}</p><p class="lr-ov-sub">${dupe?"Already in your designs":"New design unlocked"}</p>`;
+  tx.classList.add("lr-on");
+  await lrWait(r==="mythic"?3400:r==="legendary"?2800:1700);
+  tx.classList.remove("lr-on");ov.classList.remove("lr-on");LR_SFX.shrink();
+  const hd2=document.getElementById("lr-die"),hr2=hd2.getBoundingClientRect();
+  big.style.transform=`translate(${hr2.left}px,${hr2.top}px) scale(${hr2.width/58})`;
+  if(pick.id!==LR.eq){LR_PREVIEW=pick.id;applySkin(pick.id)}
+  await lrWait(560);big.style.opacity="0";big.classList.remove("lr-landed","lr-slam");$("lr-aura").className="lr-aura";ov.classList.remove("lr-busy");
+  document.getElementById("lr-die")?.classList.remove("lr-hide");LR_BUSY=false;
+  if(pick.id===LR.eq){toast(`${pick.ico} You're already using ${pick.name}`);return}
+  lrAskKeep(pick)}
+function lrCelebrate(r,rc){const $=id=>document.getElementById(id),ov=$("lr-ov");ov.style.setProperty("--rc",rc);
+  const rays=$("lr-rays"),r1=$("lr-ring1"),r2=$("lr-ring2"),sp=$("lr-sparks"),fl=$("lr-flash");
+  [rays,r1,r2,sp,fl].forEach(e=>{e.classList.remove("lr-go");void e.offsetWidth});
+  rays.classList.toggle("lr-rainbow",r==="mythic");
+  const n={common:10,rare:16,epic:26,legendary:36,mythic:60}[r],pal=r==="mythic"?["#ff7eb3","#ffd36e","#7affc1","#6ec8ff","#c58bff"]:[rc,"#ffffff"];
+  let h="";for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,d=(r==="common"?50:r==="rare"?80:120)+Math.random()*(r==="mythic"?170:90);
+    h+=`<span style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${Math.random()*540}deg;--col:${pal[i%pal.length]};--s:${4+Math.random()*(r==="mythic"?8:5)}px;--d:${.8+Math.random()*.7}s"></span>`}
+  sp.innerHTML=h;sp.classList.add("lr-go");
+  if(r!=="common")r1.classList.add("lr-go");
+  if(r==="epic"||r==="legendary"||r==="mythic")r2.classList.add("lr-go");
+  if(r==="legendary"||r==="mythic"){rays.classList.add("lr-go");fl.classList.add("lr-go")}
+  const fr=$("lr-frame"),au=$("lr-aura"),r2b=$("lr-rays2"),r3=$("lr-ring3"),r4=$("lr-ring4"),rain=$("lr-rain"),sl=$("lr-slam");
+  [r2b,r3,r4,sl].forEach(e=>{e.classList.remove("lr-go");void e.offsetWidth});fr.className="";ov.classList.remove("lr-quake-big");void ov.offsetWidth;rain.innerHTML="";
+  if(r==="legendary"||r==="mythic"){const m=r==="mythic";
+    rays.classList.add("lr-big");r2b.classList.add("lr-go");r3.classList.add("lr-go");if(m)r4.classList.add("lr-go");
+    au.classList.remove("lr-charge");void au.offsetWidth;au.classList.add("lr-burst");
+    sl.textContent=m?"MYTHIC!!":"LEGENDARY!";sl.classList.toggle("lr-rainbow",m);sl.style.setProperty("--rc",rc);sl.classList.add("lr-go");
+    fr.className=m?"lr-glow-m":"lr-glow-l";ov.classList.add("lr-quake-big");
+    let h2="";const cnt=m?110:56,cols=["#ff7eb3","#ffd36e","#7affc1","#6ec8ff","#c58bff","#ffffff"];
+    for(let i=0;i<cnt;i++){const coin=!m||i%4===0,w=coin?12+Math.random()*6:5+Math.random()*6;
+      h2+=`<span class="${coin?"lr-coin":""}" style="left:${Math.random()*100}%;--w:${w}px;--h:${coin?w:w*1.8}px;--br:${coin?"50%":"2px"};--col:${coin?"#f0b64f":cols[i%cols.length]};--dx:${(Math.random()-.5)*80}px;--r:${(Math.random()-.5)*900}deg;--d:${1.6+Math.random()*1.4}s;--dl:${Math.random()*(m?1.6:1.1)}s"></span>`}
+    rain.innerHTML=h2;
+    if(m)setTimeout(()=>{fl.classList.remove("lr-go");void fl.offsetWidth;fl.classList.add("lr-go")},500);
+  }else rays.classList.remove("lr-big")}
+function lrSwatch(t){return `<span class="lr-sw" style="${lrVars(t)}">${lrFxHtml(t)}<i></i><u></u></span>`}
+function lrAskKeep(t){const prev=lrSkin(LR.eq);LR_SFX.ask();
+  openSheet(`<div class="lr-keep" style="--rc:${LR_R[t.r].c}">${lrSwatch(t)}<div><h2>Keep using ${esc(t.name)}?</h2><p class="muted">${t.ico} ${LR_R[t.r].name} · ${esc(t.desc)}</p><p class="mono lr-small">It stays in your designs either way. <button type="button" class="lr-link" data-lr="designs">See all designs</button></p></div></div>
+    <div class="form-foot"><div class="right"><button type="button" class="btn" data-lr="keep-no">Back to ${esc(prev.name)}</button><button type="button" class="btn primary lr-keep-btn" data-lr="keep-yes">Keep it</button></div></div>`)}
+/* closing the sheet any other way goes back to the design you had */
+function lrSheetClosed(){if(LR_PREVIEW){LR_PREVIEW=null;applySkin(LR.eq)}}
+function lrEquip(id){LR.eq=id;LR_PREVIEW=null;lrSave();applySkin(id);beat()}
+function lrDesigns(){document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);LR_PREVIEW=null;applySkin(LR.eq);
+  const order=["mythic","legendary","epic","rare","common"];
+  const tiles=[...LR_T].sort((a,b)=>order.indexOf(a.r)-order.indexOf(b.r)).map(t=>{const own=LR.owned.includes(t.id),cur=LR.eq===t.id;
+    return `<button type="button" class="lr-tile${own?"":" lr-locked"}" data-lr="pick" data-id="${t.id}" aria-pressed="${cur}" style="--rc:${LR_R[t.r].c}" aria-label="${esc(t.name)}, ${LR_R[t.r].name}${own?cur?", in use":"":", locked"}">${lrSwatch(t)}${cur?'<span class="lr-using">Using</span>':""}
+      <span class="lr-tile-meta"><span class="lr-tile-name">${t.ico} ${esc(t.name)}</span><span class="lr-chip">${LR_R[t.r].name}</span></span></button>`}).join("");
+  openSheet(`<div class="lr-head"><div><h2>🎲 My designs</h2><p class="muted">${LR.owned.length} of ${LR_T.length} unlocked · ${LR.rolls.toLocaleString()} rolls</p></div><button type="button" class="btn primary" data-lr="roll">Roll</button></div>
+    <div class="lr-odds">${Object.entries(LR_R).map(([k,r])=>`<span class="lr-chip" style="--rc:${r.c}">${r.name} · ${r.odds}</span>`).join("")}</div>
+    <div class="lr-grid">${tiles}</div>
+    <div class="form-foot"><button type="button" class="btn ghost" data-lr="snd" aria-pressed="${LR.snd}">${LR.snd?"🔊 Sound on":"🔇 Sound off"}</button><div class="right"><button type="button" class="btn" data-act="close">Close</button></div></div>`)}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-lr]");if(!b)return;const a=b.dataset.lr;
+  if(a==="keep-yes"){const id=LR_PREVIEW;if(id)lrEquip(id);closeSheet();const t=lrSkin(LR.eq);toast(`${t.ico} Now using ${t.name}`)}
+  else if(a==="keep-no"){closeSheet()}
+  else if(a==="designs"){lrDesigns()}
+  else if(a==="roll"){closeSheet();lrRoll()}
+  else if(a==="snd"){LR.snd=!LR.snd;lrSave(false);b.setAttribute("aria-pressed",String(LR.snd));b.textContent=LR.snd?"🔊 Sound on":"🔇 Sound off";if(LR.snd)LR_SFX.click()}
+  else if(a==="pick"){const id=b.dataset.id,t=lrSkin(id);
+    if(!LR.owned.includes(id)){toast(`🔒 Roll the die to unlock ${t.name} (${LR_R[t.r].name}, ${LR_R[t.r].odds})`);return}
+    lrEquip(id);LR_SFX.click();lrDesigns()}});
+
+/* one-time "new feature" pop-up */
+const FEATURE_ID="lucky-roll";
+function maybeFeature(){const u=LIVE.user;if(!u||store("feat-"+FEATURE_ID+"-"+u.uid))return;
+  if(!sheet.hidden||LR_BUSY){setTimeout(maybeFeature,8000);return}
+  store("feat-"+FEATURE_ID+"-"+u.uid,"1");
+  openSheet(`<div class="feat"><span class="feat-tag">✨ New feature</span><div class="feat-die" aria-hidden="true">${lrDieSvg(20,"#b9aeff","#6c5ce0","f")}</div>
+    <h2>Lucky Roll</h2><p class="muted">Tap the die in the corner of the home page to roll for a new look for Study Atlas and your profile. There are ${LR_T.length-1} designs to collect, from Common up to Mythic (1 in 10,000). Rolls are unlimited.</p></div>
+    <div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Later</button><button type="button" class="btn primary" data-lr="roll">🎲 Roll now</button></div></div>`)}
+
+/* ---------- phone notifications ----------
+   Asks once after sign-in; the 🔔 switch in the profile menu changes it any time.
+   users/{uid}.notify = "on" | "off" (said no / turned off) | "blocked" (browser said no) | "ios-app" (iPhone/iPad Safari: needs the Home Screen app first).
+   Sending: Firebase console > Messaging > New campaign > Firebase Notification messages, target the Study Atlas web app. */
+const NOTIFY_OK=()=>"Notification" in window&&"serviceWorker" in navigator&&"PushManager" in window&&location.protocol==="https:";
+function notifyState(){const u=LIVE.user;return u?(store("notify-"+u.uid)||""):""}
+function notifyTag(u){const m={on:["🔔 Notifications","notif-tag"],off:["🔕 Said no","notif-tag no"],blocked:["⛔ Blocked","notif-tag no"],"ios-app":["📲 Wants them, needs app","notif-tag no"]}[u.notify];
+  return m?`<span class="app-tag ${m[1]}" title="Notifications: ${esc(m[0].slice(2))}${u.notifyAt?" · "+esc(fmt(u.notifyAt)):""}">${m[0]}</span>`:""}
+async function saveNotify(state,token){const u=LIVE.user;if(!u)return;store("notify-"+u.uid,state);
+  document.querySelectorAll("[data-act=notify-toggle]").forEach(b=>b.setAttribute("aria-checked",String(state==="on")));
+  if(!LIVE.on)return;const FV=firebase.firestore.FieldValue;
+  try{await LIVE.fs.collection("users").doc(u.uid).update({notify:state,notifyAt:FV.serverTimestamp(),notifyToken:String(token||"").slice(0,400),lastSeen:FV.serverTimestamp()})}catch(e){console.warn("notification choice saved on this device only",e)}}
+async function pushToken(){try{if(!firebase.messaging||!(await firebase.messaging.isSupported()))return"";
+  const reg=await navigator.serviceWorker.ready;return await firebase.messaging().getToken({serviceWorkerRegistration:reg})||""}catch(e){console.warn("push token",e);return""}}
+async function enableNotify(){
+  if(IS_IOS&&!IS_STANDALONE){closeSheet();await saveNotify("ios-app");
+    openSheet(`<div class="feat"><span class="ask-bell" aria-hidden="true">📲</span><h2>One more step on iPhone and iPad</h2><p class="muted">Apple only lets Home Screen apps send notifications. Add Study Atlas to your Home Screen, open it from there, then turn on <b>🔔 Notifications</b> in your profile menu.</p>${IOS_SAFARI()?iosSteps():`<p>Open the site in <b>Safari</b> first, then:</p>${iosSteps()}`}<div class="form-foot"><div class="right"><button type="button" class="btn primary" data-act="close">Got it</button></div></div></div>`);return}
+  if(!NOTIFY_OK()){closeSheet();toast("This browser can't show notifications. Try Chrome or Safari.");return}
+  let p=Notification.permission;
+  if(p==="default"){try{p=await Notification.requestPermission()}catch(e){p="denied"}}
+  closeSheet();
+  if(p!=="granted"){await saveNotify(p==="denied"?"blocked":"off");
+    toast(p==="denied"?"Notifications are blocked. Allow them for this site in your phone's settings, then try again.":"No problem. Turn them on any time from your profile menu.");return}
+  const t=await pushToken();await saveNotify("on",t);toast("🔔 You'll get a heads-up when something new drops")}
+async function disableNotify(){try{if(firebase.messaging&&(await firebase.messaging.isSupported()))await firebase.messaging().deleteToken()}catch(e){}
+  await saveNotify("off");toast("🔕 Notifications off. Turn them back on any time from here.")}
+function openNotifyAsk(){document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
+  openSheet(`<div class="feat"><span class="ask-bell" aria-hidden="true">🔔</span><h2>Want a heads-up?</h2><p class="muted">Get a notification on this ${/iPad/.test(navigator.userAgent)?"iPad":IS_IOS||/Android/.test(navigator.userAgent)?"phone":"device"} when new notes, quizzes or features come out. You can turn it off any time from your profile menu.</p>
+    <div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="notify-no">Not now</button><button type="button" class="btn primary" data-act="notify-yes">Yes, notify me</button></div></div></div>`)}
+function maybeAskNotify(){const u=LIVE.user;if(!u||notifyState()||IN_APP)return;
+  if(!NOTIFY_OK()&&!IS_IOS)return;
+  if(document.getElementById("a2hs")||!sheet.hidden){setTimeout(maybeAskNotify,15000);return}
+  store("notify-asked-"+u.uid,"1");openNotifyAsk()}
+/* keeps the owner's list right if someone turns notifications off in their phone settings, and refreshes the push address */
+async function checkNotify(){const u=LIVE.user;if(!u||!LIVE.on)return;
+  try{const d=await LIVE.fs.collection("users").doc(u.uid).get(),srv=d.exists?d.data().notify||"":"";
+    if(!notifyState()&&srv)store("notify-"+u.uid,srv)}catch(e){}
+  const st=notifyState();if(st==="ios-app"&&IS_STANDALONE&&NOTIFY_OK()&&Notification.permission==="default"){openNotifyAsk();return}
+  if(st!=="on"||!NOTIFY_OK())return;
+  if(Notification.permission!=="granted"){await saveNotify(Notification.permission==="denied"?"blocked":"off");return}
+  const t=await pushToken();if(t&&t!==store("notify-token-"+u.uid)){store("notify-token-"+u.uid,t);await saveNotify("on",t)}}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-act=notify-toggle],[data-act=notify-yes],[data-act=notify-no]");if(!b)return;
+  const a=b.dataset.act;
+  if(a==="notify-yes")enableNotify();
+  else if(a==="notify-no"){closeSheet();saveNotify("off");toast("No problem. Turn them on any time from your profile menu.")}
+  else{b.closest("details.me")&&(b.closest("details.me").open=false);notifyState()==="on"?disableNotify():openNotifyAsk()}});
 /* custom name for the home greeting */
 function openNick(){const u=LIVE.user;if(!u)return;document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);
   const g=niceName(u.displayName||"").trim().split(/\s+/)[0]||"";
@@ -1876,11 +2279,11 @@ function renderAdmin(){
   const totalDl=Object.values(LIVE.downloads).reduce((a,b)=>a+b,0);
   app.innerHTML=topbar(back)+`<section class="hero"><span class="mono eyebrow">Only you can see this page</span><h1>Who's visiting</h1></section>
    <p class="notice">Tap <b>Let them edit</b> next to a friend to let them add quizzes, exams and reminders to the Schedule. Only you can change who's an editor.</p>
-   <div class="stats"><div><span class="big-n">${LIVE.users.length}</span><span class="mono">people signed in</span></div><div><span class="big-n">${LIVE.users.reduce((a,u)=>a+(u.visits||0),0)}</span><span class="mono">total visits</span></div><div><span class="big-n">${totalDl}</span><span class="mono">downloads</span></div><div><span class="big-n">${LIVE.attempts.length}</span><span class="mono">quiz attempts</span></div><div><span class="big-n">${LIVE.users.filter(u=>u.app).length}</span><span class="mono">added the app</span></div><div><span class="big-n">${LIVE.users.filter(u=>u.progressViews).length}</span><span class="mono">checked progress</span></div></div>
+   <div class="stats"><div><span class="big-n">${LIVE.users.length}</span><span class="mono">people signed in</span></div><div><span class="big-n">${LIVE.users.reduce((a,u)=>a+(u.visits||0),0)}</span><span class="mono">total visits</span></div><div><span class="big-n">${totalDl}</span><span class="mono">downloads</span></div><div><span class="big-n">${LIVE.attempts.length}</span><span class="mono">quiz attempts</span></div><div><span class="big-n">${LIVE.users.filter(u=>u.app).length}</span><span class="mono">added the app</span></div><div><span class="big-n">${LIVE.users.filter(u=>u.progressViews).length}</span><span class="mono">checked progress</span></div><div><span class="big-n">${LIVE.users.filter(u=>u.notify==="on").length}</span><span class="mono">notifications on</span></div><div><span class="big-n">${LIVE.users.filter(u=>u.notify&&u.notify!=="on").length}</span><span class="mono">said no / can't yet</span></div></div>
    <h2 class="sec">Shared notes${LIVE.shares.length?` <span class="mono">(${LIVE.shares.length})</span>`:""}</h2>${LIVE.shares.length?`<ul class="sugg-list">${LIVE.shares.map(x=>`<li><div class="hd"><span><span class="sugg-cat">${esc(anySubj(x.subject)?.name||"Other")}</span> <b>${esc(x.title)}</b> <span class="muted">from ${esc(x.name||"Anonymous")}</span></span><span class="mono">${fmt(x.at)} <button class="btn small ghost" data-act="share-done" data-id="${esc(x.id)}">Done ✓</button></span></div>${x.message?`<div class="tx">${esc(x.message)}</div>`:""}<div><a class="btn small primary" href="${esc(x.link)}" target="_blank" rel="noopener noreferrer">Open link ↗</a> <span class="mono">${esc(x.link.replace(/^https?:\/\//,"").slice(0,60))}</span></div></li>`).join("")}</ul>`:`<p class="muted">No shared notes yet.</p>`}
    <h2 class="sec">Suggestions${LIVE.suggestions.length?` <span class="mono">(${LIVE.suggestions.length})</span>`:""}</h2>${LIVE.suggestions.length?`<ul class="sugg-list">${LIVE.suggestions.map(x=>`<li><div class="hd"><span><span class="sugg-cat">${esc(SUGG_CATS.find(c=>c[0]===x.category)?.[1]||"Other")}</span> <b>${esc(x.name||"Anonymous")}</b></span><span class="mono">${fmt(x.at)} <button class="btn small ghost" data-act="sugg-done" data-id="${esc(x.id)}">Done ✓</button></span></div><div class="tx">${esc(x.text)}</div></li>`).join("")}</ul>`:`<p class="muted">No suggestions yet.</p>`}
    <h2 class="sec">People</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th class="n">Visits</th><th class="n">Downloads</th><th class="n">Quizzes</th><th>First visit</th><th>Last seen</th><th>Schedule</th></tr></thead><tbody>
-   ${LIVE.users.map(u=>`<tr><td><span class="person">${u.photo?`<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">`:""}${esc(u.name||"—")}${u.app?`<span class="app-tag" title="Added to home screen ${esc(fmt(u.app))}">📲 App</span>`:""}${u.progressViews?`<span class="app-tag prog-tag" title="Opened My progress ${u.progressViews}× · last ${esc(fmt(u.progressAt))}">🔥 Progress ${u.progressViews}</span>`:""}</span></td><td>${esc(u.email||"")}</td><td class="n">${u.visits||0}</td><td class="n">${LIVE.dlog.filter(d=>d.uid===u.id).length}</td><td class="n">${LIVE.attempts.filter(a=>a.player===u.id).length}</td><td>${fmt(u.firstSeen)}</td><td>${fmt(u.lastSeen)}</td><td>${LIVE.editors.includes(u.id)?`<span class="editor-tag">Editor</span> <button class="btn small ghost" data-act="editor-off" data-id="${esc(u.id)}">Remove</button>`:`<button class="btn small" data-act="editor-on" data-id="${esc(u.id)}">Let them edit</button>`}</td></tr>`).join("")||`<tr><td colspan="7" class="muted">Nobody has signed in yet.</td></tr>`}
+   ${LIVE.users.map(u=>`<tr><td><span class="person">${u.photo?`<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">`:""}${esc(u.name||"—")}${u.app?`<span class="app-tag" title="Added to home screen ${esc(fmt(u.app))}">📲 App</span>`:""}${u.progressViews?`<span class="app-tag prog-tag" title="Opened My progress ${u.progressViews}× · last ${esc(fmt(u.progressAt))}">🔥 Progress ${u.progressViews}</span>`:""}${notifyTag(u)}${u.rolls?`<span class="app-tag lr-tag" title="Lucky Roll · ${(u.skins||[]).length||1} designs · using ${esc((lrSkin(u.skin)||lrSkin("default")).name)}">🎲 ${u.rolls}</span>`:""}</span></td><td>${esc(u.email||"")}</td><td class="n">${u.visits||0}</td><td class="n">${LIVE.dlog.filter(d=>d.uid===u.id).length}</td><td class="n">${LIVE.attempts.filter(a=>a.player===u.id).length}</td><td>${fmt(u.firstSeen)}</td><td>${fmt(u.lastSeen)}</td><td>${LIVE.editors.includes(u.id)?`<span class="editor-tag">Editor</span> <button class="btn small ghost" data-act="editor-off" data-id="${esc(u.id)}">Remove</button>`:`<button class="btn small" data-act="editor-on" data-id="${esc(u.id)}">Let them edit</button>`}</td></tr>`).join("")||`<tr><td colspan="7" class="muted">Nobody has signed in yet.</td></tr>`}
    </tbody></table></div>
    <h2 class="sec">Downloads by note</h2>${notesRows.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Note</th><th>Subject</th><th class="n">Downloads</th><th>Who</th></tr></thead><tbody>
    ${notesRows.map(r=>`<tr><td>${esc(r.title)}</td><td>${esc(r.subject)}</td><td class="n">${r.total}</td><td>${[...r.people.entries()].map(([uid,c])=>esc(nameOf(uid))+(c>1?` ×${c}`:"")).join(", ")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">No downloads yet.</p>`}
