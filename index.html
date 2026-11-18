@@ -879,7 +879,7 @@ body.nudged #app{animation:nudge-shake .55s}
 @keyframes bellRing{0%,60%,100%{transform:rotate(0)}10%{transform:rotate(16deg)}20%{transform:rotate(-14deg)}30%{transform:rotate(10deg)}40%{transform:rotate(-8deg)}50%{transform:rotate(4deg)}}
 @media (prefers-reduced-motion: reduce){.ask-bell{animation:none}}
 /* ---------- Lucky Roll ---------- */
-.lr-die-num{font:700 30px var(--f-display);fill:#fff}
+.lr-die-num{font:800 22px var(--f-display);fill:#fff;paint-order:stroke;stroke:#0000004d;stroke-width:2.2px;letter-spacing:-.02em}
 @keyframes lrBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-6deg)}}
 #lr-ov{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden;visibility:hidden}
 #lr-ov.lr-on,#lr-ov.lr-busy{visibility:visible}
@@ -970,8 +970,9 @@ body.nudged #app{animation:nudge-shake .55s}
 #lr-die:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:12px}
 #lr-die.lr-hide{visibility:hidden}
 #lr-frame{position:fixed;inset:0;z-index:201;pointer-events:none}
-#lr-auto{position:fixed;right:max(8px,env(safe-area-inset-right,0px));bottom:calc(50px + env(safe-area-inset-bottom,0px));z-index:16;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 11px var(--f-mono);cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.18)}
-#lr-auto[aria-pressed=true]{z-index:203;background:#e5484d;border-color:#e5484d;color:#fff;animation:lrAutoPulse 1.6s ease-in-out infinite}
+#lr-auto{position:fixed;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(142px + env(safe-area-inset-bottom,0px));z-index:16;display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--surface);color:var(--ink);font:700 12px var(--f-body);cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.18);transition:transform .15s}
+#lr-auto:active{transform:scale(.95)}
+#lr-auto[aria-pressed=true]{z-index:203;padding:9px 16px;font-size:14px;background:#e5484d;border-color:#e5484d;color:#fff;animation:lrAutoPulse 1.6s ease-in-out infinite}
 @keyframes lrAutoPulse{0%,100%{box-shadow:0 0 0 0 #e5484d66}50%{box-shadow:0 0 0 6px #e5484d00}}
 .lr-head-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 
@@ -2045,12 +2046,25 @@ const LR_SFX={
 };
 
 
-function lrDieSvg(n,c1,c2,uid){return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lrg${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
-  <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="url(#lrg${uid})" stroke="#ffffff55" stroke-width="1.5"/>
-  <polygon points="50,22 76,66 24,66" fill="#ffffff22" stroke="#ffffff66" stroke-width="1.2"/>
-  <line x1="50" y1="4" x2="50" y2="22" stroke="#ffffff44"/><line x1="90" y1="27" x2="76" y2="66" stroke="#ffffff44"/><line x1="10" y1="27" x2="24" y2="66" stroke="#ffffff44"/>
-  <line x1="90" y1="73" x2="76" y2="66" stroke="#ffffff44"/><line x1="10" y1="73" x2="24" y2="66" stroke="#ffffff44"/><line x1="50" y1="96" x2="24" y2="66" stroke="#ffffff33"/><line x1="50" y1="96" x2="76" y2="66" stroke="#ffffff33"/>
-  <text x="50" y="58" text-anchor="middle" class="lr-die-num">${n}</text></svg>`}
+function lrDieSvg(n,c1,c2,uid){
+  /* a d20 seen face-on: 10 visible faces, each lit differently so it reads as a solid 3D gem */
+  const P={T:[50,3],UR:[92,27],LR:[92,73],B:[50,97],LL:[8,73],UL:[8,27],A:[50,23],R:[75,65],L:[25,65]};
+  const F=[["T","UL","A",.42,0],["T","A","UR",.3,0],["UR","A","R",.12,0],["UR","R","LR",0,.1],["LR","R","B",0,.32],["B","R","L",0,.22],["B","L","LL",0,.4],["LL","L","UL",0,.18],["UL","L","A",.22,0]];
+  const pts=k=>k.map(x=>P[x].join(",")).join(" ");
+  const faces=F.map(([a,b,c,w,k])=>`<polygon points="${pts([a,b,c])}" fill="url(#lrg${uid})"/><polygon points="${pts([a,b,c])}" fill="${w?"#fff":"#000"}" fill-opacity="${w||k}"/>`).join("");
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs>
+    <linearGradient id="lrg${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+    <radialGradient id="lrc${uid}" cx=".42" cy=".35" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".55" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></radialGradient>
+    <linearGradient id="lrs${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+  <polygon points="${pts(["T","UR","LR","B","LL","UL"])}" fill="#000" fill-opacity=".25" transform="translate(0 2.5)"/>
+  ${faces}
+  <polygon points="${pts(["A","R","L"])}" fill="url(#lrg${uid})"/><polygon points="${pts(["A","R","L"])}" fill="url(#lrc${uid})"/>
+  <g fill="none" stroke="#fff" stroke-linejoin="round"><polygon points="${pts(["T","UR","LR","B","LL","UL"])}" stroke-opacity=".55" stroke-width="1.6"/>
+    <path d="M${P.T} L${P.A} M${P.UR} L${P.A} M${P.UL} L${P.A} M${P.UR} L${P.R} M${P.LR} L${P.R} M${P.B} L${P.R} M${P.B} L${P.L} M${P.LL} L${P.L} M${P.UL} L${P.L}" stroke-opacity=".3" stroke-width="1"/>
+    <polygon points="${pts(["A","R","L"])}" stroke-opacity=".7" stroke-width="1.3"/></g>
+  <path d="M16 27 L48 8.5" stroke="url(#lrs${uid})" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>
+  <ellipse cx="38" cy="38" rx="7" ry="3.2" fill="#fff" opacity=".35" transform="rotate(-32 38 38)"/>
+  <text x="50" y="57" text-anchor="middle" class="lr-die-num">${n}</text></svg>`}
 
 /* ---------- Lucky Roll ----------
    A d20 on the home screen. Unlimited rolls with RNG-style odds unlock designs (skins) for the whole site
@@ -2097,14 +2111,14 @@ html:root[data-skin] body{background:${v.pattern?v.pattern+",":""}${v.bg};backgr
   if(was!==t.id&&typeof render==="function"&&LIVE.authReady)render()}
 const skinOn=()=>!!document.documentElement.dataset.skin;
 
-/* the die in the corner of the home page */
+/* the dice in the corner of the home page */
 function lrPaintDie(){let b=document.getElementById("lr-die");const show=LIVE.on&&!!LIVE.user&&route().v==="home";
   if(!show){if(b)b.hidden=true;const a=document.getElementById("lr-auto");if(a)a.hidden=true;if(LR_AUTO)lrSetAuto(false);return}
-  if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the die for a new design");b.title="Lucky Roll";b.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","h");b.addEventListener("click",()=>lrRoll());document.body.appendChild(b)}
+  if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the dice for a new design");b.title="Lucky Roll";b.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","h");b.addEventListener("click",()=>lrRoll());document.body.appendChild(b)}
   b.hidden=false;
   let a=document.getElementById("lr-auto");
   if(!a){a=document.createElement("button");a.type="button";a.id="lr-auto";a.addEventListener("click",()=>lrSetAuto(!LR_AUTO));document.body.appendChild(a)}
-  a.hidden=false;a.setAttribute("aria-pressed",String(LR_AUTO));a.innerHTML=LR_AUTO?"■ Stop auto":"↻ Auto roll"}
+  a.hidden=false;a.setAttribute("aria-pressed",String(LR_AUTO));a.innerHTML=LR_AUTO?"■ Stop":"↻ Auto roll"}
 function lrOverlay(){let ov=document.getElementById("lr-ov");if(ov)return ov;
   ov=document.createElement("div");ov.id="lr-ov";ov.setAttribute("aria-live","polite");
   ov.innerHTML=`<div class="lr-ov-dim"></div><div class="lr-aura" id="lr-aura"></div><div class="lr-rays2" id="lr-rays2"></div><div class="lr-rays" id="lr-rays"></div>
@@ -2116,9 +2130,9 @@ const lrWait=ms=>new Promise(r=>setTimeout(r,ms));
 const lrRarity=n=>Object.keys(LR_R).find(k=>n>=LR_R[k].range[0]&&n<=LR_R[k].range[1]);
 function luckyNum(){const x=Math.random();let acc=0;for(const k of ["mythic","legendary","epic","rare"]){acc+=LR_R[k].w;if(x<acc){const[a,b]=LR_R[k].range;return a+Math.floor(Math.random()*(b-a+1))}}return 1+Math.floor(Math.random()*11)}
 function lrAutoNext(){if(!LR_AUTO)return;if(route().v!=="home"||document.visibilityState==="hidden"||!sheet.hidden){lrSetAuto(false);return}setTimeout(()=>{if(LR_AUTO)lrRoll()},350)}
-function lrSetAuto(on){LR_AUTO=!!on;const b=document.getElementById("lr-auto");if(b){b.setAttribute("aria-pressed",String(LR_AUTO));b.innerHTML=LR_AUTO?"■ Stop auto":"↻ Auto roll"}
+function lrSetAuto(on){LR_AUTO=!!on;const b=document.getElementById("lr-auto");if(b){b.setAttribute("aria-pressed",String(LR_AUTO));b.innerHTML=LR_AUTO?"■ Stop":"↻ Auto roll"}
   document.querySelectorAll("[data-lr=auto]").forEach(x=>{x.setAttribute("aria-pressed",String(LR_AUTO));x.textContent=LR_AUTO?"■ Stop auto roll":"↻ Auto roll"});
-  if(LR_AUTO){if(!sheet.hidden)closeSheet();toast("↻ Auto roll on. Tap Stop any time.");if(!LR_BUSY)lrRoll()}}
+  if(LR_AUTO){if(!sheet.hidden)closeSheet();toast("↻ Auto roll on. Tap the red Stop button any time.");if(!LR_BUSY)lrRoll()}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&LR_AUTO)lrSetAuto(false)});
 async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   if(route().v!=="home"){location.hash="";await lrWait(350)}
@@ -2208,7 +2222,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-lr]");if(!
   else if(a==="auto"){closeSheet();if(route().v!=="home"){location.hash="";setTimeout(()=>lrSetAuto(!LR_AUTO),400)}else lrSetAuto(!LR_AUTO)}
   else if(a==="snd"){LR.snd=!LR.snd;lrSave(false);b.setAttribute("aria-pressed",String(LR.snd));b.textContent=LR.snd?"🔊 Sound on":"🔇 Sound off";if(LR.snd)LR_SFX.click()}
   else if(a==="pick"){const id=b.dataset.id,t=lrSkin(id);
-    if(!LR.owned.includes(id)){toast(`🔒 Roll the die to unlock ${t.name} (${LR_R[t.r].name}, ${LR_R[t.r].odds})`);return}
+    if(!LR.owned.includes(id)){toast(`🔒 Roll the dice to unlock ${t.name} (${LR_R[t.r].name}, ${LR_R[t.r].odds})`);return}
     lrEquip(id);LR_SFX.click();lrDesigns()}});
 
 /* one-time "new feature" pop-up */
@@ -2217,7 +2231,7 @@ function maybeFeature(){const u=LIVE.user;if(!u||store("feat-"+FEATURE_ID+"-"+u.
   if(!sheet.hidden||LR_BUSY){setTimeout(maybeFeature,8000);return}
   store("feat-"+FEATURE_ID+"-"+u.uid,"1");
   openSheet(`<div class="feat"><span class="feat-tag">✨ New feature</span><div class="feat-die" aria-hidden="true">${lrDieSvg(20,"#b9aeff","#6c5ce0","f")}</div>
-    <h2>Lucky Roll</h2><p class="muted">Tap the die in the corner of the home page to roll for a new look for Study Atlas and your profile. There are ${LR_T.length-1} designs to collect, from Common up to Mythic. Rolls are unlimited, and you can turn on auto roll. Good luck getting a Mythic (1 in 5,000).</p>
+    <h2>Lucky Roll</h2><p class="muted">Tap the dice in the corner of the home page to roll for a new look for Study Atlas and your profile. There are ${LR_T.length-1} designs to collect, from Common up to Mythic. Rolls are unlimited, and you can turn on auto roll. Good luck getting a Mythic (1 in 5,000).</p>
     <p class="feat-also"><b>Also new:</b> 🫀 Nutrition, Health &amp; Wellness and 🌱 Human Development notes, and 🔔 notifications you can turn on in your profile menu.</p></div>
     <div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Later</button><button type="button" class="btn primary" data-lr="roll">🎲 Roll now</button></div></div>`)}
 
