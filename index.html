@@ -1894,7 +1894,9 @@ function beat(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.adminKnown||document.vi
   const full={...base,doc:r.v==="doc"?String(r.id).slice(0,100):r.v==="subject"?("s:"+r.id).slice(0,100):"",hidden:hid,
     photo:hid?"":(u.photoURL||"").slice(0,500),streak:hid?0:progStreak(),badges:hid?0:Object.keys(PROG.badges).length,skin:hid?"":String(LR.eq||"").slice(0,20)};
   if(PRES_NODOC){ref.set(base).catch(()=>{});return}
-  ref.set(full).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}
+  const noSkin={...full};delete noSkin.skin;
+  ref.set(PRES_NOSKIN?noSkin:full).catch(()=>{if(!PRES_NOSKIN){PRES_NOSKIN=true;ref.set(noSkin).catch(()=>{PRES_NODOC=true;ref.set(base).catch(()=>{})})}else{PRES_NODOC=true;ref.set(base).catch(()=>{})}})}
+let PRES_NOSKIN=false;
 document.addEventListener("click",e=>{if(e.target.closest("[data-act=share-active]"))setShareActive(!shareActive())});
 /* ---------- profiles + nudges (online people only) ---------- */
 function presDoing(p){if(!p.doc)return"Browsing Study Atlas";if(p.doc.startsWith("s:")){const sb=anySubj(p.doc.slice(2));return sb?`Looking through ${sb.name}`:"Browsing a subject"}
@@ -2068,7 +2070,8 @@ async function lrPull(u){if(!LIVE.on)return;try{const d=await LIVE.fs.collection
   const owned=[...new Set([...LR.owned,...(Array.isArray(x.skins)?x.skins:[])])].filter(lrSkin);
   const changed=owned.length!==LR.owned.length||((x.rolls|0)>LR.rolls)||(LR.eq==="default"&&x.skin&&x.skin!=="default"&&owned.includes(x.skin));
   LR.owned=owned;LR.rolls=Math.max(LR.rolls,x.rolls|0);if(LR.eq==="default"&&x.skin&&owned.includes(x.skin))LR.eq=x.skin;
-  if(changed){lrSave(false);applySkin(LR.eq);beat()}}catch(e){}}
+  if(changed){lrSave(false);applySkin(LR.eq);beat()}
+  if((x.rolls|0)<LR.rolls||(Array.isArray(x.skins)?x.skins.length:0)<LR.owned.length||(x.skin||"default")!==LR.eq)lrPush()}catch(e){}}
 function lrStart(u){if(!u){LR=LR_DEF();applySkin("default");lrPaintDie();return}
   lrLoad();applySkin(LR.eq);lrPaintDie();setTimeout(()=>lrPull(u),1500)}
 
@@ -2254,7 +2257,8 @@ function maybeAskNotify(){const u=LIVE.user;if(!u||notifyState()||IN_APP)return;
 /* keeps the owner's list right if someone turns notifications off in their phone settings, and refreshes the push address */
 async function checkNotify(){const u=LIVE.user;if(!u||!LIVE.on)return;
   try{const d=await LIVE.fs.collection("users").doc(u.uid).get(),srv=d.exists?d.data().notify||"":"";
-    if(!notifyState()&&srv)store("notify-"+u.uid,srv)}catch(e){}
+    if(!notifyState()&&srv)store("notify-"+u.uid,srv);
+    else if(notifyState()&&srv!==notifyState()){const st0=notifyState();await saveNotify(st0,st0==="on"?await pushToken():"")}}catch(e){}
   const st=notifyState();if(st==="ios-app"&&IS_STANDALONE&&NOTIFY_OK()&&Notification.permission==="default"){openNotifyAsk();return}
   if(st!=="on"||!NOTIFY_OK())return;
   if(Notification.permission!=="granted"){await saveNotify(Notification.permission==="denied"?"blocked":"off");return}
