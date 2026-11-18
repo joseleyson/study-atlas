@@ -994,6 +994,7 @@ body.nudged #app{animation:nudge-shake .55s}
 .lr-head h2{margin:0}.lr-head p{margin:2px 0 0}
 .lr-odds{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .lr-odds .lr-chip{font-size:10px;padding:2px 8px}
+.lr-default{width:100%;justify-content:center;margin:0 0 10px}
 .lr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(140px,100%),1fr));gap:10px;max-height:min(52vh,460px);overflow:auto;padding:2px}
 .lr-tile{position:relative;min-width:0;display:grid;gap:6px;padding:7px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .lr-tile:hover,.lr-tile:focus-visible{border-color:var(--rc);outline:none}
@@ -2001,7 +2002,7 @@ const LR_R={
   mythic:{name:"Mythic",c:"#f07fa6",odds:"1 in 5,000",w:1/5000,range:[20,20]}
 };
 const LR_T=[
-  {id:"default",name:"Study Atlas",r:"common",ico:"🧠",desc:"The standard look.",v:{bg:"#0d1117",ink:"#e8ecf4",accent:"#a99cff",card:"#161b25cc",line:"#2a3142",banner:"linear-gradient(135deg,#2b2850,#16324a)",ring:"#a99cff"}},
+  {id:"default",name:"Default",r:"common",ico:"🧠",desc:"The standard Study Atlas look.",v:{bg:"#0d1117",ink:"#e8ecf4",accent:"#a99cff",card:"#161b25cc",line:"#2a3142",banner:"linear-gradient(135deg,#2b2850,#16324a)",ring:"#a99cff"}},
   {id:"graph",name:"Graph Paper",r:"common",ico:"📐",desc:"Faint blue grid, like a lab notebook.",v:{bg:"#f4f7fb",ink:"#1b2433",accent:"#3b6fd8",card:"#ffffffd9",line:"#cdd8ea",banner:"repeating-linear-gradient(0deg,#dfe8f7 0 1px,transparent 1px 14px),repeating-linear-gradient(90deg,#dfe8f7 0 1px,#f4f7fb 1px 14px)",ring:"#3b6fd8",pattern:"repeating-linear-gradient(0deg,#3b6fd81a 0 1px,transparent 1px 18px),repeating-linear-gradient(90deg,#3b6fd81a 0 1px,transparent 1px 18px)"}},
   {id:"chalk",name:"Chalkboard",r:"common",ico:"✏️",desc:"Green board with chalk dust.",v:{bg:"#1f3a30",ink:"#eef3ea",accent:"#f3e9b5",card:"#ffffff12",line:"#ffffff2a",banner:"linear-gradient(160deg,#2a4b3e,#183028)",ring:"#f3e9b5",pattern:"radial-gradient(#ffffff10 1px,transparent 1.5px)"}},
   {id:"highlighter",name:"Highlighter",r:"common",ico:"🖍️",desc:"Neon yellow marks on white.",v:{bg:"#fffef4",ink:"#24231c",accent:"#d9a800",card:"#ffffffe6",line:"#ece6b8",banner:"linear-gradient(100deg,#fff36b 0 60%,#fffef4 60%)",ring:"#fff36b"}},
@@ -2207,11 +2208,12 @@ function lrSheetClosed(){if(LR_PREVIEW){LR_PREVIEW=null;applySkin(LR.eq)}}
 function lrEquip(id){LR.eq=id;LR_PREVIEW=null;lrSave();applySkin(id);beat()}
 function lrDesigns(){document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);LR_PREVIEW=null;applySkin(LR.eq);
   const order=["mythic","legendary","epic","rare","common"];
-  const tiles=[...LR_T].sort((a,b)=>order.indexOf(a.r)-order.indexOf(b.r)).map(t=>{const own=LR.owned.includes(t.id),cur=LR.eq===t.id;
+  const tiles=[...LR_T].sort((a,b)=>(a.id==="default"?-1:b.id==="default"?1:order.indexOf(a.r)-order.indexOf(b.r))).map(t=>{const own=LR.owned.includes(t.id),cur=LR.eq===t.id;
     return `<button type="button" class="lr-tile${own?"":" lr-locked"}" data-lr="pick" data-id="${t.id}" aria-pressed="${cur}" style="--rc:${LR_R[t.r].c}" aria-label="${esc(t.name)}, ${LR_R[t.r].name}${own?cur?", in use":"":", locked"}">${lrSwatch(t)}${cur?'<span class="lr-using">Using</span>':""}
       <span class="lr-tile-meta"><span class="lr-tile-name">${t.ico} ${esc(t.name)}</span><span class="lr-chip">${LR_R[t.r].name}</span></span></button>`}).join("");
   openSheet(`<div class="lr-head"><div><h2>🎲 My designs</h2><p class="muted">${LR.owned.length} of ${LR_T.length} unlocked · ${LR.rolls.toLocaleString()} rolls</p></div><span class="lr-head-btns"><button type="button" class="btn" data-lr="auto" aria-pressed="${LR_AUTO}">${LR_AUTO?"■ Stop auto roll":"↻ Auto roll"}</button><button type="button" class="btn primary" data-lr="roll">Roll</button></span></div>
     <div class="lr-odds">${Object.entries(LR_R).map(([k,r])=>`<span class="lr-chip" style="--rc:${r.c}">${r.name} · ${r.odds}</span>`).join("")}</div>
+    ${LR.eq!=="default"?`<button type="button" class="btn lr-default" data-lr="pick" data-id="default">↺ Back to the default design</button>`:""}
     <div class="lr-grid">${tiles}</div>
     <div class="form-foot"><button type="button" class="btn ghost" data-lr="snd" aria-pressed="${LR.snd}">${LR.snd?"🔊 Sound on":"🔇 Sound off"}</button><div class="right"><button type="button" class="btn" data-act="close">Close</button></div></div>`)}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-lr]");if(!b)return;const a=b.dataset.lr;
