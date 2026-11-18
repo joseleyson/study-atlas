@@ -662,6 +662,9 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .prep b{font-weight:600;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .prep .skip{background:none;border:0;padding:4px 6px;font:500 13px/1 var(--f-body);color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;border-radius:6px}
 .prep .skip:hover{color:var(--ink)}
+.prep .x{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.prep .x:hover{color:var(--ink)}
+.prep .save{justify-self:stretch;text-align:center;justify-content:center}
 .prep .bar{height:4px;border-radius:4px;background:var(--soft);overflow:hidden}
 .prep .bar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0);animation:prepbar var(--dur,3s) linear forwards}
 @keyframes prepbar{to{transform:scaleX(1)}}
@@ -1496,10 +1499,31 @@ function popBurst(el,ev){
 function startFileDownload(href,name){const a=document.createElement("a");a.href=href;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();a.remove()}
 function prepDownload(href,name){document.querySelector(".prep")?.remove();
   const DUR=5000,box=document.createElement("div");box.className="prep";box.setAttribute("role","status");box.style.setProperty("--dur",DUR+"ms");
-  box.innerHTML=`<div class="row"><span class="ic" aria-hidden="true">⤓</span><b>Preparing ${esc(name)}…</b><button type="button" class="skip">Skip</button></div><div class="bar"><i></i></div><p>These notes are free, always. If they've helped you, you can <a href="#support">chip in to keep the site running</a> ♥</p>`;
+  box.innerHTML=`<div class="row"><span class="ic" aria-hidden="true">⤓</span><b>Preparing ${esc(name)}…</b><button type="button" class="skip">Skip</button><button type="button" class="x" aria-label="Close">×</button></div><div class="bar"><i></i></div><p>These notes are free, always. If they've helped you, you can <a href="#support">chip in to keep the site running</a> ♥</p>`;
   document.body.appendChild(box);requestAnimationFrame(()=>box.classList.add("in"));
-  let done=false;const go=()=>{if(done)return;done=true;clearTimeout(t);startFileDownload(href,name);box.querySelector("b").textContent="Downloading "+name;box.querySelector(".skip").remove();setTimeout(()=>{box.classList.remove("in");setTimeout(()=>box.remove(),300)},1400)};
+  const close=()=>{clearTimeout(t);box.classList.remove("in");setTimeout(()=>box.remove(),300)};box.querySelector(".x").onclick=()=>{done=true;close()};
+  let done=false;const go=()=>{if(done)return;done=true;clearTimeout(t);if(IS_STANDALONE){saveInApp(href,name,box,close);return}startFileDownload(href,name);box.querySelector("b").textContent="Downloading "+name;box.querySelector(".skip").remove();setTimeout(()=>{box.classList.remove("in");setTimeout(()=>box.remove(),300)},1400)};
   const t=setTimeout(go,DUR);box.querySelector(".skip").onclick=go;box.querySelector("p a").addEventListener("click",go)}
+/* In the Home Screen app a plain download opens the PDF full screen with no way back (iPhone/iPad).
+   So there we fetch the file and hand it to the phone's own Save/Share sheet ("Save to Files", Drive, Books…). */
+async function saveInApp(href,name,box,close){
+  const b=box.querySelector("b"),sk=box.querySelector(".skip"),bar=box.querySelector(".bar");sk&&sk.remove();bar&&bar.remove();
+  b.textContent="Getting "+name+" ready…";
+  let file;try{const r=await fetch(href);if(!r.ok)throw new Error(r.status);file=new File([await r.blob()],name,{type:"application/pdf"})}
+  catch(e){b.textContent="Couldn't get the PDF. Check your connection and try again.";return}
+  if(!box.isConnected)return;
+  const share=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]}));
+  b.textContent=name+" is ready";
+  const btn=document.createElement("button");btn.type="button";btn.className="btn primary save";
+  btn.innerHTML='<span aria-hidden="true">⤓</span> Save to your device';
+  box.querySelector(".row").after(btn);
+  const tip=document.createElement("p");tip.textContent=share?(/iP(hone|ad|od)|Macintosh/.test(navigator.userAgent)?"Tap Save, then pick \u201cSave to Files\u201d.":"Tap Save, then pick where to keep it (Files, Drive, and more)."):"It will go to your downloads.";
+  btn.after(tip);
+  btn.onclick=async()=>{
+    if(share){try{await navigator.share({files:[file],title:name});close()}catch(e){if(e&&e.name==="AbortError")return;blobDownload(file,name);close()}}
+    else{blobDownload(file,name);close()}};
+}
+function blobDownload(file,name){const u=URL.createObjectURL(file);startFileDownload(u,name);setTimeout(()=>URL.revokeObjectURL(u),30000)}
 function dlBtn(d,cls=""){return `<a class="btn ${cls}" href="${esc(d.file)}" download="${esc(d.title.replace(/[\\/:*?"<>|]/g,""))}.pdf" data-act="dl-doc" data-id="${esc(d.id)}"><span aria-hidden="true">⤓</span> Download${LIVE.on?` <span class="dl-n">${dlCount(d.id)}</span>`:""}</a>`}
 function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
