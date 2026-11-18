@@ -1704,7 +1704,7 @@ const presName=p=>p.name||(LIVE.isAdmin?(LIVE.users.find(x=>x.id===p.id)?.name||
 const visiblePres=p=>LIVE.isAdmin||!p.hidden;
 /* fair trade: if you hide yourself, you only see how many are online, not who */
 const canSeeNames=()=>LIVE.isAdmin||shareActive();
-const ONLINE_MS=2*60*1000,BEAT_MS=45*1000;let beatTimer=null,tickTimer=null;
+const ONLINE_MS=75*1000,BEAT_MS=30*1000;let beatTimer=null,tickTimer=null;
 function onlineCount(){const now=Date.now(),me=LIVE.user?.uid;
   const n=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS).length;
   return n+(LIVE.user?1:0)}
@@ -1777,7 +1777,8 @@ function startPresence(u){stopPresence();beat();beatTimer=setInterval(beat,BEAT_
     LIVE.presence=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));paintOnline();paintHere()},()=>{}))}
 function stopPresence(){clearInterval(beatTimer);clearInterval(tickTimer);beatTimer=tickTimer=null}
 function leavePresence(){const u=LIVE.user;if(LIVE.on&&u)LIVE.fs.collection("presence").doc(u.uid).delete().catch(()=>{})}
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")beat()});
+/* leaving the tab, closing the app or switching apps removes you from "online" right away */
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")beat();else leavePresence()});
 addEventListener("pagehide",leavePresence);
 async function recordVisit(u){
   const FV=firebase.firestore.FieldValue,ref=LIVE.fs.collection("users").doc(u.uid);
