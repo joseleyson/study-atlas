@@ -1998,9 +1998,9 @@ function maybeA2HS(force){try{
 const LR_R={
   common:{name:"Common",c:"#9aa3b5",odds:"1 in 1.2",w:0,range:[1,11]},
   rare:{name:"Rare",c:"#5ea8f0",odds:"1 in 8",w:1/8,range:[12,16]},
-  epic:{name:"Epic",c:"#b77cf2",odds:"1 in 75",w:1/75,range:[17,18]},
-  legendary:{name:"Legendary",c:"#f0b64f",odds:"1 in 1,000",w:1/1000,range:[19,19]},
-  mythic:{name:"Mythic",c:"#f07fa6",odds:"1 in 5,000",w:1/5000,range:[20,20]}
+  epic:{name:"Epic",c:"#b77cf2",odds:"1 in 25",w:1/25,range:[17,18]},
+  legendary:{name:"Legendary",c:"#f0b64f",odds:"1 in 250",w:1/250,range:[19,19]},
+  mythic:{name:"Mythic",c:"#f07fa6",odds:"1 in 1,000",w:1/1000,range:[20,20]}
 };
 const LR_T=[
   {id:"default",name:"Default",r:"common",ico:"🧠",desc:"The standard Study Atlas look.",v:{bg:"#0d1117",ink:"#e8ecf4",accent:"#a99cff",card:"#161b25cc",line:"#2a3142",banner:"linear-gradient(135deg,#2b2850,#16324a)",ring:"#a99cff"}},
@@ -2251,7 +2251,7 @@ function maybeFeature(){const u=LIVE.user;if(!u||store("feat-"+FEATURE_ID+"-"+u.
   if(!sheet.hidden||LR_BUSY){setTimeout(maybeFeature,8000);return}
   store("feat-"+FEATURE_ID+"-"+u.uid,"1");
   openSheet(`<div class="feat"><span class="feat-tag">✨ New feature</span><div class="feat-die" aria-hidden="true">${lrDieSvg(20,"#b9aeff","#6c5ce0","f")}</div>
-    <h2>Lucky Roll</h2><p class="muted">Tap the dice in the corner of the home page to roll for a new look for Study Atlas and your profile. There are ${LR_T.length-1} designs to collect, from Common up to Mythic. Rolls are unlimited, and you can turn on auto roll. Good luck getting a Mythic (1 in 5,000).</p>
+    <h2>Lucky Roll</h2><p class="muted">Tap the dice in the corner of the home page to roll for a new look for Study Atlas and your profile. There are ${LR_T.length-1} designs to collect, from Common up to Mythic. Rolls are unlimited, and you can turn on auto roll. Good luck getting a Mythic (1 in 1,000).</p>
     <p class="feat-also"><b>Also new:</b> 🫀 Nutrition, Health &amp; Wellness and 🌱 Human Development notes, and 🔔 notifications you can turn on in your profile menu.</p></div>
     <div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Later</button><button type="button" class="btn primary" data-lr="roll">🎲 Roll now</button></div></div>`)}
 
