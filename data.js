@@ -21,6 +21,20 @@ window.STUDY_DATA = {
    "blurb": "Wrist & hand, the back, abdomen, pelvis & gluteal region, thigh and leg",
    "stain": "eosin",
    "order": 3
+  },
+  {
+   "id": "nhw",
+   "name": "Nutrition, Health & Wellness",
+   "blurb": "Body mechanics, posture and preventative strategies",
+   "stain": "fast",
+   "order": 4
+  },
+  {
+   "id": "human-dev",
+   "name": "Human Development",
+   "blurb": "Late adulthood: Kail & Cavanaugh, chapters 14–16",
+   "stain": "silver",
+   "order": 5
   }
  ],
  "notes": [],
@@ -262,6 +276,32 @@ window.STUDY_DATA = {
    "size": 780484,
    "lab": false,
    "order": 5
+  },
+  {
+   "id": "nhw-preventative-strategies",
+   "subject": "nhw",
+   "title": "Adopting Preventative Strategies",
+   "desc": "Ms. Kaye Y. Jagutin, PTRP · NHW slides + recorded lecture",
+   "file": "pdfs/nhw/adopting-preventative-strategies.pdf",
+   "thumb": "pdfs/nhw/adopting-preventative-strategies.jpg",
+   "pages": 5,
+   "size": 545422,
+   "lab": false,
+   "order": 1,
+   "added": "2026-11-18"
+  },
+  {
+   "id": "hd-late-adulthood",
+   "subject": "human-dev",
+   "title": "Late Adulthood",
+   "desc": "Kail & Cavanaugh, Human Development (9e) · Ch. 14–16",
+   "file": "pdfs/human-dev/late-adulthood.pdf",
+   "thumb": "pdfs/human-dev/late-adulthood.jpg",
+   "pages": 7,
+   "size": 1523009,
+   "lab": false,
+   "order": 1,
+   "added": "2026-11-18"
   }
  ]
 };

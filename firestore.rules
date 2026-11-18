@@ -15,7 +15,13 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name','email','photo','firstSeen','lastSeen','visits','app','progressAt','progressViews','nick'])
+        && request.resource.data.keys().hasOnly(['name','email','photo','firstSeen','lastSeen','visits','app','progressAt','progressViews','nick','notify','notifyAt','notifyToken','skins','skin','rolls'])
+        && (!('skins' in request.resource.data) || (request.resource.data.skins is list && request.resource.data.skins.size() <= 40))
+        && (!('skin' in request.resource.data) || (request.resource.data.skin is string && request.resource.data.skin.size() <= 20))
+        && (!('rolls' in request.resource.data) || request.resource.data.rolls is int)
+        && (!('notify' in request.resource.data) || request.resource.data.notify in ['on','off','blocked','ios-app'])
+        && (!('notifyAt' in request.resource.data) || request.resource.data.notifyAt is timestamp)
+        && (!('notifyToken' in request.resource.data) || (request.resource.data.notifyToken is string && request.resource.data.notifyToken.size() <= 400))
         && (!('nick' in request.resource.data) || (request.resource.data.nick is string && request.resource.data.nick.size() <= 20))
         && (!('app' in request.resource.data) || request.resource.data.app is timestamp)
         && (!('progressAt' in request.resource.data) || request.resource.data.progressAt is timestamp)
@@ -82,7 +88,8 @@ service cloud.firestore {
     match /presence/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['name','at','doc','hidden','photo','streak','badges'])
+        && request.resource.data.keys().hasOnly(['name','at','doc','hidden','photo','streak','badges','skin'])
+        && (!('skin' in request.resource.data) || (request.resource.data.skin is string && request.resource.data.skin.size() <= 20))
         && (!('photo' in request.resource.data) || (request.resource.data.photo is string && request.resource.data.photo.size() <= 500))
         && (!('streak' in request.resource.data) || request.resource.data.streak is int)
         && (!('badges' in request.resource.data) || request.resource.data.badges is int)

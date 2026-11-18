@@ -1,7 +1,7 @@
 /* Study Atlas service worker: lets the Home Screen app open fast and show the last
    loaded version when offline. Pages and notes always try the network first,
    so updates show up right away. PDFs and other sites are not touched. */
-const CACHE = "study-atlas-v1";
+const CACHE = "study-atlas-v2";
 const SHELL = ["./", "index.html", "data.js", "firebase-config.js", "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -32,3 +32,20 @@ self.addEventListener("fetch", e => {
     })));
   }
 });
+
+/* Phone notifications (Firebase Cloud Messaging). Tapping one opens Study Atlas. */
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => {
+    const c = cs.find(x => "focus" in x);
+    return c ? c.focus() : self.clients.openWindow("./");
+  }));
+});
+try {
+  self.window = self;
+  importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
+                "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js",
+                "firebase-config.js");
+  firebase.initializeApp(self.FIREBASE_CONFIG);
+  firebase.messaging();
+} catch (e) {}
