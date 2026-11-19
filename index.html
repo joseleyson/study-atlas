@@ -2173,11 +2173,21 @@ function lrTrick(name){const b=document.getElementById("lr-die");if(!b||!b.anima
   LR_TRICK&&LR_TRICK.cancel();b.style.animationPlayState="paused";
   LR_TRICK=b.animate(LR_TRICKS[name],{duration:LR_TRICK_MS[name],easing:"cubic-bezier(.35,0,.25,1)"});
   LR_TRICK.onfinish=LR_TRICK.oncancel=()=>{b.style.animationPlayState="";LR_TRICK=null}}
+/* entrance: once per visit the dice bounces in from the top-left corner and settles in its spot */
+function lrEntrance(b){try{if(sessionStorage.getItem("lr-entered")||matchMedia("(prefers-reduced-motion: reduce)").matches||!b.animate)return;sessionStorage.setItem("lr-entered","1")}catch(e){return}
+  const r=b.getBoundingClientRect(),dx=16-r.left,dy=70-r.top,N=4,kf=[];
+  // N bounces along the way; each arc is lower than the last, like a ball losing energy
+  for(let i=0;i<=N*8;i++){const t=i/(N*8),e=1-Math.pow(1-t,1.6),seg=Math.min(N-1,Math.floor(t*N)),u=t*N-seg,h=(90-seg*20)*4*u*(1-u);
+    kf.push({offset:t,translate:`${dx*(1-e)}px ${dy*(1-e)-h}px`,rotate:`${-720*(1-e)}deg`,opacity:Math.min(1,t*6)})}
+  kf[kf.length-1]={offset:1,translate:"0 0",rotate:"0deg",opacity:1};
+  b.style.animationPlayState="paused";const a=document.getElementById("lr-auto");if(a){a.style.opacity="0";a.style.transition="opacity .5s"}
+  const an=b.animate(kf,{duration:2200,easing:"linear"});
+  an.onfinish=()=>{b.style.animationPlayState="";lrTrick("hop");if(a)a.style.opacity=""}}
 function lrIdleLoop(){clearTimeout(LR_IDLE_T);LR_IDLE_T=setTimeout(()=>{if(lrCanPlay())lrTrick();lrIdleLoop()},LR_IDLE.min+Math.random()*(LR_IDLE.max-LR_IDLE.min))}
 lrIdleLoop();
 function lrPaintDie(){let b=document.getElementById("lr-die");const show=LIVE.on&&!!LIVE.user&&route().v==="home";
   if(!show){if(b)b.hidden=true;const a=document.getElementById("lr-auto");if(a)a.hidden=true;if(LR_AUTO)lrSetAuto(false);return}
-  if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the dice for a new design");b.title="Lucky Roll";b.addEventListener("click",()=>lrRoll());document.body.appendChild(b);lrDieFace()}
+  if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the dice for a new design");b.title="Lucky Roll";b.addEventListener("click",()=>lrRoll());document.body.appendChild(b);lrDieFace();requestAnimationFrame(()=>lrEntrance(b))}
   b.hidden=false;
   let a=document.getElementById("lr-auto");
   if(!a){a=document.createElement("button");a.type="button";a.id="lr-auto";a.addEventListener("click",()=>lrSetAuto(!LR_AUTO));document.body.appendChild(a)}
