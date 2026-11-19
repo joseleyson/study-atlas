@@ -1483,21 +1483,28 @@ function popBurst(el,ev){
     h+=`<span class="bit" style="--bc:${cols[i%cols.length]};--x:${Math.cos(ang)*dist}px;--y:${Math.sin(ang)*dist}px;--r:${Math.random()*540-270}deg;border-radius:${i%3?"3px":"50%"}"></span>`}
   h+=`<span class="plus" style="--bc:${cols[2]}">+1</span>`;
   box.innerHTML=h;document.body.appendChild(box);setTimeout(()=>box.remove(),1000)}
-/* Every topic download: a 5-second "preparing" popup with a quiet support line and a Skip link. */
+/* Download starts right away. A small note thanks people and links to Support, then fades. */
 function startFileDownload(href,name){const a=document.createElement("a");a.href=href;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();a.remove()}
-function prepDownload(href,name){document.querySelector(".prep")?.remove();
-  const DUR=5000,box=document.createElement("div");box.className="prep";box.setAttribute("role","status");box.style.setProperty("--dur",DUR+"ms");
-  box.innerHTML=`<div class="row"><span class="ic" aria-hidden="true">⤓</span><b>Preparing ${esc(name)}…</b><button type="button" class="skip">Skip</button><button type="button" class="x" aria-label="Close">×</button></div><div class="bar"><i></i></div><p>These notes are free, always. If they've helped you, you can <a href="#support">chip in to keep the site running</a> ♥</p>`;
+/* Home Screen app: the PDF is fetched ahead of time, so tapping Download can open the phone's save sheet straight away */
+const PDF_FILES={};
+function prefetchPdf(href,name){if(!IS_STANDALONE||PDF_FILES[href])return;PDF_FILES[href]={p:fetch(href).then(r=>{if(!r.ok)throw 0;return r.blob()}).then(bl=>PDF_FILES[href].f=new File([bl],name,{type:"application/pdf"})).catch(()=>{delete PDF_FILES[href]})}}
+function prepBox(name,msg){document.querySelector(".prep")?.remove();const box=document.createElement("div");box.className="prep";box.setAttribute("role","status");
+  box.innerHTML=`<div class="row"><span class="ic" aria-hidden="true">⤓</span><b>${esc(msg||("Downloading "+name))}</b><button type="button" class="x" aria-label="Close">×</button></div><p>These notes are free, always. If they've helped you, you can <a href="#support">chip in to keep the site running</a> ♥</p>`;
   document.body.appendChild(box);requestAnimationFrame(()=>box.classList.add("in"));
-  const close=()=>{clearTimeout(t);box.classList.remove("in");setTimeout(()=>box.remove(),300)};box.querySelector(".x").onclick=()=>{done=true;close()};
-  let done=false;const go=()=>{if(done)return;done=true;clearTimeout(t);if(IS_STANDALONE){saveInApp(href,name,box,close);return}startFileDownload(href,name);box.querySelector("b").textContent="Downloading "+name;box.querySelector(".skip").remove();setTimeout(()=>{box.classList.remove("in");setTimeout(()=>box.remove(),300)},1400)};
-  const t=setTimeout(go,DUR);box.querySelector(".skip").onclick=go;box.querySelector("p a").addEventListener("click",go)}
+  const close=()=>{clearTimeout(box._t);box.classList.remove("in");setTimeout(()=>box.remove(),300)};box.querySelector(".x").onclick=close;box._close=close;return box}
+function prepDownload(href,name){
+  if(IS_STANDALONE){const f=PDF_FILES[href]&&PDF_FILES[href].f;
+    if(f&&navigator.canShare&&navigator.share&&navigator.canShare({files:[f]})){
+      navigator.share({files:[f],title:name}).catch(e=>{if(!e||e.name!=="AbortError")blobDownload(f,name)});
+      const box=prepBox(name,"Saving "+name);box._t=setTimeout(box._close,4000);return}
+    if(f&&!(navigator.canShare&&navigator.share)){blobDownload(f,name);const box=prepBox(name);box._t=setTimeout(box._close,4000);return}
+    const box=prepBox(name,"Getting "+name+" ready…");saveInApp(href,name,box,box._close);return}
+  startFileDownload(href,name);const box=prepBox(name);box._t=setTimeout(box._close,4000)}
 /* In the Home Screen app a plain download opens the PDF full screen with no way back (iPhone/iPad).
    So there we fetch the file and hand it to the phone's own Save/Share sheet ("Save to Files", Drive, Books…). */
 async function saveInApp(href,name,box,close){
-  const b=box.querySelector("b"),sk=box.querySelector(".skip"),bar=box.querySelector(".bar");sk&&sk.remove();bar&&bar.remove();
-  b.textContent="Getting "+name+" ready…";
-  let file;try{const r=await fetch(href);if(!r.ok)throw new Error(r.status);file=new File([await r.blob()],name,{type:"application/pdf"})}
+  const b=box.querySelector("b");
+  let file;try{prefetchPdf(href,name);if(PDF_FILES[href])await PDF_FILES[href].p;file=PDF_FILES[href]&&PDF_FILES[href].f;if(!file)throw new Error("fetch")}
   catch(e){b.textContent="Couldn't get the PDF. Check your connection and try again.";return}
   if(!box.isConnected)return;
   const share=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]}));
@@ -1792,7 +1799,7 @@ function renderDoc(id){
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div>
     <nav class="next-topic"><a class="btn small" href="#s-${esc(d.subject)}">← All ${esc(s?s.name:"")} topics</a>${revBtn(d)}${nx?`<a class="go" href="#d-${esc(nx.id)}"><span class="mono">Next topic →</span><b>${esc(nx.title)}</b></a>`:`<a class="go" href="#"><span class="mono">You've reached the end →</span><b>Back to all subjects</b></a>`}</nav></div>
     <div class="pg-ind" id="pg-ind" aria-live="off"></div>`;
-  loadPdf(d);
+  loadPdf(d);try{prefetchPdf(d.file,d.title.replace(/[\\/:*?"<>|]/g,"")+".pdf")}catch(e){}
 }
 async function loadPdf(d){
   const box=document.getElementById("pdf-pages");
