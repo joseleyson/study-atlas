@@ -686,8 +686,7 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .subj-ico svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .subj-name{margin:0;font-family:var(--f-display);font-size:19px;font-weight:700;line-height:1.2}
 .subj-count{font:500 11.5px/1.4 var(--f-mono);color:var(--muted);letter-spacing:.03em}
-.subj .new-pill{position:absolute;right:14px;top:14px}
-.subj:has(.new-pill) .subj-name{padding-right:58px}
+.subj .subj-name .new-pill{position:static;margin-left:4px;vertical-align:3px}
 .subj-chips{display:flex;flex-wrap:wrap;gap:6px}
 .subj-chips span{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .subj-chips span.more{border-style:dashed}
@@ -982,6 +981,10 @@ body.nudged #app{animation:nudge-shake .55s}
 .lr-sw{position:relative;display:block;aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:var(--t-bg);border:1px solid #ffffff1f}
 .lr-sw::before{content:"";position:absolute;inset:0;background:var(--t-pattern,none)}
 .lr-sw i{position:absolute;left:10px;bottom:10px;width:24px;height:24px;border-radius:50%;background:var(--t-accent);box-shadow:0 0 0 2px #0006,0 0 0 4px var(--t-accent)}
+.lr-sw-die{background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--rc) 30%,transparent),transparent 70%),var(--soft);display:grid;place-items:center}
+.lr-sw-die::before{display:none}.lr-sw-die svg{height:78%;width:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+.lr-keep .lr-sw-die svg{height:70%}
+#lr-die.lr-die-fancy{filter:drop-shadow(0 8px 14px rgba(0,0,0,.4)) drop-shadow(0 0 8px color-mix(in srgb,var(--rc) 70%,transparent))}
 .lr-sw u{position:absolute;right:10px;bottom:12px;left:44px;height:8px;border-radius:4px;background:var(--t-card);border:1px solid var(--t-line)}
 .lr-keep{display:flex;gap:14px;align-items:center}
 .lr-small{font-size:12px;margin-top:6px!important}
@@ -1263,8 +1266,8 @@ function renderHome(){
   const cards=subs.map(s=>{const n=notesOf(s.id).length,q=qsOf(s.id).length,best=store("best-"+s.id),ds=docsOf(s.id),r=readSet(),nr=ds.filter(d=>r.has(d.id)).length;
     const last=ds.map(d=>d.updated||d.added).filter(Boolean).sort().pop();
     const chips=ds.slice(0,6).map(d=>`<span>${esc(d.title)}</span>`).join("")+(ds.length>6?`<span class="more">+${ds.length-6} more</span>`:"");
-    return `<a class="subj" href="#s-${esc(s.id)}" style="--c:${stainVar(s.stain)}">${ds.some(isNewDoc)?`<span class="new-pill">New!</span>`:""}
-      <div class="sj-head"><span class="subj-ico${hereInner("s:"+s.id)?" ico-here":""}" data-anim="${esc(SUBJ_ICON[s.id]||s.icon||"book")}">${iconSvg(SUBJ_ICON[s.id]||s.icon)}</span><div><p class="subj-name">${esc(s.name)}</p><span class="subj-count">${ds.length?plural(ds.length,"topic"):""}${n?(ds.length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}</span><div class="here here-subj${hereInner("s:"+s.id)?" on":""}" data-here="s:${esc(s.id)}">${hereInner("s:"+s.id)}</div></div></div>
+    return `<a class="subj" href="#s-${esc(s.id)}" style="--c:${stainVar(s.stain)}">
+      <div class="sj-head"><span class="subj-ico${hereInner("s:"+s.id)?" ico-here":""}" data-anim="${esc(SUBJ_ICON[s.id]||s.icon||"book")}">${iconSvg(SUBJ_ICON[s.id]||s.icon)}</span><div><p class="subj-name">${esc(s.name)}${ds.some(isNewDoc)?` <span class="new-pill">New!</span>`:""}</p><span class="subj-count">${ds.length?plural(ds.length,"topic"):""}${n?(ds.length?" · ":"")+plural(n,"note"):""}${q?" · "+q+" Qs":""}</span><div class="here here-subj${hereInner("s:"+s.id)?" on":""}" data-here="s:${esc(s.id)}">${hereInner("s:"+s.id)}</div></div></div>
       ${chips?`<div class="subj-chips">${chips}</div>`:s.blurb?`<p class="muted" style="font-size:13.5px">${esc(s.blurb)}</p>`:""}
       ${last||q?`<div class="subj-foot"><span>${last?updatedLabel(last):""}</span><span>${q?`best ${best?esc(best)+"%":"–"}`:""}</span></div>`:""}</a>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1 class="greet-h">${helloLine()}<span id="greet" class="greet-p" aria-live="off">${esc(greetText())}</span></h1>
@@ -1928,9 +1931,9 @@ function openProfile(uid){const now=Date.now(),p=LIVE.presence.find(x=>x.id===ui
   if(!p||!canSeeNames()){toast("They're not online anymore");openWho();return}
   const nm=niceName(presName(p)||"Someone"),ph=p.photo||(LIVE.isAdmin?LIVE.users.find(x=>x.id===uid)?.photo:"")||"";
   const sk=!p.hidden&&p.skin&&p.skin!=="default"?lrSkin(p.skin):null;
-  openSheet(`<div class="pf${sk?" lr-pf":""}"${sk?` style="${lrVars(sk)}"`:""}>${sk?`<div class="pf-banner">${lrFxHtml(sk)}</div>`:""}<button type="button" class="pf-back" data-pf="back" aria-label="Back to Online now">‹</button>
-    <div class="pf-av${sk?" lr-ringed":""}" style="--hc:${sk?sk.v.accent:hereColor(nm)}">${ph?`<img src="${esc(ph)}" alt="" referrerpolicy="no-referrer">`:esc((nm.trim()[0]||"?").toUpperCase())}<span class="pf-dot"></span></div>
-    <h2 class="pf-name">${esc(nm)}</h2><p class="pf-doing">${esc(presDoing(p))}</p>${sk?`<span class="lr-chip pf-skin" style="--rc:${LR_R[sk.r].c}">${sk.ico} ${esc(sk.name)} · ${LR_R[sk.r].name}</span>`:""}
+  openSheet(`<div class="pf"><button type="button" class="pf-back" data-pf="back" aria-label="Back to Online now">‹</button>
+    <div class="pf-av" style="--hc:${hereColor(nm)}">${ph?`<img src="${esc(ph)}" alt="" referrerpolicy="no-referrer">`:esc((nm.trim()[0]||"?").toUpperCase())}<span class="pf-dot"></span></div>
+    <h2 class="pf-name">${esc(nm)}</h2><p class="pf-doing">${esc(presDoing(p))}</p>${sk?`<span class="lr-chip pf-skin" style="--rc:${LR_R[sk.r].c}">🎲 ${sk.ico} ${esc(sk.name)} dice · ${LR_R[sk.r].name}</span>`:""}
     ${p.hidden?"":`<div class="pf-stats"><div><b>🔥 ${+p.streak||0}</b><span>day streak</span></div><div><b>🏅 ${+p.badges||0}</b><span>badges</span></div></div>`}
     <button type="button" class="btn pf-nudge" data-pf="nudge" data-uid="${esc(uid)}"><span class="pf-wave">👉</span> Nudge</button>
     <p class="pf-note mono" id="pf-note">${LIVE.isAdmin?"Your nudges show up as from \"Someone\".":"They'll get a buzz with your name."}</p></div>
@@ -2121,22 +2124,25 @@ function lrFxHtml(t){const f=(t&&t.fx)||"";let h="";
   if(f.includes("shine"))h+=`<span class="lr-shine"></span>`;
   if(f.includes("holo"))h+=`<span class="lr-holo"></span>`;
   return h}
-function applySkin(id){const t=lrSkin(id)||lrSkin("default"),root=document.documentElement;let st=document.getElementById("skin-style"),fx=document.getElementById("lr-fx");
-  if(t.id==="default"){if(root.dataset.skin){delete root.dataset.skin;st&&st.remove();fx&&fx.remove();const th=store("theme");if(th==="light"||th==="dark")root.dataset.theme=th;else delete root.dataset.theme;if(typeof render==="function"&&LIVE.authReady)render()}return}
-  const v=t.v,base=lrHex(v.bg),light=lrLum(base)>.45,ink=v.ink,was=root.dataset.skin;
-  root.dataset.skin=t.id;root.dataset.theme=light?"light":"dark";
-  if(!st){st=document.createElement("style");st.id="skin-style";document.head.appendChild(st)}
-  st.textContent=`html:root[data-skin]{--bg:${base};--surface:${light?`color-mix(in srgb,#ffffff 80%,${base})`:`color-mix(in srgb,${ink} 8%,${base})`};--soft:color-mix(in srgb,${ink} 12%,${base});--muted:color-mix(in srgb,${ink} 66%,${base});--line:color-mix(in srgb,${ink} 18%,${base});--ink:${ink};--accent:${v.accent};--accent-ink:${lrLum(lrHex(v.accent))>.4?"#15122f":"#ffffff"};color-scheme:${light?"light":"dark"}}
-html:root[data-skin] body{background:${v.pattern?v.pattern+",":""}${v.bg};background-color:${base};background-attachment:fixed}`;
-  if(!fx){fx=document.createElement("div");fx.id="lr-fx";fx.setAttribute("aria-hidden","true");document.body.prepend(fx)}
-  fx.innerHTML=lrFxHtml(t);
-  if(was!==t.id&&typeof render==="function"&&LIVE.authReady)render()}
+/* designs only change the dice now (2026-11-19): the site background and colours always stay the default */
+let LR_DIE_C="#b9aeff";
+function lrDieColor(t){return !t||t.id==="default"?"#b9aeff":lrHex(t.v.accent)}
+function applySkin(id){const t=lrSkin(id)||lrSkin("default"),root=document.documentElement;
+  if(root.dataset.skin){delete root.dataset.skin;document.getElementById("skin-style")?.remove();document.getElementById("lr-fx")?.remove();
+    const th=store("theme");if(th==="light"||th==="dark")root.dataset.theme=th;else delete root.dataset.theme;if(typeof render==="function"&&LIVE.authReady)render()}
+  const c=lrDieColor(t);if(c===LR_DIE_C&&document.getElementById("lr-die")?.dataset.c===c)return;LR_DIE_C=c;lrDieFace()}
+function lrDieDark(c){return "#"+[1,3,5].map(i=>Math.round(parseInt(c.slice(i,i+2),16)*.55).toString(16).padStart(2,"0")).join("")}
+/* paints the corner dice in the equipped design's colour (3D picture when the 3D dice is loaded) */
+function lrDieFace(){const b=document.getElementById("lr-die");if(!b)return;const c=LR_DIE_C,t=lrSkin(LR_PREVIEW||LR.eq);b.dataset.c=c;
+  b.style.setProperty("--rc",t&&t.id!=="default"?LR_R[t.r].c:"transparent");b.classList.toggle("lr-die-fancy",!!t&&t.id!=="default");
+  if(window.D20&&LR_3D)D20.snapshot(20,c,116,"one").then(url=>{if(b.dataset.c===c)b.innerHTML='<img src="'+url+'" alt="" style="width:100%;height:100%;display:block">'}).catch(()=>{b.innerHTML=lrDieSvg(20,c,lrDieDark(c),"h")});
+  else b.innerHTML=lrDieSvg(20,c,lrDieDark(c),"h")}
 const skinOn=()=>!!document.documentElement.dataset.skin;
 
 /* the dice in the corner of the home page */
 function lrPaintDie(){let b=document.getElementById("lr-die");const show=LIVE.on&&!!LIVE.user&&route().v==="home";
   if(!show){if(b)b.hidden=true;const a=document.getElementById("lr-auto");if(a)a.hidden=true;if(LR_AUTO)lrSetAuto(false);return}
-  if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the dice for a new design");b.title="Lucky Roll";b.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","h");b.addEventListener("click",()=>lrRoll());document.body.appendChild(b)}
+  if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the dice for a new design");b.title="Lucky Roll";b.addEventListener("click",()=>lrRoll());document.body.appendChild(b);lrDieFace()}
   b.hidden=false;
   let a=document.getElementById("lr-auto");
   if(!a){a=document.createElement("button");a.type="button";a.id="lr-auto";a.addEventListener("click",()=>lrSetAuto(!LR_AUTO));document.body.appendChild(a)}
@@ -2165,7 +2171,7 @@ function lrDie3D(){if(!window.D20)return Promise.resolve(null);
   /* don't hold up a roll on a slow connection: use the flat dice this time if 3D isn't ready in 2.5 s */
   return Promise.race([LR_3D,lrWait(2500).then(()=>null)])}
 function lrWarm3D(){if(!window.D20||!LIVE.user)return;(window.requestIdleCallback||setTimeout)(()=>{D20.load().then(()=>{lrOverlay();lrDie3D();
-  const b=document.getElementById("lr-die");if(b&&!b.dataset.d3)D20.snapshot(20,"#b9aeff",116,"one").then(url=>{b.dataset.d3="1";b.innerHTML='<img src="'+url+'" alt="" style="width:100%;height:100%;display:block">'}).catch(()=>{})}).catch(()=>{})})}
+  lrDie3D().then(()=>lrDieFace())}).catch(()=>{})})}
 async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   if(route().v!=="home"){location.hash="";await lrWait(350)}
   if(!sheet.hidden)closeSheet();
@@ -2173,7 +2179,7 @@ async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   const ov=lrOverlay(),$=id=>document.getElementById(id),hd=document.getElementById("lr-die");lrPaintDie();
   const hr=hd.getBoundingClientRect(),big=$("lr-big"),spin=$("lr-spin");
   const d3=await lrDie3D();ov.classList.add("lr-busy");
-  if(d3){d3.setColor("#b9aeff",600);d3.spin(true)}else spin.innerHTML=lrDieSvg(20,"#b9aeff","#6c5ce0","b");
+  if(d3){d3.setColor(LR_DIE_C,600);d3.spin(true)}else spin.innerHTML=lrDieSvg(20,LR_DIE_C,lrDieDark(LR_DIE_C),"b");
   big.style.transition="none";big.style.transform=`translate(${hr.left}px,${hr.top}px) scale(${hr.width/58})`;big.style.opacity="1";
   hd.classList.add("lr-hide");void big.offsetWidth;
   const sw=innerWidth,sh=innerHeight,S=Math.min(2.8,Math.max(2.2,sw/160)),size=58*S;
@@ -2237,7 +2243,7 @@ function lrRainHtml(m){let h2="";const cnt=m?110:56,cols=["#ff7eb3","#ffd36e","#
   for(let i=0;i<cnt;i++){const coin=!m||i%4===0,w=coin?12+Math.random()*6:5+Math.random()*6;
     h2+=`<span class="${coin?"lr-coin":""}" style="left:${Math.random()*100}%;--w:${w}px;--h:${coin?w:w*1.8}px;--br:${coin?"50%":"2px"};--col:${coin?"#f0b64f":cols[i%cols.length]};--dx:${(Math.random()-.5)*80}px;--r:${(Math.random()-.5)*900}deg;--d:${1.6+Math.random()*1.4}s;--dl:${Math.random()*(m?1.6:1.1)}s"></span>`}
   return h2}
-function lrSwatch(t){return `<span class="lr-sw" style="${lrVars(t)}">${lrFxHtml(t)}<i></i><u></u></span>`}
+function lrSwatch(t){const c=lrDieColor(t);return `<span class="lr-sw lr-sw-die" style="--rc:${LR_R[t.r].c}">${lrDieSvg(20,c,lrDieDark(c),"sw"+t.id.replace(/\W/g,""))}</span>`}
 function lrAskKeep(t){const prev=lrSkin(LR.eq);LR_SFX.ask();
   openSheet(`<div class="lr-keep" style="--rc:${LR_R[t.r].c}">${lrSwatch(t)}<div><h2>Keep using ${esc(t.name)}?</h2><p class="muted">${t.ico} ${LR_R[t.r].name} · ${esc(t.desc)}</p><p class="mono lr-small">It stays in your designs either way. <button type="button" class="lr-link" data-lr="designs">See all designs</button></p></div></div>
     <div class="form-foot"><div class="right"><button type="button" class="btn" data-lr="keep-no">Back to ${esc(prev.name)}</button><button type="button" class="btn primary lr-keep-btn" data-lr="keep-yes">Keep it</button></div></div>`)}
@@ -2271,7 +2277,7 @@ function maybeFeature(){const u=LIVE.user;if(!u||store("feat-"+FEATURE_ID+"-"+u.
   if(!sheet.hidden||LR_BUSY){setTimeout(maybeFeature,8000);return}
   store("feat-"+FEATURE_ID+"-"+u.uid,"1");
   openSheet(`<div class="feat"><span class="feat-tag">✨ New feature</span><div class="feat-die" aria-hidden="true">${lrDieSvg(20,"#b9aeff","#6c5ce0","f")}</div>
-    <h2>Lucky Roll</h2><p class="muted">Tap the dice in the corner of the home page to roll for a new look for Study Atlas and your profile. There are ${LR_T.length-1} designs to collect, from Common up to Mythic. Rolls are unlimited, and you can turn on auto roll. Good luck getting a Mythic (1 in 1,000).</p>
+    <h2>Lucky Roll</h2><p class="muted">Tap the dice in the corner of the home page to roll for a new design for your dice. There are ${LR_T.length-1} designs to collect, from Common up to Mythic. Rolls are unlimited, and you can turn on auto roll. Good luck getting a Mythic (1 in 1,000).</p>
     <p class="feat-also"><b>Also new:</b> 🫀 Nutrition, Health &amp; Wellness and 🌱 Human Development notes.</p></div>
     <div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Later</button><button type="button" class="btn primary" data-lr="roll">🎲 Roll now</button></div></div>`)}
 
