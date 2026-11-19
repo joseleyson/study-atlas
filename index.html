@@ -1167,7 +1167,7 @@ function topbar(right=""){const u=LIVE.user;
     <button data-act="edit-nick"><span aria-hidden="true">✏️</span>Change my name</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${IS_STANDALONE?"":`<button data-act="a2hs-help"><span aria-hidden="true">📲</span>Add to Home Screen</button>`}
-    ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a>`:""}
+    ${LIVE.isAdmin?`<a href="#admin"><span aria-hidden="true">👥</span>Visitors</a><a href="dashboard.html" target="_blank" rel="noopener"><span aria-hidden="true">📊</span>Dashboard</a>`:""}
     <button data-act="sign-out"><span aria-hidden="true">↪</span>Sign out</button></div></details>`:"";
   const dotOn=`<span class="sa-dot" aria-hidden="true"></span><span id="online-count">${onlineLabel()}</span>`;
   const on=u?`<button type="button" class="sa-online sa-btn-like" id="who-online" title="See who is online">${dotOn}</button>`:"";
@@ -1237,6 +1237,7 @@ function render(){
   const r=route();try{lrPaintDie()}catch(e){}const fl=document.getElementById("foot-links");if(fl)fl.hidden=!(LIVE.on&&LIVE.user);
   if(LIVE.on&&!LIVE.authReady){app.innerHTML=topbar()+`<div class="loading">Checking your sign-in…</div>`;return}
   if(LIVE.on&&!LIVE.user)return renderSignIn();
+  try{statView()}catch(e){}
   if(r.v==="admin")return renderAdmin();
   if(S.mode==="loading"){app.innerHTML=topbar()+`<div class="loading">${S.slow?"Your notes can't be reached yet. They'll appear here as soon as the connection catches up.":"Opening your study atlas…"}</div>`;return}
   if(S.mode==="error"&&!S.subjects.length){app.innerHTML=topbar()+`<div class="empty" style="margin-top:40px"><h3>Your notes didn't load</h3><p>Reload the page to try again.</p></div>`;return}
@@ -1819,7 +1820,24 @@ async function loadPdf(d){
 async function drawPage(doc,el){try{const pg=await doc.getPage(+el.dataset.n);const w=el.clientWidth||800,dpr=Math.min(2,window.devicePixelRatio||1);
   const vp=pg.getViewport({scale:w/pg.getViewport({scale:1}).width*dpr});const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
   el.appendChild(c);await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise}catch(e){}}
-function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d)return;const FV=firebase.firestore.FieldValue,u=LIVE.user;
+/* ---------- usage totals for the owner's dashboard: day-by-day counters only (no names, no account IDs) ---------- */
+const STAT_TZ="Asia/Manila";
+const statDay=()=>new Intl.DateTimeFormat("en-CA",{timeZone:STAT_TZ,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+const statHour=()=>(+new Intl.DateTimeFormat("en-US",{timeZone:STAT_TZ,hour:"numeric",hourCycle:"h23"}).format(new Date()))%24;
+const statKey=k=>String(k).toLowerCase().replace(/[^a-z0-9_-]/g,"_").slice(0,80);
+function stat(...keys){if(!LIVE.on||!LIVE.user||!LIVE.adminKnown||LIVE.isAdmin||!LIVE.fs)return;
+  const ref=LIVE.fs.collection("stats").doc("d-"+statDay()),FV=firebase.firestore.FieldValue;
+  keys.forEach(k=>ref.set({[statKey(k)]:FV.increment(1)},{merge:true}).catch(()=>{}))}
+let STAT_LAST=null;
+function statView(){if(!LIVE.adminKnown||!LIVE.user)return;const k=location.hash||"#";if(k===STAT_LAST)return;STAT_LAST=k;
+  const r=route(),v=r.v||"home",ks=["views","v_"+v,"h_"+statHour()];
+  if(r.v==="subject")ks.push("s_"+r.id);if(r.v==="doc")ks.push("p_"+r.id);stat(...ks)}
+function statSession(){const ua=navigator.userAgent,ipad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  const dev=ipad||/Tablet|Android(?!.*Mobile)/.test(ua)?"tablet":/Mobi|iPhone|iPod|Android/.test(ua)?"phone":"computer";
+  const os=/iPhone|iPad|iPod/.test(ua)||ipad?"ios":/Android/.test(ua)?"android":/CrOS/.test(ua)?"chromeos":/Windows/.test(ua)?"windows":/Mac/.test(ua)?"mac":/Linux/.test(ua)?"linux":"other";
+  const br=/FBAN|FBAV|FB_IAB|Messenger/.test(ua)?"facebook":/Instagram/.test(ua)?"instagram":/Edg\//.test(ua)?"edge":/CriOS|Chrome\//.test(ua)?"chrome":/FxiOS|Firefox/.test(ua)?"firefox":/Safari/.test(ua)?"safari":"other";
+  stat("sessions","dev_"+dev,"os_"+os,"br_"+br,IS_STANDALONE?"via_app":"via_browser")}
+function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d)return;try{stat("downloads","dl_"+d.id)}catch(e){}const FV=firebase.firestore.FieldValue,u=LIVE.user;
   LIVE.fs.collection("downloads").doc(d.id).set({count:FV.increment(1)},{merge:true}).catch(()=>{});
   LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:d.id,noteTitle:String(d.title).slice(0,120),subject:String(subj(d.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()}).catch(()=>{})}
 
@@ -1839,7 +1857,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
     LIVE.unsubs.push(fs.collection("downloads").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data().count||0);LIVE.downloads=m;if(route().v==="subject"||route().v==="doc")render()},()=>{}));
     LIVE.unsubs.push(fs.collection("events").orderBy("date").limit(1000).onSnapshot(snap=>{LIVE.events=snap.docs.map(d=>({id:d.id,...d.data()}));const v=route().v;if(v==="schedule"||v==="home"||v==="new")render()},()=>{}));
     try{const a=await fs.collection("admins").doc(u.uid).get();LIVE.isAdmin=a.exists}catch(e){LIVE.isAdmin=false}
-    LIVE.adminKnown=true;beat();
+    LIVE.adminKnown=true;beat();try{STAT_LAST=null;statSession();statView()}catch(e){}
     try{const ed=await fs.collection("editors").doc(u.uid).get();LIVE.isEditor=ed.exists}catch(e){LIVE.isEditor=false}
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("shares").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.shares=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("suggestions").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.suggestions=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
@@ -1870,6 +1888,7 @@ function paintReacts(){document.querySelectorAll(".reacts[data-doc]").forEach(el
 function toggleReact(id,e){const u=LIVE.user;if(!u||!LIVE.fs||!REACTS.includes(e))return;
   const prev=LIVE.reacts.find(r=>r.doc===id&&r.uid===u.uid),cur=prev?.es||[],es=cur.includes(e)?cur.filter(x=>x!==e):[...cur,e];
   const rid=id+"__"+u.uid,ref=LIVE.fs.collection("reactions").doc(rid),name=(u.displayName||u.email||"").slice(0,80);
+  if(es.length>cur.length)try{stat("reacts")}catch(e){}
   LIVE.reacts=LIVE.reacts.filter(r=>r.id!==rid);if(es.length)LIVE.reacts.push({id:rid,doc:id,uid:u.uid,name,es});paintReacts();
   (es.length?ref.set({doc:id,uid:u.uid,name,es,at:firebase.firestore.FieldValue.serverTimestamp()}):ref.delete()).catch(()=>{
     LIVE.reacts=LIVE.reacts.filter(r=>r.id!==rid);if(prev)LIVE.reacts.push(prev);paintReacts();toast("Couldn't save your reaction. Try again in a bit.")})}
@@ -1935,7 +1954,7 @@ async function sendNudge(uid,btn){const u=LIVE.user;if(!LIVE.on||!u||uid===u.uid
   const now=Date.now();if(now-lastNudge<NUDGE_GAP){btn?.classList.remove("shake");void btn?.offsetWidth;btn?.classList.add("shake");return}lastNudge=now;
   btn?.classList.remove("sent");void btn?.offsetWidth;btn?.classList.add("sent");
   try{await LIVE.fs.collection("nudges").add({to:uid,from:u.uid,fromName:LIVE.isAdmin?"":(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()});
-    const n=document.getElementById("pf-note");if(n)n.textContent="Nudge sent! 👉"}
+    const n=document.getElementById("pf-note");if(n)n.textContent="Nudge sent! 👉";try{stat("nudges")}catch(e){}}
   catch(e){toast("Couldn't send that nudge")}}
 document.addEventListener("click",e=>{const w=e.target.closest("[data-who]");if(w){openProfile(w.dataset.who);return}
   const b=e.target.closest("[data-pf]");if(!b)return;if(b.dataset.pf==="back")openWho();else if(b.dataset.pf==="nudge")sendNudge(b.dataset.uid,b);else if(b.dataset.pf==="back-nudge")sendNudge(b.dataset.uid,b)});
@@ -2178,7 +2197,7 @@ async function lrRoll(force){if(LR_BUSY||!LIVE.user)return;
   big.style.transition="";ov.classList.add("lr-on");
   big.style.transform=`translate(${(sw-size)/2}px,${sh*.44-size/2}px) scale(${S})`;LR_SFX.whoosh();
   await lrWait(560);
-  const n=force==="mythic"?20:force==="legendary"?19:luckyNum(),r=lrRarity(n),rc=LR_R[r].c;
+  const n=force==="mythic"?20:force==="legendary"?19:luckyNum(),r=lrRarity(n),rc=LR_R[r].c;try{if(!force)stat("rolls","roll_"+r)}catch(e){}
   const pool=LR_T.filter(t=>t.r===r&&t.id!=="default"),pick=pool[Math.floor(Math.random()*pool.length)];
   ov.classList.add("lr-rolling");LR_SFX.rattle(1150);big.classList.remove("lr-landed","lr-slam");if(!d3)big.classList.add("lr-rolling");
   const tk=setInterval(()=>{const e=spin.querySelector(".lr-die-num");if(e)e.textContent=1+Math.floor(Math.random()*20)},70);

@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Study Atlas Dashboard</title>
+<meta name="theme-color" content="#3f3796">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Owner-only dashboard. Every number on this page is read live from Firestore, and
+   firestore.rules only lets the owner (admins/{uid}) read users, downloadLog,
+   suggestions and shares, so nobody else can load this data even with the link. */
+:root{
+  --bg:#f1f3f6; --surface:#ffffff; --ink:#141c25; --muted:#586574; --line:#d6dce4; --soft:#e7e9f3;
+  --accent:#3f3796; --accent-ink:#ffffff; --good:#1d7a4c; --bad:#b3324c; --bar:#5b52c4;
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1319; --surface:#161d25; --ink:#e5eaf0; --muted:#98a4b2; --line:#29333f; --soft:#20263a;
+  --accent:#a8a1ff; --accent-ink:#15122f; --good:#56c58d; --bad:#f07c91; --bar:#9c95ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1319; --surface:#161d25; --ink:#e5eaf0; --muted:#98a4b2; --line:#29333f; --soft:#20263a;
+  --accent:#a8a1ff; --accent-ink:#15122f; --good:#56c58d; --bad:#f07c91; --bar:#9c95ff; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:110px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.02em;color:var(--muted)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .row{display:flex;align-items:center;gap:12px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;font:700 18px/1 var(--f-display);color:var(--ink);text-decoration:none}
+.brand img{width:26px;height:26px;border-radius:7px}
+.brand small{font:500 12px var(--f-mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.top .sp{flex:1}
+.live{display:inline-flex;align-items:center;gap:7px;font:500 12px var(--f-mono);color:var(--muted)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 60%,transparent);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px transparent}}
+.me{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.me img{width:28px;height:28px;border-radius:50%}
+.btn{font:600 13px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);padding:11px 20px;font-size:15px}
+nav.jump{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
+nav.jump::-webkit-scrollbar{display:none}
+nav.jump a{flex:none;font:500 13px var(--f-body);color:var(--muted);text-decoration:none;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+nav.jump a:hover{color:var(--ink);border-color:var(--accent)}
+h1{font:700 clamp(26px,4vw,36px)/1.1 var(--f-display);margin:26px 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 20px}
+h2{font:700 20px/1.2 var(--f-display);margin:0;display:flex;align-items:baseline;gap:8px}
+h2 .mono{font-size:13px}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:0 0 16px;min-width:0}
+.card-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid2>section.card{margin:0}
+.grid2+section,.grid2+.grid2{margin-top:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;text-decoration:none;color:inherit;display:block}
+.tile:hover{border-color:var(--accent)}
+.tile .n{font:700 30px/1.1 var(--f-display);display:block;font-variant-numeric:tabular-nums}
+.tile .l{font-size:13px;color:var(--muted)}
+.tile .d{font:500 12px var(--f-mono);color:var(--good);display:block;margin-top:4px}
+.tile .d.zero{color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;margin:4px 0}
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;max-height:520px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+th{position:sticky;top:0;background:var(--soft);font:600 12px var(--f-body);color:var(--muted);cursor:pointer;user-select:none;z-index:1}
+th.n,td.n{text-align:right;font-variant-numeric:tabular-nums}
+th[data-dir="asc"]::after{content:" ▲";font-size:9px}
+th[data-dir="desc"]::after{content:" ▼";font-size:9px}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:color-mix(in srgb,var(--soft) 55%,transparent)}
+td.wrap{white-space:normal;min-width:220px}
+.person{display:inline-flex;align-items:center;gap:8px}
+.person img,.av{width:24px;height:24px;border-radius:50%;flex:none}
+.av{display:inline-grid;place-items:center;background:var(--soft);font:600 11px var(--f-body);color:var(--muted)}
+.tag{display:inline-block;font:500 11px var(--f-mono);padding:1px 7px;border-radius:999px;background:var(--soft);color:var(--muted);margin-left:6px}
+.tag.on{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.search{font:14px var(--f-body);padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;width:220px;max-width:100%}
+/* online list */
+.online{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.online li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--bg)}
+.online .who{font-weight:600}
+.online .what{color:var(--muted);font-size:13px}
+.online .dot{width:8px;height:8px;border-radius:50%;background:var(--good);margin-left:auto;flex:none}
+/* feed / message lists */
+.feed{list-style:none;margin:0;padding:0;max-height:430px;overflow-y:auto}
+.feed li{display:flex;gap:12px;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.feed li:last-child{border-bottom:0}
+.feed .when{flex:none;font:500 12px var(--f-mono);color:var(--muted)}
+.msgs{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:520px;overflow-y:auto}
+.msgs li{background:var(--bg);border-radius:10px;padding:11px 13px}
+.msgs .hd{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-bottom:4px}
+.msgs .body{white-space:pre-wrap;word-break:break-word}
+.cat{font:600 11px var(--f-mono);text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-right:6px}
+/* bar charts */
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .ax{font:500 10.5px var(--f-mono);fill:var(--muted)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .b{fill:var(--bar)}
+.chart .hit{fill:transparent;cursor:default}
+.chart .hit:hover+.b,.chart g:hover .b{fill:var(--accent)}
+.chart .total{font:600 13px var(--f-body);color:var(--muted);margin:0 0 6px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:500 12px var(--f-body);padding:5px 9px;border-radius:7px;white-space:nowrap;transform:translate(-50%,-100%);opacity:0;transition:opacity .1s;z-index:3}
+.tip.on{opacity:1}
+.hbars{display:grid;gap:7px}
+.hb{display:grid;grid-template-columns:minmax(90px,160px) 1fr auto;gap:10px;align-items:center;font-size:13.5px}
+.hb .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .track{display:block;height:12px;border-radius:0 4px 4px 0;overflow:hidden;background:color-mix(in srgb,var(--soft) 60%,transparent)}
+.hb .fill{display:block;height:100%;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
+.hb .v{font:500 12.5px var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums;min-width:28px;text-align:right}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+@media (max-width:900px){.grid3{grid-template-columns:1fr}}
+.grid2.flat{gap:22px}
+.tiles.mini{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:18px}
+.tiles.mini .tile{background:var(--bg);border-color:transparent;padding:11px 13px}
+.tiles.mini .n{font-size:24px}
+.seg{display:inline-flex;gap:4px}
+.seg .btn{padding:5px 11px;font-size:12px}
+.seg .btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+.rx{font-size:15px;letter-spacing:2px}
+/* gate */
+.gate{min-height:calc(100vh - 60px);display:grid;place-items:center;text-align:center;padding:30px 16px}
+.gate .box{max-width:420px}
+.gate h1{margin-top:0}
+.gate p{color:var(--muted)}
+code{font:12px var(--f-mono);background:var(--soft);padding:2px 6px;border-radius:5px;word-break:break-all}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:20px 0 40px}
+@media (max-width:560px){
+  .top .me span,.brand small{display:none}
+  .tile .n{font-size:26px}
+  section.card{padding:14px}
+  .search{width:100%}
+  .hb{grid-template-columns:minmax(80px,120px) 1fr auto}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="row">
+    <a class="brand" href="./"><img src="icons/icon-192.png" alt="">Study Atlas <small>Dashboard</small></a>
+    <span class="sp"></span>
+    <span class="live" id="live" hidden><i></i>Live</span>
+    <span class="me" id="me"></span>
+  </div>
+  <nav class="jump" id="jump" hidden>
+    <a href="#overview">Overview</a><a href="#online">Online now</a><a href="#usage">Usage</a><a href="#activity">Activity</a><a href="#people">People</a>
+    <a href="#downloads">Downloads</a><a href="#suggestions">Suggestions</a><a href="#shares">Shared notes</a><a href="#reactions">Reactions</a>
+    <a href="#luckyroll">Lucky Roll</a><a href="#quizzes">Quizzes</a><a href="#schedule">Schedule</a>
+  </nav>
+</div></header>
+<main id="app" class="wrap"><div class="gate"><div class="box"><p class="mono">Loading…</p></div></div></main>
+<div class="tip" id="tip"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="data.js"></script>
+<script>
+(()=>{
+"use strict";
+const app=document.getElementById("app"),meEl=document.getElementById("me"),jump=document.getElementById("jump"),liveEl=document.getElementById("live"),tip=document.getElementById("tip");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DATA=window.STUDY_DATA||{subjects:[],docs:[]};
+const EXTRA={genetics:"Genetics",tl1:"TL1",nhw:"NHW","human-dev":"Human Development",ethics:"Ethics",pe104:"PE 104",histopath:"Histopathology",psychiatry:"Psychiatry"};
+const subjName=id=>(DATA.subjects.find(s=>s.id===id)||{}).name||EXTRA[id]||id||"";
+const docById=id=>(DATA.docs||[]).find(d=>d.id===id);
+const ONLINE_MS=75*1000;
+/* Lucky Roll dice designs (kept in step with LR_T in index.html) */
+const RAR={common:{n:"Common",c:"#9aa3b5"},rare:{n:"Rare",c:"#5ea8f0"},epic:{n:"Epic",c:"#b77cf2"},legendary:{n:"Legendary",c:"#f0b64f"},mythic:{n:"Mythic",c:"#f07fa6"}};
+const SKINS={default:["Default","common","🧠"],graph:["Graph Paper","common","📐"],chalk:["Chalkboard","common","✏️"],highlighter:["Highlighter","common","🖍️"],index:["Index Card","common","🗂️"],
+  lavender:["Lavender Lab","rare","🧪"],scrubs:["Mint Scrubs","rare","🩺"],sakura:["Sakura Notes","rare","🌸"],ocean:["Deep Sea","rare","🌊"],
+  blueprint:["Anatomy Blueprint","epic","🦴"],synapse:["Synapse Storm","epic","⚡"],aurora:["Aurora","epic","🌌"],
+  golden:["Golden Skeleton","legendary","💀"],galaxy:["Galaxy Brain","legendary","🪐"],prism:["Prism","mythic","💎"],nat20:["Natural 20","mythic","🎲"]};
+const RANK=["common","rare","epic","legendary","mythic"];
+
+const ms=t=>t&&t.toMillis?t.toMillis():(t instanceof Date?t.getTime():(typeof t==="number"?t:0));
+const dayKey=m=>{const d=new Date(m);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const today=()=>dayKey(Date.now());
+function ago(m){if(!m)return"—";const x=Math.max(0,(Date.now()-m)/1000);if(x<60)return"just now";if(x<3600)return Math.floor(x/60)+" min ago";if(x<86400)return Math.floor(x/3600)+" h ago";if(x<86400*30)return Math.floor(x/86400)+" d ago";return new Date(m).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}
+function when(m){if(!m)return"—";return new Date(m).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}
+const fmtDate=s=>{if(!s)return"";const[y,mo,d]=s.split("-").map(Number);return new Date(y,mo-1,d).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})};
+const avatar=(name,photo)=>photo?`<img src="${esc(photo)}" alt="" referrerpolicy="no-referrer">`:`<span class="av">${esc((String(name||"?").trim()[0]||"?").toUpperCase())}</span>`;
+
+const S={user:null,users:[],presence:[],dlog:[],downloads:{},suggestions:[],shares:[],reactions:[],attempts:[],events:[],editors:[],loaded:new Set(),peopleQ:"",sort:{people:["lastSeen","desc"]},stats:[],range:14};
+let unsubs=[];
+
+/* ---------- sign in + owner check ---------- */
+function gate(html){jump.hidden=true;liveEl.hidden=true;app.innerHTML=`<div class="gate"><div class="box">${html}</div></div>`}
+function signIn(){const pr=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(pr).catch(e=>{if(e&&/popup-blocked|operation-not-supported/.test(e.code||""))firebase.auth().signInWithRedirect(pr)})}
+document.addEventListener("click",e=>{const a=e.target.closest("[data-act]");if(!a)return;
+  if(a.dataset.act==="sign-in")signIn();else if(a.dataset.act==="sign-out")firebase.auth().signOut()});
+
+function start(){
+  const cfg=window.FIREBASE_CONFIG;if(!cfg||!window.firebase){gate(`<h1>Can't connect</h1><p>Firebase didn't load. Check your connection and refresh.</p>`);return}
+  firebase.initializeApp(cfg);const fs=firebase.firestore();
+  firebase.auth().onAuthStateChanged(async u=>{
+    unsubs.forEach(f=>f());unsubs=[];S.loaded.clear();S.user=u;
+    if(!u){meEl.innerHTML="";gate(`<h1>Owner dashboard</h1><p>Sign in with the Google account that owns Study Atlas to see your site's data.</p><p><button class="btn primary" data-act="sign-in">Sign in with Google</button></p>`);return}
+    meEl.innerHTML=`${u.photoURL?`<img src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">`:""}<span>${esc(u.displayName||u.email||"")}</span><button class="btn" data-act="sign-out">Sign out</button>`;
+    gate(`<p class="mono">Checking access…</p>`);
+    let ok=false;try{ok=(await fs.collection("admins").doc(u.uid).get()).exists}catch(e){ok=false}
+    if(!ok){gate(`<h1>This page is for the site owner</h1><p>You're signed in as ${esc(u.email||u.displayName||"someone")}, which isn't the owner account. Nothing here can be loaded by other accounts.</p><p><a class="btn" href="./">Go to Study Atlas</a></p>`);return}
+    jump.hidden=false;liveEl.hidden=false;
+    const ts={serverTimestamps:"estimate"};
+    const sub=(key,q,map)=>unsubs.push(q.onSnapshot(snap=>{S[key]=map?map(snap):snap.docs.map(d=>({id:d.id,...d.data(ts)}));S.loaded.add(key);paint()},e=>{console.warn(key,e);S.loaded.add(key);paint()}));
+    sub("users",fs.collection("users").orderBy("lastSeen","desc").limit(2000));
+    sub("presence",fs.collection("presence").orderBy("at","desc").limit(300));
+    sub("dlog",fs.collection("downloadLog").orderBy("at","desc").limit(3000));
+    sub("downloads",fs.collection("downloads"),snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data().count||0);return m});
+    sub("suggestions",fs.collection("suggestions").orderBy("at","desc").limit(500));
+    sub("shares",fs.collection("shares").orderBy("at","desc").limit(500));
+    sub("reactions",fs.collection("reactions").limit(5000));
+    sub("attempts",fs.collection("attempts").orderBy("at","desc").limit(2000));
+    sub("events",fs.collection("events").orderBy("date").limit(2000));
+    sub("editors",fs.collection("editors"),snap=>snap.docs.map(d=>({id:d.id,...d.data()})));
+    sub("stats",fs.collection("stats").orderBy(firebase.firestore.FieldPath.documentId(),"desc").limit(120));
+    paint();
+  });
+}
+setInterval(()=>{if(S.loaded.size)paint()},30000);
+
+/* ---------- small chart helpers ---------- */
+function daysBack(n){const out=[];const d=new Date();d.setHours(0,0,0,0);for(let i=n-1;i>=0;i--){const x=new Date(d);x.setDate(d.getDate()-i);out.push(dayKey(x.getTime()))}return out}
+function barChart(id,keys,counts,unit){
+  const W=640,H=180,pl=30,pr=6,pt=10,pb=24,iw=W-pl-pr,ih=H-pt-pb,max=Math.max(1,...keys.map(k=>counts[k]||0));
+  const step=Math.max(1,Math.ceil(max/4)),top=Math.ceil(max/step)*step,bw=iw/keys.length,gap=Math.max(2,bw*.22);
+  let g="";for(let v=0;v<=top;v+=step){const y=pt+ih-ih*v/top;g+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}"/><text class="ax" x="${pl-6}" y="${y+3.5}" text-anchor="end">${v}</text>`}
+  const bars=keys.map((k,i)=>{const v=counts[k]||0,h=v?Math.max(2,ih*v/top):0,x=pl+i*bw+gap/2,w=bw-gap,y=pt+ih-h;
+    const [yy,mm,dd]=k.split("-").map(Number),lab=new Date(yy,mm-1,dd).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+    const r=Math.min(4,w/2,h);
+    const path=h?`<path class="b" d="M${x},${pt+ih}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${pt+ih}Z"/>`:"";
+    const tick=(i%Math.ceil(keys.length/7)===0||i===keys.length-1)?`<text class="ax" x="${x+w/2}" y="${H-6}" text-anchor="middle">${lab}</text>`:"";
+    return `<g data-tip="${esc(lab)}: ${v} ${esc(v===1?unit[0]:unit[1])}"><rect class="hit" x="${pl+i*bw}" y="${pt}" width="${bw}" height="${ih}"/>${path}</g>${tick}`}).join("");
+  return `<div class="chart" id="${id}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(unit[1])} per day">${g}${bars}</svg></div>`}
+function hbars(rows,unit){const max=Math.max(1,...rows.map(r=>r.v));
+  return `<div class="hbars">${rows.map(r=>`<div class="hb" title="${esc(r.label)}: ${r.v} ${esc(unit)}"><span class="lbl">${r.pre||""}${esc(r.label)}</span><span class="track"><span class="fill" style="width:${100*r.v/max}%;${r.c?`background:${r.c}`:""}"></span></span><span class="v">${r.v}</span></div>`).join("")}</div>`}
+document.addEventListener("mousemove",e=>{const g=e.target.closest&&e.target.closest("[data-tip]");if(!g){tip.classList.remove("on");return}
+  tip.textContent=g.dataset.tip;tip.style.left=e.pageX+"px";tip.style.top=(e.pageY-12)+"px";tip.classList.add("on")});
+
+/* ---------- table sorting ---------- */
+document.addEventListener("click",e=>{const b=e.target.closest("[data-range]");if(b){S.range=+b.dataset.range;paint()}});
+document.addEventListener("click",e=>{const th=e.target.closest("th[data-k]");if(!th)return;const t=th.closest("table").dataset.t,cur=S.sort[t]||[];
+  S.sort[t]=[th.dataset.k,cur[0]===th.dataset.k&&cur[1]==="desc"?"asc":"desc"];paint()});
+document.addEventListener("input",e=>{if(e.target.id==="people-q"){S.peopleQ=e.target.value;const pos=e.target.selectionStart;paint();const i=document.getElementById("people-q");if(i){i.focus();i.setSelectionRange(pos,pos)}}});
+function sortRows(t,rows){const s=S.sort[t];if(!s)return rows;const[k,dir]=s,m=dir==="asc"?1:-1;
+  return rows.slice().sort((a,b)=>{const x=a[k],y=b[k];if(typeof x==="string"||typeof y==="string")return m*String(x||"").localeCompare(String(y||""));return m*((x||0)-(y||0))})}
+const th=(t,k,label,n)=>{const s=S.sort[t]||[];return `<th data-k="${k}"${n?' class="n"':""}${s[0]===k?` data-dir="${s[1]}"`:""}>${label}</th>`};
+
+/* ---------- page ---------- */
+function paint(){
+  if(!S.user)return;
+  const keep=window.scrollY,now=Date.now(),T=today();
+  const users=S.users,dlog=S.dlog;
+  const userOf=uid=>users.find(u=>u.id===uid);
+  const nameOf=(uid,fallback)=>{const u=userOf(uid);return(u&&(u.nick||u.name||u.email))||fallback||"Someone"};
+  const online=S.presence.filter(p=>p.at&&now-ms(p.at)<ONLINE_MS&&p.id!==S.user.uid);
+  const totalVisits=users.reduce((a,u)=>a+(u.visits||0),0);
+  const totalDl=Object.values(S.downloads).reduce((a,b)=>a+b,0);
+  const totalRolls=users.reduce((a,u)=>a+(u.rolls||0),0);
+  const newToday=users.filter(u=>dayKey(ms(u.firstSeen))===T).length;
+  const activeToday=users.filter(u=>dayKey(ms(u.lastSeen))===T).length;
+  const dlToday=dlog.filter(d=>dayKey(ms(d.at))===T).length;
+  const sgToday=S.suggestions.filter(d=>dayKey(ms(d.at))===T).length;
+  const upcoming=S.events.filter(e=>(e.endDate||e.date)>=T);
+  const apps=users.filter(u=>u.app).length;
+  const dlBy={};dlog.forEach(d=>{(dlBy[d.uid]=dlBy[d.uid]||0);dlBy[d.uid]++});
+  const qzBy={};S.attempts.forEach(a=>{qzBy[a.player]=(qzBy[a.player]||0)+1});
+  const delta=(n,word)=>`<span class="d${n?"":" zero"}">${n?"+"+n:"0"} ${word}</span>`;
+
+  /* overview tiles */
+  const tiles=`<div class="tiles" id="overview">
+    <a class="tile" href="#people"><span class="n">${users.length}</span><span class="l">people signed in</span>${delta(newToday,"new today")}</a>
+    <a class="tile" href="#online"><span class="n">${online.length}</span><span class="l">online now</span><span class="d zero">${activeToday} visited today</span></a>
+    <a class="tile" href="#people"><span class="n">${totalVisits.toLocaleString()}</span><span class="l">total visits</span><span class="d zero">${apps} use the app</span></a>
+    <a class="tile" href="#downloads"><span class="n">${totalDl.toLocaleString()}</span><span class="l">PDF downloads</span>${delta(dlToday,"today")}</a>
+    <a class="tile" href="#suggestions"><span class="n">${S.suggestions.length}</span><span class="l">suggestions</span>${delta(sgToday,"today")}</a>
+    <a class="tile" href="#luckyroll"><span class="n">${totalRolls.toLocaleString()}</span><span class="l">dice rolls</span><span class="d zero">${users.filter(u=>u.rolls).length} players</span></a>
+    <a class="tile" href="#schedule"><span class="n">${upcoming.length}</span><span class="l">upcoming on the schedule</span><span class="d zero">${S.events.length} entries total</span></a>
+  </div>`;
+
+  /* online now */
+  const doing=p=>{if(!p.doc)return"Browsing Study Atlas";if(p.doc.startsWith("s:"))return"Looking through "+subjName(p.doc.slice(2));const d=docById(p.doc);return d?"Reading "+d.title:"Reading notes"};
+  const onlineCard=`<section class="card" id="online"><div class="card-hd"><h2>Online now <span class="mono">${online.length}</span></h2><span class="mono">updates live</span></div>
+    ${online.length?`<ul class="online">${online.map(p=>{const u=userOf(p.id)||{},nm=u.nick||u.name||p.name||"Someone";
+      return `<li>${avatar(nm,u.photo||p.photo)}<div><div class="who">${esc(nm)}${p.hidden?`<span class="tag" title="They turned off 'Show me as online'">hidden</span>`:""}</div><div class="what">${esc(doing(p))}</div></div><span class="dot" title="online"></span></li>`}).join("")}</ul>`
+      :`<p class="empty">Nobody else is on the site right now.</p>`}</section>`;
+
+  /* recent activity feed: downloads, suggestions, shares, quiz scores, new people */
+  const feedItems=[
+    ...dlog.slice(0,60).map(d=>({t:ms(d.at),h:`<b>${esc(d.name||nameOf(d.uid))}</b> downloaded ${esc(d.noteTitle)}`})),
+    ...users.slice().sort((a,b)=>ms(b.firstSeen)-ms(a.firstSeen)).slice(0,30).map(u=>({t:ms(u.firstSeen),h:`<b>${esc(u.nick||u.name||u.email)}</b> signed in for the first time`})),
+    ...S.suggestions.slice(0,30).map(s=>({t:ms(s.at),h:`<b>${esc(s.name||"Someone (anonymous)")}</b> sent a suggestion`})),
+    ...S.shares.slice(0,20).map(s=>({t:ms(s.at),h:`<b>${esc(s.name||"Someone")}</b> shared notes: ${esc(s.title)}`})),
+    ...S.attempts.slice(0,30).map(a=>({t:ms(a.at),h:`<b>${esc(a.name)}</b> scored ${a.score}/${a.total} on ${esc(a.subjectName)}`})),
+    ...S.events.slice().sort((a,b)=>ms(b.at)-ms(a.at)).slice(0,20).map(e=>({t:ms(e.at),h:`<b>${esc(e.byName||"Someone")}</b> added “${esc(e.title)}” to the schedule`}))
+  ].filter(x=>x.t).sort((a,b)=>b.t-a.t).slice(0,40);
+  const feedCard=`<section class="card"><div class="card-hd"><h2>Latest activity</h2></div>${feedItems.length?`<ul class="feed">${feedItems.map(x=>`<li><span>${x.h}</span><span class="when">${ago(x.t)}</span></li>`).join("")}</ul>`:`<p class="empty">No activity yet.</p>`}</section>`;
+
+  /* activity charts (last 14 days) */
+  const K=daysBack(14),dlDay={},newDay={};
+  dlog.forEach(d=>{const k=dayKey(ms(d.at));dlDay[k]=(dlDay[k]||0)+1});
+  users.forEach(u=>{const k=dayKey(ms(u.firstSeen));newDay[k]=(newDay[k]||0)+1});
+  const sum=(o)=>K.reduce((a,k)=>a+(o[k]||0),0);
+  const charts=`<div class="grid2" id="activity">
+    <section class="card"><div class="card-hd"><h2>Downloads per day</h2><span class="mono">last 14 days · ${sum(dlDay)}</span></div>${barChart("c-dl",K,dlDay,["download","downloads"])}</section>
+    <section class="card"><div class="card-hd"><h2>New people per day</h2><span class="mono">last 14 days · ${sum(newDay)}</span></div>${barChart("c-new",K,newDay,["new person","new people"])}</section>
+  </div>`;
+
+  /* people table */
+  const q=S.peopleQ.trim().toLowerCase();
+  const prows=sortRows("people",users.map(u=>({id:u.id,name:u.nick||u.name||"",gname:u.name||"",email:u.email||"",photo:u.photo,visits:u.visits||0,dl:dlBy[u.id]||0,qz:qzBy[u.id]||0,rolls:u.rolls||0,skin:u.skin||"",app:!!u.app,
+      on:online.some(p=>p.id===u.id),firstSeen:ms(u.firstSeen),lastSeen:ms(u.lastSeen),editor:S.editors.some(e=>e.id===u.id)}))
+    .filter(r=>!q||(r.name+" "+r.gname+" "+r.email).toLowerCase().includes(q)));
+  const skinCell=id=>{const s=SKINS[id];return s&&id!=="default"?`<span title="${esc(RAR[s[1]].n)}">${s[2]} ${esc(s[0])}</span>`:`<span class="mono">—</span>`};
+  const people=`<section class="card" id="people"><div class="card-hd"><h2>People <span class="mono">${users.length}</span></h2><input class="search" id="people-q" type="search" placeholder="Search name or email" value="${esc(S.peopleQ)}" aria-label="Search people"></div>
+    <div class="tbl-wrap"><table data-t="people"><thead><tr>${th("people","name","Name")}${th("people","email","Email")}${th("people","visits","Visits",1)}${th("people","dl","Downloads",1)}${th("people","qz","Quizzes",1)}${th("people","rolls","Rolls",1)}${th("people","skin","Dice")}${th("people","firstSeen","First visit")}${th("people","lastSeen","Last seen")}</tr></thead><tbody>
+    ${prows.map(r=>`<tr><td><span class="person">${avatar(r.name||r.email,r.photo)}${esc(r.name||"—")}${r.name!==r.gname&&r.gname?` <span class="mono">(${esc(r.gname)})</span>`:""}${r.on?`<span class="tag on">online</span>`:""}${r.app?`<span class="tag">📲 app</span>`:""}${r.editor?`<span class="tag">editor</span>`:""}</span></td>
+      <td>${esc(r.email)}</td><td class="n">${r.visits}</td><td class="n">${r.dl}</td><td class="n">${r.qz}</td><td class="n">${r.rolls}</td><td>${skinCell(r.skin)}</td><td title="${esc(when(r.firstSeen))}">${esc(ago(r.firstSeen))}</td><td title="${esc(when(r.lastSeen))}">${esc(ago(r.lastSeen))}</td></tr>`).join("")||`<tr><td colspan="9" class="empty">No one matches.</td></tr>`}
+    </tbody></table></div></section>`;
+
+  /* downloads */
+  const byDoc={};dlog.forEach(d=>{const x=byDoc[d.noteId]=byDoc[d.noteId]||{title:d.noteTitle,subject:d.subject,people:new Map()};x.people.set(d.uid,(x.people.get(d.uid)||0)+1)});
+  const ids=new Set([...Object.keys(S.downloads),...Object.keys(byDoc)]);
+  const drows=[...ids].map(id=>{const doc=docById(id),x=byDoc[id];return{id,title:doc?.title||x?.title||id,subject:doc?subjName(doc.subject):(x?.subject||""),total:S.downloads[id]||(x?[...x.people.values()].reduce((a,b)=>a+b,0):0),people:x?x.people.size:0,who:x?[...x.people.entries()].map(([uid,c])=>nameOf(uid)+(c>1?" ×"+c:"")).join(", "):""}}).sort((a,b)=>b.total-a.total);
+  const dlCard=`<section class="card" id="downloads"><div class="card-hd"><h2>Downloads by PDF <span class="mono">${totalDl} total</span></h2></div>
+    ${drows.length?`${hbars(drows.slice(0,10).map(r=>({label:r.title,v:r.total})),"downloads")}
+    <div class="tbl-wrap" style="margin-top:14px"><table><thead><tr><th>PDF</th><th>Subject</th><th class="n">Downloads</th><th class="n">People</th><th>Who</th></tr></thead><tbody>
+    ${drows.map(r=>`<tr><td>${esc(r.title)}</td><td>${esc(r.subject)}</td><td class="n">${r.total}</td><td class="n">${r.people}</td><td class="wrap">${esc(r.who)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="empty">No downloads yet.</p>`}</section>`;
+
+  /* suggestions + shares */
+  const catLabel={idea:"Idea",notes:"Notes",bug:"Bug",other:"Other"};
+  const sugCard=`<section class="card" id="suggestions"><div class="card-hd"><h2>Suggestions <span class="mono">${S.suggestions.length}</span></h2></div>
+    ${S.suggestions.length?`<ul class="msgs">${S.suggestions.map(s=>`<li><div class="hd"><span><span class="cat">${esc(catLabel[s.category]||s.category)}</span>${esc(s.name||"Anonymous")}</span><span title="${esc(when(ms(s.at)))}">${ago(ms(s.at))}</span></div><div class="body">${esc(s.text)}</div></li>`).join("")}</ul>`:`<p class="empty">No suggestions yet.</p>`}</section>`;
+  const shCard=`<section class="card" id="shares"><div class="card-hd"><h2>Shared notes <span class="mono">${S.shares.length}</span></h2></div>
+    ${S.shares.length?`<ul class="msgs">${S.shares.map(s=>`<li><div class="hd"><span><span class="cat">${esc(subjName(s.subject)||"Notes")}</span>${esc(s.name||"Anonymous")}</span><span>${ago(ms(s.at))}</span></div><div class="body"><a href="${esc(s.link)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a>${s.message?`\n${esc(s.message)}`:""}</div></li>`).join("")}</ul>`:`<p class="empty">Nobody has shared notes yet.</p>`}</section>`;
+
+  /* reactions */
+  const rx={};S.reactions.forEach(r=>{const x=rx[r.doc]=rx[r.doc]||{people:0,e:{}};x.people++;(r.es||[]).forEach(e=>x.e[e]=(x.e[e]||0)+1)});
+  const rrows=Object.entries(rx).map(([id,x])=>({id,title:docById(id)?.title||id,people:x.people,total:Object.values(x.e).reduce((a,b)=>a+b,0),e:Object.entries(x.e).sort((a,b)=>b[1]-a[1])})).sort((a,b)=>b.total-a.total);
+  const rxCard=`<section class="card" id="reactions"><div class="card-hd"><h2>Reactions <span class="mono">${S.reactions.length} people-PDF pairs</span></h2></div>
+    ${rrows.length?`<div class="tbl-wrap"><table><thead><tr><th>PDF</th><th class="n">People</th><th>Emojis</th></tr></thead><tbody>${rrows.map(r=>`<tr><td>${esc(r.title)}</td><td class="n">${r.people}</td><td>${r.e.map(([e,c])=>`<span class="rx">${e}</span><span class="mono">${c}</span>`).join("&nbsp;&nbsp;")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="empty">No reactions yet.</p>`}</section>`;
+
+  /* lucky roll */
+  const players=users.filter(u=>u.rolls>0).sort((a,b)=>b.rolls-a.rolls);
+  const owned={};RANK.forEach(r=>owned[r]=0);const best=u=>{let b=-1;(u.skins||[]).forEach(id=>{const s=SKINS[id];if(s)b=Math.max(b,RANK.indexOf(s[1]))});return b};
+  users.forEach(u=>(u.skins||[]).forEach(id=>{const s=SKINS[id];if(s&&id!=="default")owned[s[1]]++}));
+  const using={};users.forEach(u=>{if(u.skin&&u.skin!=="default"&&SKINS[u.skin])using[u.skin]=(using[u.skin]||0)+1});
+  const lrCard=`<section class="card" id="luckyroll"><div class="card-hd"><h2>Lucky Roll <span class="mono">${totalRolls.toLocaleString()} rolls · ${players.length} players</span></h2></div>
+    <div class="grid2" style="gap:22px">
+      <div><p class="mono" style="margin:0 0 8px">Dice designs unlocked, by rarity</p>${hbars(RANK.map(r=>({label:RAR[r].n,v:owned[r],c:RAR[r].c,pre:`<span class="swatch" style="background:${RAR[r].c}"></span>`})),"unlocked")}
+        <p class="mono" style="margin:18px 0 8px">Dice people are using now</p>${Object.keys(using).length?hbars(Object.entries(using).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([id,v])=>({label:SKINS[id][0],v,pre:SKINS[id][2]+" "})),"people"):`<p class="empty">Everyone is on the default dice.</p>`}</div>
+      <div><p class="mono" style="margin:0 0 8px">Top rollers</p>${players.length?`<div class="tbl-wrap"><table><thead><tr><th>Name</th><th class="n">Rolls</th><th class="n">Designs</th><th>Best</th></tr></thead><tbody>
+        ${players.slice(0,15).map(u=>{const b=best(u);return `<tr><td><span class="person">${avatar(u.nick||u.name,u.photo)}${esc(u.nick||u.name||u.email)}</span></td><td class="n">${u.rolls}</td><td class="n">${Math.max(0,(u.skins||[]).filter(i=>i!=="default").length)}</td><td>${b>=0?`<span class="swatch" style="background:${RAR[RANK[b]].c}"></span>${RAR[RANK[b]].n}`:"—"}</td></tr>`}).join("")}</tbody></table></div>`:`<p class="empty">Nobody has rolled yet.</p>`}</div>
+    </div></section>`;
+
+  /* quizzes */
+  const qBy={};S.attempts.forEach(a=>{const x=qBy[a.subjectName||a.subject]=qBy[a.subjectName||a.subject]||{n:0,p:0,players:new Set()};x.n++;x.p+=a.total?a.score/a.total:0;x.players.add(a.player)});
+  const qzCard=`<section class="card" id="quizzes"><div class="card-hd"><h2>Quizzes <span class="mono">${S.attempts.length} attempts</span></h2></div>
+    ${S.attempts.length?`<div class="tbl-wrap"><table><thead><tr><th>Subject</th><th class="n">Attempts</th><th class="n">People</th><th class="n">Avg score</th></tr></thead><tbody>${Object.entries(qBy).sort((a,b)=>b[1].n-a[1].n).map(([k,x])=>`<tr><td>${esc(k)}</td><td class="n">${x.n}</td><td class="n">${x.players.size}</td><td class="n">${Math.round(100*x.p/x.n)}%</td></tr>`).join("")}</tbody></table></div>
+      <ul class="feed" style="margin-top:10px">${S.attempts.slice(0,10).map(a=>`<li><span><b>${esc(a.name)}</b> scored ${a.score}/${a.total} on ${esc(a.subjectName)}</span><span class="when">${ago(ms(a.at))}</span></li>`).join("")}</ul>`:`<p class="empty">No quiz attempts yet.</p>`}</section>`;
+
+  /* schedule */
+  const typeLabel={quiz:"Quiz",exam:"Exam",lecture:"Lecture",deadline:"Deadline",reminder:"Reminder",other:"Other"};
+  const evRow=e=>`<tr><td>${esc(fmtDate(e.date))}${e.endDate?` – ${esc(fmtDate(e.endDate))}`:""}${e.time?` <span class="mono">${esc(e.time)}</span>`:""}</td><td><span class="cat">${esc(typeLabel[e.type]||e.type)}</span>${esc(e.title)}</td><td>${esc(subjName(e.subject))}</td><td>${esc(e.byName||"")}</td><td title="${esc(when(ms(e.at)))}">${ago(ms(e.at))}</td></tr>`;
+  const past=S.events.filter(e=>(e.endDate||e.date)<T).reverse();
+  const evByWho={};S.events.forEach(e=>evByWho[e.byName||"Someone"]=(evByWho[e.byName||"Someone"]||0)+1);
+  const scCard=`<section class="card" id="schedule"><div class="card-hd"><h2>Schedule <span class="mono">${upcoming.length} upcoming · ${past.length} past</span></h2><span class="mono">Editors: ${S.editors.length?S.editors.map(e=>esc(e.name||nameOf(e.id))).join(", "):"none"}</span></div>
+    ${S.events.length?`<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Entry</th><th>Subject</th><th>Added by</th><th>Added</th></tr></thead><tbody>
+      ${upcoming.map(evRow).join("")}${past.length?`<tr><td colspan="5" class="mono" style="background:var(--soft)">Past</td></tr>${past.slice(0,40).map(evRow).join("")}`:""}</tbody></table></div>
+      <p class="mono" style="margin:12px 0 0">Entries added by: ${Object.entries(evByWho).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`${esc(n)} (${c})`).join(", ")}</p>`:`<p class="empty">The schedule is empty.</p>`}</section>`;
+
+  /* usage totals (anonymous day-by-day counters from the stats collection) */
+  const manilaDay=off=>{const d=new Date(Date.now()-off*864e5);return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).format(d)};
+  const RK=[];for(let i=S.range-1;i>=0;i--)RK.push(manilaDay(i));
+  const byDay={};S.stats.forEach(d=>byDay[d.id.slice(2)]=d);
+  const U={};RK.forEach(k=>{const d=byDay[k];if(d)Object.entries(d).forEach(([f,v])=>{if(f!=="id"&&typeof v==="number")U[f]=(U[f]||0)+v})});
+  const pre=p=>Object.entries(U).filter(([k])=>k.startsWith(p)).map(([k,v])=>({k:k.slice(p.length),v})).sort((a,b)=>b.v-a.v);
+  const vDay={};RK.forEach(k=>vDay[k]=(byDay[k]||{}).views||0);
+  const hours={};for(let h=0;h<24;h++)hours[h]=U["h_"+h]||0;
+  const wk=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],wd={};wk.forEach(w=>wd[w]=0);
+  RK.forEach(k=>{const[y,m,d]=k.split("-").map(Number);wd[wk[new Date(y,m-1,d).getDay()]]+=(byDay[k]||{}).views||0});
+  const hourLab=h=>(h%12||12)+(h<12?" AM":" PM");
+  const simpleBars=(id,labels,vals,unit,every,wide)=>{const W=wide?1100:640,H=wide?200:170,pl=30,pr=6,pt=10,pb=24,iw=W-pl-pr,ih=H-pt-pb,max=Math.max(1,...vals),step=Math.max(1,Math.ceil(max/4)),top=Math.ceil(max/step)*step,bw=iw/vals.length,gap=Math.max(2,bw*.22);
+    let g="";for(let v=0;v<=top;v+=step){const y=pt+ih-ih*v/top;g+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}"/><text class="ax" x="${pl-6}" y="${y+3.5}" text-anchor="end">${v}</text>`}
+    const bars=vals.map((v,i)=>{const h=v?Math.max(2,ih*v/top):0,x=pl+i*bw+gap/2,w=bw-gap,y=pt+ih-h,r=Math.min(4,w/2,h);
+      return `<g data-tip="${esc(labels[i])}: ${v} ${esc(unit)}"><rect class="hit" x="${pl+i*bw}" y="${pt}" width="${bw}" height="${ih}"/>${h?`<path class="b" d="M${x},${pt+ih}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${pt+ih}Z"/>`:""}</g>${i%every===0?`<text class="ax" x="${x+w/2}" y="${H-6}" text-anchor="middle">${esc(labels[i])}</text>`:""}`}).join("");
+    return `<div class="chart" id="${id}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(unit)}">${g}${bars}</svg></div>`};
+  const NICE={dev:{phone:"📱 Phone",tablet:"📟 Tablet",computer:"💻 Computer"},os:{ios:"iPhone / iPad",android:"Android",windows:"Windows",mac:"Mac",chromeos:"Chromebook",linux:"Linux",other:"Other"},
+    br:{safari:"Safari",chrome:"Chrome",edge:"Edge",firefox:"Firefox",facebook:"Facebook / Messenger app",instagram:"Instagram app",other:"Other"},
+    v:{home:"Home",subject:"Subject pages",doc:"PDF pages",schedule:"Schedule",new:"Updates",support:"Support page",quiz:"Quizzes",admin:"Visitors page",notes:"Notes"}};
+  const nice=(g,k)=>(NICE[g]||{})[k]||k;
+  const listCard=(title,rows,unit,label)=>`<div><p class="mono" style="margin:0 0 8px">${title}</p>${rows.length?hbars(rows.slice(0,10).map(r=>({label:label(r.k),v:r.v,pre:r.pre})),unit):`<p class="empty">Nothing yet.</p>`}</div>`;
+  const pdfOpen=pre("p_"),subjOpen=pre("s_");
+  const rollR=RANK.map(r=>({k:r,v:U["roll_"+r]||0,c:RAR[r].c}));
+  const hasStats=S.stats.length>0;
+  const usage=`<section class="card" id="usage"><div class="card-hd"><h2>How people use the site</h2><span class="seg">${[7,14,30].map(n=>`<button class="btn${S.range===n?" on":""}" data-range="${n}">${n} days</button>`).join("")}</span></div>
+    ${hasStats?"":`<p class="empty" style="margin-bottom:12px">Usage totals start counting once the updated Firestore rules are published. Until then these stay at zero.</p>`}
+    <div class="tiles mini">
+      <div class="tile"><span class="n">${(U.sessions||0).toLocaleString()}</span><span class="l">visits (app opens)</span></div>
+      <div class="tile"><span class="n">${(U.views||0).toLocaleString()}</span><span class="l">pages viewed</span></div>
+      <div class="tile"><span class="n">${pdfOpen.reduce((a,r)=>a+r.v,0).toLocaleString()}</span><span class="l">PDFs opened</span></div>
+      <div class="tile"><span class="n">${(U.downloads||0).toLocaleString()}</span><span class="l">PDFs downloaded</span></div>
+      <div class="tile"><span class="n">${(U.rolls||0).toLocaleString()}</span><span class="l">dice rolls</span></div>
+      <div class="tile"><span class="n">${(U.reacts||0)+(U.nudges||0)}</span><span class="l">reactions + nudges</span></div>
+    </div>
+    <p class="mono" style="margin:4px 0 8px">Pages viewed per day</p>${simpleBars("c-views",RK.map(k=>{const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{month:"short",day:"numeric"})}),RK.map(k=>vDay[k]),"pages viewed",Math.ceil(RK.length/10),1)}
+    <div class="grid2 flat" style="margin-top:18px">
+      <div><p class="mono" style="margin:0 0 8px">Busiest hours (Manila time)</p>${simpleBars("c-hours",[...Array(24).keys()].map(hourLab),[...Array(24).keys()].map(h=>hours[h]),"pages viewed",3)}</div>
+      <div><p class="mono" style="margin:0 0 8px">Busiest days of the week</p>${simpleBars("c-wd",wk,wk.map(w=>wd[w]),"pages viewed",1)}</div>
+    </div>
+    <div class="grid3">
+      ${listCard("Most opened PDFs",pdfOpen,"opens",k=>docById(k)?.title||k)}
+      ${listCard("Most opened subjects",subjOpen,"opens",k=>subjName(k))}
+      ${listCard("Pages people visit",pre("v_"),"views",k=>nice("v",k))}
+    </div>
+    <div class="grid3">
+      ${listCard("Devices",pre("dev_"),"visits",k=>nice("dev",k))}
+      ${listCard("Phone / computer system",pre("os_"),"visits",k=>nice("os",k))}
+      ${listCard("Browser",pre("br_"),"visits",k=>nice("br",k))}
+    </div>
+    <div class="grid3">
+      ${listCard("Opened from",[{k:"app",v:U.via_app||0},{k:"browser",v:U.via_browser||0}].filter(r=>r.v),"visits",k=>k==="app"?"📲 Home Screen app":"🌐 Browser")}
+      <div><p class="mono" style="margin:0 0 8px">Dice roll results</p>${hbars(rollR.map(r=>({label:RAR[r.k].n,v:r.v,c:r.c,pre:`<span class="swatch" style="background:${r.c}"></span>`})),"rolls")}</div>
+      ${listCard("Most downloaded PDFs",pre("dl_"),"downloads",k=>docById(k)?.title||k)}
+    </div>
+  </section>`;
+
+  const loading=S.loaded.size<11?`<p class="mono">Loading data… (${S.loaded.size}/11)</p>`:"";
+  app.innerHTML=`<h1>Your site at a glance</h1><p class="sub">Everything on Study Atlas, live. Only your account can open this page.</p>${loading}
+    ${tiles}<div class="grid2">${onlineCard}${feedCard}</div>${usage}${charts}${people}${dlCard}<div class="grid2">${sugCard}${shCard}</div>${rxCard}${lrCard}${qzCard}${scCard}
+    <footer>Study Atlas dashboard · numbers update by themselves while this page is open</footer>`;
+  window.scrollTo(0,keep);
+}
+start();
+})();
+</script>
+</body>
+</html>

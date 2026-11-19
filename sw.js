@@ -15,6 +15,7 @@ self.addEventListener("fetch", e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== "GET" || url.origin !== location.origin) return;
   if (url.pathname.endsWith(".pdf")) return;
+  if (url.pathname.endsWith("/dashboard.html")) return; // owner dashboard: always live, never cached
   const isPage = req.mode === "navigate" || /\/(index\.html)?$/.test(url.pathname);
   const isLive = isPage || /\/(data|firebase-config)\.js$/.test(url.pathname);
   if (isLive) {
