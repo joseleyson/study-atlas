@@ -1020,7 +1020,7 @@ body.nudged #app{animation:nudge-shake .55s}
 <noscript><div style="max-width:560px;margin:15vh auto;padding:24px;font-family:system-ui,sans-serif;text-align:center"><h1>Study Atlas</h1><p>Free med school review notes, topic PDFs, quizzes and a shared class schedule.</p><p>Please turn on JavaScript to open the atlas.</p></div></noscript>
 
 <div class="wrap" id="app"><div class="loading">Opening your study atlas…</div></div>
-<footer class="site-foot" id="site-foot"><span class="by">Made by <b>Jose</b> · PT 2B</span><nav id="foot-links" hidden><button data-foot="share">Share your notes</button><button data-foot="suggest">Send a suggestion</button><a href="#support" style="color:inherit">Support the site</a></nav></footer>
+<footer class="site-foot" id="site-foot"><span class="by">Made by <b>Jose</b> · PT 2B</span><nav id="foot-links" hidden><button data-foot="suggest">Send a suggestion</button><a href="#support" style="color:inherit">Support the site</a></nav></footer>
 <div id="sheet" hidden><div class="sheet-panel" role="dialog" aria-modal="true" id="sheet-panel"></div></div>
 <div id="toast" hidden></div>
 
@@ -1164,7 +1164,6 @@ function topbar(right=""){const u=LIVE.user;
     <button data-lr="designs"><span aria-hidden="true">🎲</span>My designs</button>
     ${LIVE.isAdmin?"":`<button data-act="share-active" role="switch" aria-checked="${shareActive()}" class="sw-row"><span aria-hidden="true">🟢</span>Show me as online<span class="mini-sw" aria-hidden="true"></span></button>`}
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
-    <button data-act="share-notes"><span aria-hidden="true">📤</span>Share your notes</button>
     <button data-act="edit-nick"><span aria-hidden="true">✏️</span>Change my name</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
     ${IS_STANDALONE?"":`<button data-act="a2hs-help"><span aria-hidden="true">📲</span>Add to Home Screen</button>`}
