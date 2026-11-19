@@ -2151,6 +2151,30 @@ function lrDieFace(){const b=document.getElementById("lr-die");if(!b)return;cons
 const skinOn=()=>!!document.documentElement.dataset.skin;
 
 /* the dice in the corner of the home page */
+/* ---------- the dice comes alive (low-key) ----------
+   Every 9-22 s (random) it does one small trick: a hop, a curious tilt, a look-around, a little spin,
+   or a hop out to the side and back. It stays still while you scroll, read a sheet, roll, or if the
+   phone asks for reduced motion. Tune LR_IDLE below. */
+const LR_IDLE={min:9000,max:22000,quietAfterScroll:2500,height:1};
+let LR_IDLE_T=null,LR_LAST_SCROLL=0,LR_TRICK=null;
+addEventListener("scroll",()=>{LR_LAST_SCROLL=Date.now()},{passive:true});
+const LR_TRICKS={
+  hop:[{translate:"0 0",scale:"1 1"},{translate:"0 0",scale:"1.08 .9",offset:.15},{translate:"0 -18px",scale:".96 1.06",offset:.4},{translate:"0 0",scale:"1.08 .92",offset:.7},{translate:"0 -5px",scale:"1 1",offset:.85},{translate:"0 0",scale:"1 1"}],
+  double:[{translate:"0 0"},{translate:"0 -14px",offset:.22},{translate:"0 0",scale:"1.06 .94",offset:.42},{translate:"0 -9px",scale:"1 1",offset:.62},{translate:"0 0",scale:"1.04 .96",offset:.82},{translate:"0 0",scale:"1 1"}],
+  tilt:[{rotate:"0deg"},{rotate:"-14deg",offset:.3},{rotate:"-10deg",offset:.55},{rotate:"8deg",offset:.8},{rotate:"0deg"}],
+  look:[{rotate:"0deg",translate:"0 0"},{rotate:"-12deg",translate:"-3px 0",offset:.25},{rotate:"-12deg",translate:"-3px 0",offset:.45},{rotate:"12deg",translate:"3px 0",offset:.7},{rotate:"0deg",translate:"0 0"}],
+  spin:[{translate:"0 0",rotate:"0deg"},{translate:"0 -16px",rotate:"180deg",offset:.45},{translate:"0 0",rotate:"360deg",scale:"1.06 .94",offset:.8},{translate:"0 0",rotate:"360deg",scale:"1 1"}],
+  peek:[{translate:"0 0"},{translate:"-22px -12px",offset:.18},{translate:"-44px 0",scale:"1.05 .95",offset:.3},{translate:"-44px 0",scale:"1 1",rotate:"-10deg",offset:.45},{translate:"-44px 0",rotate:"6deg",offset:.58},{translate:"-22px -12px",rotate:"0deg",offset:.78},{translate:"0 0",scale:"1.05 .95",offset:.92},{translate:"0 0",scale:"1 1"}]};
+const LR_TRICK_MS={hop:900,double:1100,tilt:1200,look:1600,spin:1100,peek:2600};
+function lrCanPlay(){const b=document.getElementById("lr-die");return b&&!b.hidden&&!b.classList.contains("lr-hide")&&!LR_BUSY&&!LR_AUTO&&sheet.hidden&&document.visibilityState==="visible"&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&Date.now()-LR_LAST_SCROLL>LR_IDLE.quietAfterScroll}
+function lrTrick(name){const b=document.getElementById("lr-die");if(!b||!b.animate)return;
+  const names=Object.keys(LR_TRICKS),w={hop:4,double:2,tilt:3,look:2,spin:1,peek:1};
+  if(!name){let r=Math.random()*names.reduce((a,n)=>a+w[n],0);name=names.find(n=>(r-=w[n])<0)||"hop"}
+  LR_TRICK&&LR_TRICK.cancel();b.style.animationPlayState="paused";
+  LR_TRICK=b.animate(LR_TRICKS[name],{duration:LR_TRICK_MS[name],easing:"cubic-bezier(.35,0,.25,1)"});
+  LR_TRICK.onfinish=LR_TRICK.oncancel=()=>{b.style.animationPlayState="";LR_TRICK=null}}
+function lrIdleLoop(){clearTimeout(LR_IDLE_T);LR_IDLE_T=setTimeout(()=>{if(lrCanPlay())lrTrick();lrIdleLoop()},LR_IDLE.min+Math.random()*(LR_IDLE.max-LR_IDLE.min))}
+lrIdleLoop();
 function lrPaintDie(){let b=document.getElementById("lr-die");const show=LIVE.on&&!!LIVE.user&&route().v==="home";
   if(!show){if(b)b.hidden=true;const a=document.getElementById("lr-auto");if(a)a.hidden=true;if(LR_AUTO)lrSetAuto(false);return}
   if(!b){b=document.createElement("button");b.type="button";b.id="lr-die";b.setAttribute("aria-label","Lucky Roll: roll the dice for a new design");b.title="Lucky Roll";b.addEventListener("click",()=>lrRoll());document.body.appendChild(b);lrDieFace()}
