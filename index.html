@@ -1176,7 +1176,7 @@ function topbar(right=""){const u=LIVE.user;
   const upd=(u||!LIVE.on)&&((window.STUDY_DATA||{}).docs||[]).length?`<a class="sa-btn" href="#new" title="Recently added" aria-label="Updates${nu?`, ${nu} new`:""}"><svg class="sa-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="sa-lbl">Updates</span>${nu?`<span class="sa-badge">${nu>9?"9+":nu}</span>`:""}</a>`:"";
   const sch=u?`<a class="sa-btn" href="#schedule" aria-label="Schedule"><svg class="sa-cal" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><path class="sa-pins" d="M8 3v3M16 3v3"/><text x="12" y="17.2" text-anchor="middle">${new Date().getDate()}</text></svg><span class="sa-lbl">Schedule</span></a>`:"";
   const grp=sch||upd||on?`<nav class="sa-group" aria-label="Quick links"><span class="sa-glide" aria-hidden="true"></span>${sch}${upd}${on}</nav>`:"";
-  const srch=u||!LIVE.on?`<button type="button" class="sa-search" data-g="search" aria-label="Search topics"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="sa-sx-txt"><span class="sa-sx-try">Try</span> <span class="sa-sx-q">${esc(searchSuggest())}</span></span><kbd>${/Mac|iPhone|iPad/.test(navigator.platform)?"⌘":"Ctrl "}K</kbd></button>`:"";
+  const srch="";                                              /* search button removed (2026-11-19) */
   const th=skinOn()?"":`<button type="button" class="theme-btn" data-g="theme" aria-label="Switch light or dark mode" title="Light / dark mode">${isDark()?"☀":"☾"}</button>`;
   return `<header class="top"><a class="brand" href="#"><span class="mark" aria-hidden="true"></span>Study Atlas</a><div class="top-right">${right}${srch}${grp}${th}${chip}</div></header>`}
 /* search pill suggestions */
@@ -1906,7 +1906,7 @@ document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho
   const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search"){const t=g.querySelector(".sa-sx-txt"),qe=g.querySelector(".sa-sx-q");const q=t&&qe&&getComputedStyle(t).display!=="none"?qe.textContent.trim():"";openSearch();if(q)setTimeout(()=>{const i=document.getElementById("sx-q");if(i){i.value=q;i.focus();i.select();i.dispatchEvent(new Event("input",{bubbles:true}))}},0)}else if(g.dataset.g==="theme")toggleTheme()}
   const f=e.target.closest("[data-foot]");if(f){if(f.dataset.foot==="share")openShare();else openSuggest()}});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList?.contains("nc")&&e.target.dataset.id){location.hash="#d-"+e.target.dataset.id}});
-document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&(e.key==="k"||e.key==="K")){if(LIVE.on&&!LIVE.user)return;e.preventDefault();if(sheet.hidden||!document.getElementById("sx-q"))openSearch();else document.getElementById("sx-q").focus()}});
+document.addEventListener("keydown",e=>{if(false&&(e.ctrlKey||e.metaKey)&&(e.key==="k"||e.key==="K")){if(LIVE.on&&!LIVE.user)return;e.preventDefault();if(sheet.hidden||!document.getElementById("sx-q"))openSearch();else document.getElementById("sx-q").focus()}});
 let PRES_NODOC=false;
 function beat(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.adminKnown||document.visibilityState==="hidden")return;
   const hid=iAmHidden(),base={name:hid?"":(u.displayName||u.email||"").slice(0,80),at:firebase.firestore.FieldValue.serverTimestamp()},r=route(),ref=LIVE.fs.collection("presence").doc(u.uid);
