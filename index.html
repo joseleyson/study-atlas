@@ -1069,7 +1069,7 @@ const subjColor=id=>{const s=subj(id);return s?stainVar(s.stain):(EXTRA_COLORS[i
 const iconSvg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||ICONS.book}</svg>`;
 function readSet(){try{return new Set(JSON.parse(store("reviewed-docs")||"[]"))}catch(e){return new Set()}}
 function toggleReviewed(id){const r=readSet();r.has(id)?r.delete(id):r.add(id);store("reviewed-docs",JSON.stringify([...r].slice(-1000)));return r.has(id)}
-const revBtn=d=>{const on=readSet().has(d.id);return `<button type="button" class="rev${on?" on":""}" data-act="rev" data-id="${esc(d.id)}" aria-pressed="${on}"><span class="bx" aria-hidden="true">${on?"✓":""}</span>${on?"Reviewed":"Mark reviewed"}</button>`};
+const revBtn=()=>"";                                     /* "Mark reviewed" removed (2026-11-19) */
 /* tap a subject card: the icon pops (ring + sparks + its own move), then the subject opens */
 function popIcon(ico){ico.classList.remove("pop");void ico.offsetWidth;ico.classList.add("pop");
   const ring=document.createElement("span");ring.className="ico-ring";ico.appendChild(ring);setTimeout(()=>ring.remove(),650);
@@ -1081,8 +1081,7 @@ document.addEventListener("click",e=>{const card=e.target.closest("a.subj");if(!
   card.dataset.popping="1";popIcon(ico);setTimeout(()=>{delete card.dataset.popping;location.hash=card.getAttribute("href")},420)});
 function updatedLabel(day){const days=Math.floor((Date.now()-Date.parse(day+"T00:00:00+08:00"))/864e5);
   return days<1?`<span class="subj-new">New today</span>`:days===1?"Updated yesterday":days<30?`Updated ${days}d ago`:"Updated "+new Date(day+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}
-function topicDots(sid){const ds=docsOf(sid);if(!ds.length)return"";const r=readSet(),n=ds.filter(d=>r.has(d.id)).length;
-  return `<div class="tdots" title="${n} of ${ds.length} topics reviewed. Mark topics reviewed inside the subject.">${ds.map(d=>`<i class="${r.has(d.id)?"on":""}" title="${esc(d.title)}"></i>`).join("")}<b>${n}/${ds.length}</b></div>`}
+function topicDots(){return""}
 const L="ABCDEF";
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 let toastT;function toast(m){toastEl.textContent=m;toastEl.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>toastEl.hidden=true,3200)}
