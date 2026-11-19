@@ -115,7 +115,7 @@ window.STUDY_DATA = {
    "pages": 2,
    "size": 48342,
    "lab": true,
-   "order": 6,
+   "order": 7,
    "srcPages": "31-32"
   },
   {
@@ -128,8 +128,34 @@ window.STUDY_DATA = {
    "pages": 2,
    "size": 61209,
    "lab": true,
-   "order": 7,
+   "order": 8,
    "srcPages": "33-34"
+  },
+  {
+   "id": "ne-limbic-system",
+   "subject": "neurophysiology",
+   "title": "The Limbic System",
+   "desc": "Behavioral function · Dr. Maria Cecilia A. Alvarez-Espino",
+   "file": "pdfs/neurophysiology/limbic-system.pdf",
+   "thumb": "pdfs/neurophysiology/limbic-system.jpg",
+   "pages": 3,
+   "size": 8938150,
+   "lab": false,
+   "order": 6,
+   "added": "2026-11-19"
+  },
+  {
+   "id": "ne-exp17-taste-sensations",
+   "subject": "neurophysiology",
+   "title": "Exp 17: Taste Sensations",
+   "desc": "Physiology lab · taste receptors & transduction",
+   "file": "pdfs/neurophysiology/exp17-taste-sensations.pdf",
+   "thumb": "pdfs/neurophysiology/exp17-taste-sensations.jpg",
+   "pages": 2,
+   "size": 65627,
+   "lab": true,
+   "order": 9,
+   "added": "2026-11-19"
   },
   {
    "id": "ga-wrist-hand",
