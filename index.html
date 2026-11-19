@@ -815,22 +815,7 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 @keyframes here-in{from{transform:scale(0)}}
 .nc.has-here{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
 @media (prefers-reduced-motion: reduce){.here-dot::after,.here-av span{animation:none}}
-/* ===== 10 · cram mode ===== */
 .tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px}
-.cram-toggle{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px 0 6px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:color .2s,border-color .2s}
-.cram-track{position:relative;width:38px;height:22px;border-radius:999px;background:var(--soft);transition:background .3s;flex:none}
-.cram-track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
-body.cram .cram-toggle{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent)}
-body.cram .cram-track{background:var(--bad)}
-body.cram .cram-track::after{transform:translateX(16px)}
-.cram-hero{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:18px 0 0;padding:16px 18px;border-radius:16px;border:1px solid color-mix(in srgb,var(--bad) 55%,transparent);background:color-mix(in srgb,var(--bad) 6%,var(--surface));animation:cram-in .4s ease}
-body.cram .cram-hero{display:flex}
-@keyframes cram-in{from{opacity:0;transform:translateY(-6px)}}
-.cram-lbl{font:11px var(--f-mono);letter-spacing:.5px;color:var(--muted)}
-.cram-hero b{font-family:var(--f-display);font-size:18px}
-.cram-time{font:600 24px var(--f-mono);color:var(--bad);font-variant-numeric:tabular-nums}
-body.cram [data-cram-hide]{display:none!important}
-body.cram .cram-far{opacity:.18;filter:grayscale(1);transition:opacity .4s,filter .4s}
 
 /* here now on home subject cards */
 .here-subj.on{height:20px;margin-top:6px}
@@ -1251,7 +1236,7 @@ panel.addEventListener("click",e=>{const a=e.target.closest("#sx-list a");if(!a)
 const canEdit=()=>false;
 
 function render(){
-  const r=route();try{lrPaintDie()}catch(e){}document.body.classList.toggle("cram",cramOn()&&r.v==="home");const fl=document.getElementById("foot-links");if(fl)fl.hidden=!(LIVE.on&&LIVE.user);
+  const r=route();try{lrPaintDie()}catch(e){}const fl=document.getElementById("foot-links");if(fl)fl.hidden=!(LIVE.on&&LIVE.user);
   if(LIVE.on&&!LIVE.authReady){app.innerHTML=topbar()+`<div class="loading">Checking your sign-in…</div>`;return}
   if(LIVE.on&&!LIVE.user)return renderSignIn();
   if(r.v==="admin")return renderAdmin();
@@ -1276,14 +1261,13 @@ function renderHome(){
       ${chips?`<div class="subj-chips">${chips}</div>`:s.blurb?`<p class="muted" style="font-size:13.5px">${esc(s.blurb)}</p>`:""}
       ${last||q?`<div class="subj-foot"><span>${last?updatedLabel(last):""}</span><span>${q?`best ${best?esc(best)+"%":"–"}`:""}</span></div>`:""}</a>`}).join("");
   app.innerHTML=topbar()+`<section class="hero"><h1 class="greet-h">${helloLine()}<span id="greet" class="greet-p" aria-live="off">${esc(greetText())}</span></h1>
-    <p>${S.questions.length?"Pick a subject to flip through your notes, or jump straight into its quiz.":"Pick a subject to open its topic notes."}</p>${urgentChip()}${LIVE.on&&LIVE.user?`<div class="tools">${cramToggleHtml()}</div>`:""}</section>
-    ${LIVE.on&&LIVE.user?cramHeroHtml():""}
-    ${subs.length||canEdit()?`<div class="grid" data-cram-hide>${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
+    <p>${S.questions.length?"Pick a subject to flip through your notes, or jump straight into its quiz.":"Pick a subject to open its topic notes."}</p>${urgentChip()}</section>
+    ${subs.length||canEdit()?`<div class="grid">${cards}${canEdit()?`<button class="card add" data-act="new-subject"><span class="plus">+</span>Add a subject</button>`:""}</div>`
       :`<div class="empty"><h3>No subjects yet</h3><p>Subjects you add will show up here.</p></div>`}
     ${comingUp()}
     ${LIVE.on&&S.questions.length?`<div id="live-slot" data-sid="">${livePanel("")}</div>`:""}
 `;
-  tickCountdowns();tickCram();
+  tickCountdowns();
 }
 
 function renderSubject(id){
@@ -1579,8 +1563,7 @@ const BADGES=[
   {id:"regular",icon:"📅",name:"Regular",desc:"Studied on 15 different days",c:"#5dcaa5",goal:15,val:()=>new Set(PROG.days).size},
   {id:"night-owl",icon:"🦉",name:"Night owl",desc:"Studied between 12 and 4 AM",c:"#a99cff",goal:1,val:()=>PROG.night},
   {id:"early-bird",icon:"🌅",name:"Early bird",desc:"Studied between 4 and 6 AM",c:"#e0a84f",goal:1,val:()=>PROG.early},
-  {id:"fresh",icon:"✨",name:"Fresh copy",desc:"Opened a note on the day it dropped",c:"#f07fa6",goal:1,val:()=>PROG.fresh},
-  {id:"cram",icon:"🚨",name:"Cram survivor",desc:"Turned on cram mode",c:"#f07070",goal:1,val:()=>PROG.cram}
+  {id:"fresh",icon:"✨",name:"Fresh copy",desc:"Opened a note on the day it dropped",c:"#f07fa6",goal:1,val:()=>PROG.fresh}
 ];
 function track(evt){if(LIVE.on&&!LIVE.user)return;const h=new Date().getHours(),t=ymd(new Date());
   if(!PROG.days.includes(t))PROG.days.push(t);if(PROG.days.length>800)PROG.days=PROG.days.slice(-800);
@@ -1624,20 +1607,7 @@ function hereInner(docId){const ppl=hereFor(docId);if(!ppl.length)return"";
   if(!canSeeNames())return `<span class="here-dot"></span><span class="here-txt">${ppl.length} here now</span>`;
   return `<span class="here-dot"></span><span class="here-av">${ppl.slice(0,3).map(n=>`<span style="background:${hereColor(n)}" title="${esc(n)}">${esc((n.trim()[0]||"?").toUpperCase())}</span>`).join("")}</span><span class="here-txt">${ppl.length} here now</span>`}
 function paintHere(){document.querySelectorAll(".here[data-here]").forEach(b=>{const h=hereInner(b.dataset.here);b.innerHTML=h;b.classList.toggle("on",!!h);b.closest(".nc")?.classList.toggle("has-here",!!h);b.closest(".subj")?.querySelector(".subj-ico")?.classList.toggle("ico-here",!!h)})}
-/* ===== 10 · cram mode ===== */
-const CRAM_MS=48*3600e3;
-const cramOn=()=>store("cram")==="1";
-function setCram(on){store("cram",on?"1":"");document.body.classList.toggle("cram",on);document.querySelectorAll(".cram-toggle").forEach(b=>b.setAttribute("aria-pressed",String(on)));if(on){track("cram");tickCram()}}
 function dueMs(e){const multi=evEnd(e)!==e.date;const[y,m,d]=(multi?evEnd(e):e.date).split("-").map(Number);const[hh,mi]=(e.time&&!multi?e.time:"23:59").split(":").map(Number);return new Date(y,m-1,d,hh,mi).getTime()}
-function tickCram(){if(!document.body.classList.contains("cram"))return;const now=Date.now();
-  const nx=LIVE.events.map(e=>({e,due:dueMs(e)})).filter(x=>x.due>now&&x.due-now<=CRAM_MS).sort((a,b)=>a.due-b.due)[0];
-  const tl=document.getElementById("cram-title"),tm=document.getElementById("cram-time");
-  if(tl)tl.textContent=nx?`${evLabel(nx.e.type)}: ${nx.e.title}`:"Nothing due in the next 48 hours";
-  if(tm){if(!nx)tm.textContent="";else{const s=Math.floor((nx.due-now)/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;tm.textContent=`${h}h ${pad2(m)}m ${pad2(x)}s`}}
-  document.querySelectorAll(".un[data-due]").forEach(el=>{const d=+el.dataset.due;el.classList.toggle("cram-far",!(d>now&&d-now<=CRAM_MS))})}
-setInterval(tickCram,1000);
-const cramToggleHtml=()=>`<button class="cram-toggle" type="button" data-g="cram" aria-pressed="${cramOn()}"><span class="cram-track"></span>Cram mode</button>`;
-const cramHeroHtml=()=>`<div class="cram-hero"><div><div class="cram-lbl">NEXT UP</div><b id="cram-title">Nothing due in the next 48 hours</b></div><span class="cram-time" id="cram-time"></span></div>`;
 /* live countdowns on the urgent chips; "hot" in the last 3 hours */
 function tickCountdowns(){const now=Date.now(),pad=n=>String(n).padStart(2,"0"),H3=3*3600e3;
   document.querySelectorAll(".urgent[data-due]").forEach(c=>{const out=c.querySelector(".cd-time");if(!out)return;const[d0,t0]=c.dataset.due.split("T"),[y,mo,da]=d0.split("-").map(Number),[hh,mi]=t0.split(":").map(Number);
@@ -1928,7 +1898,6 @@ function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-
   <ul class="who" id="who-list">${whoRows()}</ul><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Close</button></div></div>`)}
 document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho();
   const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search"){const t=g.querySelector(".sa-sx-txt"),qe=g.querySelector(".sa-sx-q");const q=t&&qe&&getComputedStyle(t).display!=="none"?qe.textContent.trim():"";openSearch();if(q)setTimeout(()=>{const i=document.getElementById("sx-q");if(i){i.value=q;i.focus();i.select();i.dispatchEvent(new Event("input",{bubbles:true}))}},0)}else if(g.dataset.g==="theme")toggleTheme()}
-  if(e.target.closest("[data-g=cram]")){setCram(!cramOn())}
   const f=e.target.closest("[data-foot]");if(f){if(f.dataset.foot==="share")openShare();else openSuggest()}});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList?.contains("nc")&&e.target.dataset.id){location.hash="#d-"+e.target.dataset.id}});
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&(e.key==="k"||e.key==="K")){if(LIVE.on&&!LIVE.user)return;e.preventDefault();if(sheet.hidden||!document.getElementById("sx-q"))openSearch();else document.getElementById("sx-q").focus()}});
