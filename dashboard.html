@@ -266,7 +266,8 @@ const th=(t,k,label,n)=>{const s=S.sort[t]||[];return `<th data-k="${k}"${n?' cl
 function paint(){
   if(!S.user)return;
   const keep=window.scrollY,now=Date.now(),T=today();
-  const users=S.users,dlog=S.dlog;
+  /* your own visits and downloads are left out: you are the owner/mod */
+  const users=S.users.filter(u=>u.id!==S.user.uid),dlog=S.dlog.filter(d=>d.uid!==S.user.uid);
   const userOf=uid=>users.find(u=>u.id===uid);
   const nameOf=(uid,fallback)=>{const u=userOf(uid);return(u&&(u.nick||u.name||u.email))||fallback||"Someone"};
   const online=S.presence.filter(p=>p.at&&now-ms(p.at)<ONLINE_MS&&p.id!==S.user.uid);
