@@ -1582,7 +1582,7 @@ function nextBadgeToast(){if(badgeShowing||!BADGE_Q.length)return;const b=BADGE_
   badgeEl.innerHTML=`<span class="ap-ti">${b.icon}</span><span>Badge unlocked: <b>${esc(b.name)}</b><small>${esc(b.desc)}</small></span>`;
   requestAnimationFrame(()=>badgeEl.classList.add("on"));
   setTimeout(()=>{badgeEl.classList.remove("on");setTimeout(()=>{badgeShowing=false;nextBadgeToast()},400)},2600)}
-function logProgressView(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.fs)return;const FV=firebase.firestore.FieldValue;
+function logProgressView(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.fs||LIVE.isAdmin)return;const FV=firebase.firestore.FieldValue;
   LIVE.fs.collection("users").doc(u.uid).update({progressAt:FV.serverTimestamp(),progressViews:FV.increment(1),lastSeen:FV.serverTimestamp()}).catch(()=>{})}
 function openProgress(){try{logProgressView()}catch(e){}document.querySelectorAll("details.me[open]").forEach(d=>d.open=false);document.querySelector(".ap-overlay")?.remove();
   const u=LIVE.user,name=niceName(u?.displayName||u?.email||"You"),now=new Date(),t=ymd(now),set=new Set(PROG.days),st=progStreak(),best=progBest();
@@ -1837,7 +1837,7 @@ function statSession(){const ua=navigator.userAgent,ipad=/iPad/.test(ua)||(/Maci
   const os=/iPhone|iPad|iPod/.test(ua)||ipad?"ios":/Android/.test(ua)?"android":/CrOS/.test(ua)?"chromeos":/Windows/.test(ua)?"windows":/Mac/.test(ua)?"mac":/Linux/.test(ua)?"linux":"other";
   const br=/FBAN|FBAV|FB_IAB|Messenger/.test(ua)?"facebook":/Instagram/.test(ua)?"instagram":/Edg\//.test(ua)?"edge":/CriOS|Chrome\//.test(ua)?"chrome":/FxiOS|Firefox/.test(ua)?"firefox":/Safari/.test(ua)?"safari":"other";
   stat("sessions","dev_"+dev,"os_"+os,"br_"+br,IS_STANDALONE?"via_app":"via_browser")}
-function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d)return;try{stat("downloads","dl_"+d.id)}catch(e){}const FV=firebase.firestore.FieldValue,u=LIVE.user;
+function recordDocDownload(d){if(!LIVE.on||!LIVE.user||!d||!LIVE.adminKnown||LIVE.isAdmin)return;try{stat("downloads","dl_"+d.id)}catch(e){}const FV=firebase.firestore.FieldValue,u=LIVE.user;
   LIVE.fs.collection("downloads").doc(d.id).set({count:FV.increment(1)},{merge:true}).catch(()=>{});
   LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:d.id,noteTitle:String(d.title).slice(0,120),subject:String(subj(d.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()}).catch(()=>{})}
 
@@ -1848,7 +1848,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
   firebase.auth().onAuthStateChanged(async u=>{
     LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;try{lrStart(u)}catch(e){console.warn(e)}LIVE.isAdmin=false;LIVE.adminKnown=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
     if(!u){render();return}
-    recordVisit(u);startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);setTimeout(dropPush,2500);setTimeout(()=>{try{maybeFeature()}catch(e){}},3500);setTimeout(()=>{try{lrWarm3D()}catch(e){}},2000);
+    startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);setTimeout(dropPush,2500);setTimeout(()=>{try{maybeFeature()}catch(e){}},3500);setTimeout(()=>{try{lrWarm3D()}catch(e){}},2000);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
       LIVE.attempts=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(a=>a.total>0);LIVE.err=null;renderLive()},
@@ -1857,14 +1857,14 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
     LIVE.unsubs.push(fs.collection("downloads").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data().count||0);LIVE.downloads=m;if(route().v==="subject"||route().v==="doc")render()},()=>{}));
     LIVE.unsubs.push(fs.collection("events").orderBy("date").limit(1000).onSnapshot(snap=>{LIVE.events=snap.docs.map(d=>({id:d.id,...d.data()}));const v=route().v;if(v==="schedule"||v==="home"||v==="new")render()},()=>{}));
     try{const a=await fs.collection("admins").doc(u.uid).get();LIVE.isAdmin=a.exists}catch(e){LIVE.isAdmin=false}
-    LIVE.adminKnown=true;beat();try{STAT_LAST=null;statSession();statView()}catch(e){}
+    LIVE.adminKnown=true;recordVisit(u);beat();try{STAT_LAST=null;statSession();statView()}catch(e){}
     try{const ed=await fs.collection("editors").doc(u.uid).get();LIVE.isEditor=ed.exists}catch(e){LIVE.isEditor=false}
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("shares").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.shares=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("suggestions").orderBy("at","desc").limit(300).onSnapshot(snap=>{LIVE.suggestions=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin)LIVE.unsubs.push(fs.collection("editors").onSnapshot(snap=>{LIVE.editors=snap.docs.map(d=>d.id);if(route().v==="admin")render()},()=>{}));
     if(LIVE.isAdmin){
-      LIVE.unsubs.push(fs.collection("users").orderBy("lastSeen","desc").limit(500).onSnapshot(snap=>{LIVE.users=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
-      LIVE.unsubs.push(fs.collection("downloadLog").orderBy("at","desc").limit(500).onSnapshot(snap=>{LIVE.dlog=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));if(route().v==="admin")render()},()=>{}));
+      LIVE.unsubs.push(fs.collection("users").orderBy("lastSeen","desc").limit(500).onSnapshot(snap=>{LIVE.users=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(x=>x.id!==u.uid);if(route().v==="admin")render()},()=>{}));
+      LIVE.unsubs.push(fs.collection("downloadLog").orderBy("at","desc").limit(500).onSnapshot(snap=>{LIVE.dlog=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})})).filter(x=>x.uid!==u.uid);if(route().v==="admin")render()},()=>{}));
     }
     render();
   });
@@ -1980,6 +1980,8 @@ function leavePresence(){const u=LIVE.user;if(LIVE.on&&u)LIVE.fs.collection("pre
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")beat();else leavePresence()});
 addEventListener("pagehide",leavePresence);
 async function recordVisit(u){
+  /* the owner is a mod: their own visits are never logged (only their saved name is read back) */
+  if(LIVE.isAdmin){try{const d=await LIVE.fs.collection("users").doc(u.uid).get();if(d.exists&&typeof d.data().nick==="string"){LIVE.nick=d.data().nick;store("nick-"+u.uid,LIVE.nick);if(route().v==="home")render()}}catch(e){}return}
   const FV=firebase.firestore.FieldValue,ref=LIVE.fs.collection("users").doc(u.uid);
   const base={name:(u.displayName||"").slice(0,80),email:(u.email||"").slice(0,120),photo:(u.photoURL||"").slice(0,500),lastSeen:FV.serverTimestamp()};
   try{const d=await ref.get(),appNew=IS_STANDALONE&&!(d.exists&&d.data().app),extra=appNew?{app:FV.serverTimestamp()}:{};
@@ -1990,7 +1992,7 @@ async function recordVisit(u){
 function dlCount(id){return LIVE.downloads[id]||0}
 async function downloadNote(n){if(!n)return;
   const FV=firebase.firestore.FieldValue,u=LIVE.user;
-  try{await Promise.all([
+  if(!LIVE.isAdmin)try{await Promise.all([
     LIVE.fs.collection("downloads").doc(n.id).set({count:FV.increment(1)},{merge:true}),
     LIVE.fs.collection("downloadLog").add({uid:u.uid,name:(u.displayName||u.email||"").slice(0,80),noteId:n.id,noteTitle:String(n.title).slice(0,120),subject:String(subj(n.subject)?.name||"").slice(0,80),at:FV.serverTimestamp()})])}
   catch(e){console.warn("download not counted",e)}
