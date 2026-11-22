@@ -741,7 +741,6 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .nc-acts .rev{height:30px;padding:0 10px;font-size:12px}
 @media (hover:none){.nc-hint::before{content:"Tap to preview"}}
 @media (hover:hover){.nc-hint::before{content:"Click to preview"}}
-.nc-set .nc-hint::before{content:"Pick one to open"!important}
 @media (prefers-reduced-motion: reduce){.subj:hover,.nc:hover,.subj:hover .subj-ico{transform:none}}
 
 /* subject icon pop on tap */
@@ -1538,20 +1537,20 @@ function collapseGroups(list){const seen={},out=[];list.forEach(d=>{if(!d.group)
 const setTitle=set=>set.find(d=>d.groupTitle)?.groupTitle||set[0].title;
 const verLabel=d=>d.choice||d.title;
 function setCard(set,s,when){const d=set[0],g=d.group,fresh=set.some(isNewDoc),upd=!fresh&&set.some(isUpdatedDoc),latest=set.slice().sort((a,b)=>((b.updated||b.added||"")>(a.updated||a.added||"")?1:-1))[0];
-  return `<article class="nc nc-set" style="--c:${stainVar(s.stain)}" data-act="pick-doc" data-id="${esc(g)}" tabindex="0" aria-label="Choose a version of ${esc(setTitle(set))}">
+  return `<article class="nc nc-set" style="--c:${stainVar(s.stain)}" data-act="pick-doc" data-id="${esc(g)}" tabindex="0" aria-label="${esc(setTitle(set))}, ${set.length} versions">
     <span class="nc-thumb nc-stack${d.thumb?"":" blank"}" aria-hidden="true">${set.slice(0,2).reverse().map(x=>x.thumb?`<img src="${esc(x.thumb)}" alt="" loading="lazy">`:`<i></i>`).join("")}</span>
     <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(setTitle(set))}${fresh?`<span class="nc-new">new</span>`:upd?`<span class="upd-pill">Updated</span>`:""}</p></div>
     <p class="nc-src">${set.map(x=>esc(verLabel(x))).join(" · ")}</p>
     <div class="nc-meta">${when(latest)}${set.length} versions</div>
-    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span><div class="nc-acts"><button type="button" class="btn small primary" data-act="pick-doc" data-id="${esc(g)}">Choose one</button></div></div></div></article>`}
+    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span></div></div></article>`}
 function pickDoc(g){const set=((window.STUDY_DATA||{}).docs||[]).filter(d=>d.group===g).sort(byOrder);if(!set.length)return;if(set.length===1){location.hash="#d-"+set[0].id;return}
   const s=subj(set[0].subject);
   openSheet(`<div class="pick" style="--c:${stainVar(s?.stain)}"><div class="sx-head"><div><span class="mono eyebrow">${esc(s?s.name:"")} · ${set.length} versions</span><h2>${esc(setTitle(set))}</h2></div><button type="button" class="sx-x" data-act="close" aria-label="Close">✕</button></div>
-    <p class="pick-q">Which one do you want to open?</p>
+    <p class="pick-q">There are ${set.length} PDFs for this topic.</p>
     <div class="pick-list">${set.map(d=>`<a class="pick-opt" href="#d-${esc(d.id)}" data-act="close-go">
       <span class="nc-thumb${d.thumb?"":" blank"}">${d.thumb?`<img src="${esc(d.thumb)}" alt="" loading="lazy">`:""}</span>
       <span class="pick-txt"><b>${esc(verLabel(d))}${isNewDoc(d)?`<span class="nc-new">new</span>`:""}</b>${d.desc?`<span class="nc-src">${esc(d.desc)}</span>`:""}<span class="nc-meta">${d.pages?plural(d.pages,"page"):""}${d.size?" · "+mb(d.size):""}</span></span>
-      <span class="pick-go" aria-hidden="true">Open →</span></a>`).join("")}</div></div>`)}
+      <span class="pick-go" aria-hidden="true">→</span></a>`).join("")}</div></div>`)}
 function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
   const when=d=>d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:"";
