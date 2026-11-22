@@ -706,18 +706,19 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .subj-new{color:var(--c);font-weight:600}
 .subj-quiz{color:var(--c);text-decoration:none;font-weight:600}
 /* 5 · countdown chips */
-/* red so the next deadline stands out (jose, 2026-11-22) */
-/* calm red at rest; .lit glows for 1s each time Home opens, then fades back over 1s (jose, 2026-11-22) */
-.urgent{gap:10px;font-size:13.5px;border:1.5px solid color-mix(in srgb,var(--bad) 30%,var(--line));background:color-mix(in srgb,var(--bad) 5%,var(--surface));box-shadow:0 0 0 0 transparent;transition:border-color 1s ease,background 1s ease,box-shadow 1s ease,transform .2s}
-.urgent:hover{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface));transform:translateY(-1px)}
-.urgent .cd-ico{color:var(--bad)}
-.urgent .cd-time{font:700 12px/1 var(--f-mono);color:var(--bad);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;padding:4px 7px;border-radius:999px;background:color-mix(in srgb,var(--bad) 8%,transparent);transition:background 1s ease}
+/* neutral at rest; .lit rises to peak red each time Home opens, holds 1s, then fades back to neutral over 1s (jose, 2026-11-22) */
+.urgent{gap:10px;font-size:13.5px;border:1.5px solid var(--line);background:var(--surface);box-shadow:0 0 0 0 transparent;transition:border-color 1s ease,background 1s ease,box-shadow 1s ease,transform .2s}
+.urgent:hover{border-color:color-mix(in srgb,var(--bad) 45%,var(--line));transform:translateY(-1px)}
+.urgent .cd-ico{color:var(--muted);transition:color 1s ease}
+.urgent .cd-time{font:500 12px/1 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;padding:4px 7px;border-radius:999px;background:transparent;transition:color 1s ease,background 1s ease}
 .urgent.lit{border-color:color-mix(in srgb,var(--bad) 70%,transparent);background:color-mix(in srgb,var(--bad) 14%,var(--surface));box-shadow:0 0 0 4px color-mix(in srgb,var(--bad) 16%,transparent),0 10px 26px -12px var(--bad);transition-duration:.45s}
+.urgent.lit .cd-ico,.urgent.lit .cd-time{color:var(--bad);transition-duration:.45s}
 .urgent.lit .cd-time{background:color-mix(in srgb,var(--bad) 16%,transparent)}
-@media (prefers-reduced-motion: reduce){.urgent,.urgent .cd-time{transition:none}}
-.urgent .cd-bar{display:none;width:42px;height:3px;border-radius:2px;background:color-mix(in srgb,var(--bad) 22%,var(--surface));overflow:hidden;flex:none}
+@media (prefers-reduced-motion: reduce){.urgent,.urgent .cd-time,.urgent .cd-ico{transition:none}}
+.urgent .cd-bar{display:none;width:42px;height:3px;border-radius:2px;background:var(--soft);overflow:hidden;flex:none}
 .urgent .cd-fill{display:block;height:100%;width:0;background:var(--bad);transition:width 1s linear}
-.urgent.hot{border-color:color-mix(in srgb,var(--bad) 60%,transparent);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.urgent.hot{border-color:color-mix(in srgb,var(--bad) 55%,transparent);background:color-mix(in srgb,var(--bad) 8%,var(--surface))}
+.urgent.hot .cd-time,.urgent.hot .cd-ico{color:var(--bad)}
 .urgent.hot .cd-bar{display:inline-block}
 .urgent.more,.urgent.more.lit{border:1px dashed var(--line);background:var(--surface);box-shadow:none}
 /* 6 · note cards */
