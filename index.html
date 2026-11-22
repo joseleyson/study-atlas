@@ -705,15 +705,19 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .subj-quiz{color:var(--c);text-decoration:none;font-weight:600}
 /* 5 · countdown chips */
 /* red so the next deadline stands out (jose, 2026-11-22) */
-.urgent{gap:10px;font-size:13.5px;border:1.5px solid color-mix(in srgb,var(--bad) 60%,transparent);background:color-mix(in srgb,var(--bad) 12%,var(--surface));box-shadow:0 8px 22px -16px var(--bad);transition:border-color .2s,background .2s,transform .2s}
-.urgent:hover{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 18%,var(--surface));transform:translateY(-1px)}
+/* calm red at rest; .lit glows for ~3s each time Home opens, then fades back (jose, 2026-11-22) */
+.urgent{gap:10px;font-size:13.5px;border:1.5px solid color-mix(in srgb,var(--bad) 30%,var(--line));background:color-mix(in srgb,var(--bad) 5%,var(--surface));box-shadow:0 0 0 0 transparent;transition:border-color 1s ease,background 1s ease,box-shadow 1s ease,transform .2s}
+.urgent:hover{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface));transform:translateY(-1px)}
 .urgent .cd-ico{color:var(--bad)}
-.urgent .cd-time{font:700 12px/1 var(--f-mono);color:var(--bad);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;padding:4px 7px;border-radius:999px;background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.urgent .cd-time{font:700 12px/1 var(--f-mono);color:var(--bad);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;padding:4px 7px;border-radius:999px;background:color-mix(in srgb,var(--bad) 8%,transparent);transition:background 1s ease}
+.urgent.lit{border-color:color-mix(in srgb,var(--bad) 70%,transparent);background:color-mix(in srgb,var(--bad) 14%,var(--surface));box-shadow:0 0 0 4px color-mix(in srgb,var(--bad) 16%,transparent),0 10px 26px -12px var(--bad);transition-duration:.45s}
+.urgent.lit .cd-time{background:color-mix(in srgb,var(--bad) 16%,transparent)}
+@media (prefers-reduced-motion: reduce){.urgent,.urgent .cd-time{transition:none}}
 .urgent .cd-bar{display:none;width:42px;height:3px;border-radius:2px;background:color-mix(in srgb,var(--bad) 22%,var(--surface));overflow:hidden;flex:none}
 .urgent .cd-fill{display:block;height:100%;width:0;background:var(--bad);transition:width 1s linear}
-.urgent.hot{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 20%,var(--surface))}
+.urgent.hot{border-color:color-mix(in srgb,var(--bad) 60%,transparent);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
 .urgent.hot .cd-bar{display:inline-block}
-.urgent.more{border:1px dashed var(--line);background:var(--surface);box-shadow:none}
+.urgent.more,.urgent.more.lit{border:1px dashed var(--line);background:var(--surface);box-shadow:none}
 /* 6 · note cards */
 .nc{--c:var(--accent);position:relative;display:flex;gap:14px;padding:12px;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;transition:transform .2s,border-color .2s,box-shadow .2s}
 .nc:hover,.nc:focus-visible{transform:translateY(-2px);border-color:var(--c);box-shadow:0 12px 26px -20px var(--c);outline:none}
@@ -1247,8 +1251,14 @@ panel.addEventListener("click",e=>{const a=e.target.closest("#sx-list a");if(!a)
 /* In-browser editing is switched off: notes only change when data.js is updated. */
 const canEdit=()=>false;
 
+const UG={v:"",start:0,t:0};
+function ugGlow(){const cs=document.querySelectorAll(".urgent[data-due]");if(!cs.length)return;
+  const now=Date.now();if(!UG.start)UG.start=now;const left=3000-(now-UG.start);clearTimeout(UG.t);
+  if(left<=0)return;const fresh=left>2900;
+  if(fresh)requestAnimationFrame(()=>requestAnimationFrame(()=>cs.forEach(c=>c.classList.add("lit"))));else cs.forEach(c=>c.classList.add("lit"));
+  UG.t=setTimeout(()=>document.querySelectorAll(".urgent.lit").forEach(c=>c.classList.remove("lit")),left)}
 function render(){
-  const r=route();try{lrPaintDie()}catch(e){}const fl=document.getElementById("foot-links");if(fl)fl.hidden=!(LIVE.on&&LIVE.user);
+  const r=route();if(UG.v!==r.v){UG.v=r.v;UG.start=0}try{lrPaintDie()}catch(e){}const fl=document.getElementById("foot-links");if(fl)fl.hidden=!(LIVE.on&&LIVE.user);
   if(LIVE.on&&!LIVE.authReady){app.innerHTML=topbar()+`<div class="loading">Checking your sign-in…</div>`;return}
   if(LIVE.on&&!LIVE.user)return renderSignIn();
   try{statView()}catch(e){}
@@ -1261,7 +1271,7 @@ function render(){
   if(r.v==="new")return renderUpdates();
   if(r.v==="support")return renderSupport();
   if(r.v==="schedule")return renderSchedule(r.id);
-  renderHome();
+  renderHome();try{ugGlow()}catch(e){}
 }
 
 function renderHome(){
