@@ -648,6 +648,9 @@ button.sa-online{cursor:pointer}button.sa-online:hover{color:var(--sa-text-hi)}
 .rev .bx{width:14px;height:14px;border-radius:4px;border:1.5px solid currentColor;display:grid;place-items:center;font-size:10px;line-height:1}
 .rev.on .bx{background:var(--c,var(--accent));border-color:var(--c,var(--accent));color:var(--surface)}
 .viewer-bar .vb-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dl-below{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:900px;width:100%;margin:22px auto 6px;text-align:center}
+.dl-below .mono{font-size:12.5px;color:var(--muted)}
+.dl-below .btn{min-width:200px;justify-content:center}
 .suggest-fab .lbl{display:none}.suggest-fab{padding:10px;width:44px;height:44px;justify-content:center;opacity:.85}.suggest-fab:hover{opacity:1}
 body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 @media (max-width:640px){
@@ -1845,8 +1848,9 @@ function renderDoc(id){
   closePdf();PDF.id=id;markSeen([id]);track("preview");if(isNewDoc(d))track("fresh");
   const sib=docsOf(d.subject),nx=sib.slice(sib.findIndex(x=>x.id===id)+1).find(x=>!d.group||x.group!==d.group);
   app.innerHTML=topbar(`<a class="back" href="#s-${esc(d.subject)}">← ${esc(s?s.name:"Back")}</a>`)+`<div class="viewer" style="--c:${stainVar(s?.stain)}">
-    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${reactBar(d)}${revBtn(d)}<div id="dl-slot">${dlBtn(d,"primary")}</div></div></div>
+    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${reactBar(d)}${revBtn(d)}</div></div>
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div>
+    <div class="dl-below"><span class="mono">Done reading? Save it for later.</span><div id="dl-slot">${dlBtn(d,"primary")}</div></div>
     <nav class="next-topic"><a class="btn small" href="#s-${esc(d.subject)}">← All ${esc(s?s.name:"")} topics</a>${revBtn(d)}${nx?`<a class="go" href="#d-${esc(nx.id)}"><span class="mono">Next topic →</span><b>${esc(nx.title)}</b></a>`:`<a class="go" href="#"><span class="mono">You've reached the end →</span><b>Back to all subjects</b></a>`}</nav></div>
     <div class="pg-ind" id="pg-ind" aria-live="off"></div>`;
   loadPdf(d);try{prefetchPdf(d.file,d.title.replace(/[\\/:*?"<>|]/g,"")+".pdf")}catch(e){}
