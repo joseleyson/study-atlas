@@ -1821,11 +1821,11 @@ const calUpdates=()=>{if(!LIVE.events||!LIVE.events.length)return[];const c=calS
 const calKey=e=>"ev:"+e.id+":"+evAt(e),isNewCal=e=>Date.now()-evAt(e)<NEW_DAYS*864e5;
 const unseenUpdates=()=>{const s=seenSet();return [...datedDocs().filter(d=>isNewDoc(d)&&!s.has(d.id)),...calUpdates().filter(e=>isNewCal(e)&&!s.has(calKey(e)))]};
 function renderUpdates(){
-  /* one timeline: PDFs and schedule changes together, newest day first; PDFs lead each day so new notes never get buried */
+  /* one timeline: PDFs and schedule changes together, strictly newest first (no type grouping) */
   const list=datedDocs(),cal=calUpdates(),seen=seenSet(),days={};
-  const day=k=>days[k]||(days[k]={k,docs:[],evs:[]});
-  list.slice().sort((a,b)=>(Date.parse(b.addedAt||"")||0)-(Date.parse(a.addedAt||"")||0)).forEach(d=>day(d.added).docs.push(d));
-  cal.forEach(e=>day(new Date(evAt(e)+8*36e5).toISOString().slice(0,10)).evs.push(e));
+  const day=k=>days[k]||(days[k]={k,items:[]});
+  list.forEach(d=>day(d.added).items.push({t:Date.parse(d.addedAt||"")||addedMs(d),d}));
+  cal.forEach(e=>day(new Date(evAt(e)+8*36e5).toISOString().slice(0,10)).items.push({t:evAt(e),e}));
   const fmt=k=>new Date(k+"T12:00:00+08:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
   const docItem=d=>{const s=subj(d.subject),fresh=isNewDoc(d)&&!seen.has(d.id);
     return `<a class="upd${fresh?" unseen":""}" href="#d-${esc(d.id)}" style="--c:${stainVar(s?.stain)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"></span>`:`<span class="pdf-page"><span class="pdf-lines"></span></span>`}
@@ -1834,7 +1834,7 @@ function renderUpdates(){
     const when=new Date(evAt(e)).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
     return `<button type="button" class="upd upd-ev${fresh?" unseen":""}" data-act="ev-open" data-id="${esc(e.id)}" style="--c:${e.subject?subjColor(e.subject):"var(--accent)"}"><span class="upd-cal" aria-hidden="true"><b>${esc(new Date(e.date+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short"}))}</b>${+e.date.slice(8)}</span>
       <span><h4>${esc(e.title)}${isNewCal(e)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(evLabel(e.type))}${s?" · "+esc(s.name):""} · ${esc(evRange(e,true))}</span><span class="mono upd-by">${e.byName?"Added by "+esc(e.byName.split(" ")[0])+" · ":""}${esc(when)}</span></span><span class="go">View →</span></button>`};
-  const body=Object.values(days).sort((x,y)=>x.k<y.k?1:-1).map(g=>`<h3 class="shelf-h upd-day">${esc(fmt(g.k))}</h3><div class="upd-list">${g.docs.map(docItem).join("")}${g.evs.map(evItem).join("")}</div>`).join("");
+  const body=Object.values(days).sort((x,y)=>x.k<y.k?1:-1).map(g=>`<h3 class="shelf-h upd-day">${esc(fmt(g.k))}</h3><div class="upd-list">${g.items.sort((x,y)=>y.t-x.t).map(i=>i.d?docItem(i.d):evItem(i.e)).join("")}</div>`).join("");
   app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs and schedule changes show up here.</p></section>
     ${body||`<div class="empty"><h3>Nothing new yet</h3><p>New PDFs will show up here the day they're uploaded.</p></div>`}`;
   markSeen([...list.filter(isNewDoc).map(d=>d.id),...cal.filter(isNewCal).map(calKey)]);
