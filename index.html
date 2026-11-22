@@ -1572,7 +1572,7 @@ function shelf(docs,s){
     ${d.desc?`<p class="nc-src">${esc(d.desc)}</p>`:""}
     <div class="nc-meta">${when(d)}${d.pages?plural(d.pages,"page"):""}${d.size?" · "+mb(d.size):""}</div>
     <div class="here${hereInner(d.id)?" on":""}" data-here="${esc(d.id)}">${hereInner(d.id)}</div>
-    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span><div class="nc-acts">${revBtn(d)}${dlBtn(d,"small")}</div></div></div></article>`).join("")}</div>`).join("");
+    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span></div></div></article>`).join("")}</div>`).join("");
 }
 /* ---------- schedule ---------- */
 const EV_TYPES=[["quiz","Quiz"],["exam","Exam"],["lecture","Lecture"],["deadline","Deadline"],["reminder","Reminder"],["other","Other"]];
