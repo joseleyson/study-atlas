@@ -745,6 +745,7 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .nc-meta{margin-top:6px;font:500 11px/1.4 var(--f-mono);color:var(--muted)}
 .nc-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:10px;flex-wrap:wrap}
 .nc-hint{font-size:11.5px;color:var(--c);font-weight:500}
+.nc-dl{font:500 12px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
 .nc-acts{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .nc-acts .btn{min-height:0;height:30px;padding:0 12px;font:500 12.5px/1 var(--f-mono);gap:6px}
 .nc-acts .rev{height:30px;padding:0 10px;font-size:12px}
@@ -1550,13 +1551,14 @@ function dlBtn(d,cls=""){return `<a class="btn ${cls}" href="${esc(d.file)}" dow
 function collapseGroups(list){const seen={},out=[];list.forEach(d=>{if(!d.group)return out.push(d);if(seen[d.group])return seen[d.group].__set.push(d);const c={__set:[d]};seen[d.group]=c;out.push(c)});return out.map(c=>c.__set&&c.__set.length===1?c.__set[0]:c)}
 const setTitle=set=>set.find(d=>d.groupTitle)?.groupTitle||set[0].title;
 const verLabel=d=>d.choice||d.title;
+const dlTag=ids=>LIVE.on?`<span class="nc-dl" title="Downloads">⤓ ${ids.reduce((a,id)=>a+dlCount(id),0)}</span>`:"";
 function setCard(set,s,when){const d=set[0],g=d.group,fresh=set.some(isNewDoc),upd=!fresh&&set.some(isUpdatedDoc),latest=set.slice().sort((a,b)=>((b.updated||b.added||"")>(a.updated||a.added||"")?1:-1))[0];
   return `<article class="nc nc-set" style="--c:${stainVar(s.stain)}" data-act="pick-doc" data-id="${esc(g)}" tabindex="0" aria-label="${esc(setTitle(set))}, ${set.length} versions">
     <span class="nc-thumb nc-stack${d.thumb?"":" blank"}" aria-hidden="true">${set.slice(0,2).reverse().map(x=>x.thumb?`<img src="${esc(x.thumb)}" alt="" loading="lazy">`:`<i></i>`).join("")}</span>
     <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(setTitle(set))}${fresh?`<span class="nc-new">new</span>`:upd?`<span class="upd-pill">Updated</span>`:""}</p></div>
     <p class="nc-src">${set.map(x=>esc(verLabel(x))).join(" · ")}</p>
     <div class="nc-meta">${when(latest)}${set.length} versions</div>
-    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span></div></div></article>`}
+    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span>${dlTag(set.map(x=>x.id))}</div></div></article>`}
 function pickDoc(g){const set=((window.STUDY_DATA||{}).docs||[]).filter(d=>d.group===g).sort(byOrder);if(!set.length)return;if(set.length===1){location.hash="#d-"+set[0].id;return}
   const s=subj(set[0].subject);
   openSheet(`<div class="pick" style="--c:${stainVar(s?.stain)}"><div class="sx-head"><div><span class="mono eyebrow">${esc(s?s.name:"")} · ${set.length} versions</span><h2>${esc(setTitle(set))}</h2></div><button type="button" class="sx-x" data-act="close" aria-label="Close">✕</button></div>
@@ -1574,7 +1576,7 @@ function shelf(docs,s){
     ${d.desc?`<p class="nc-src">${esc(d.desc)}</p>`:""}
     <div class="nc-meta">${when(d)}${d.pages?plural(d.pages,"page"):""}${d.size?" · "+mb(d.size):""}</div>
     <div class="here${hereInner(d.id)?" on":""}" data-here="${esc(d.id)}">${hereInner(d.id)}</div>
-    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span></div></div></article>`).join("")}</div>`).join("");
+    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span>${dlTag([d.id])}</div></div></article>`).join("")}</div>`).join("");
 }
 /* ---------- schedule ---------- */
 const EV_TYPES=[["quiz","Quiz"],["exam","Exam"],["lecture","Lecture"],["deadline","Deadline"],["reminder","Reminder"],["other","Other"]];
