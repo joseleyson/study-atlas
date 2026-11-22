@@ -716,6 +716,17 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .nc:hover,.nc:focus-visible{transform:translateY(-2px);border-color:var(--c);box-shadow:0 12px 26px -20px var(--c);outline:none}
 .nc-thumb{width:62px;height:82px;flex:none;border-radius:7px;border:1px solid var(--line);overflow:hidden;background:#fff;display:block}
 .nc-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.nc-stack{position:relative;overflow:visible;border:0;background:none}
+.nc-stack img,.nc-stack i{position:absolute;width:100%;height:100%;object-fit:cover;object-position:top;border-radius:7px;border:1px solid var(--line);background:#fff;display:block}
+.nc-stack>:first-child{transform:translate(6px,-5px) rotate(4deg);opacity:.85}
+.nc-set .nc-thumb{margin-right:6px}
+.pick-q{margin:-4px 0 0;color:var(--muted)}
+.pick-list{display:grid;gap:10px}
+.pick-opt{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none;background:var(--surface);transition:border-color .2s,transform .2s}
+.pick-opt:hover,.pick-opt:focus-visible{border-color:var(--c);transform:translateY(-1px);outline:none}
+.pick-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pick-txt b{font-family:var(--f-display);font-size:16px}
+.pick-go{font:600 12.5px/1 var(--f-mono);color:var(--c);white-space:nowrap}
 .nc-thumb.blank{background:color-mix(in srgb,var(--c) 14%,var(--surface))}
 .nc-body{flex:1;min-width:0;display:flex;flex-direction:column}
 .nc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
@@ -1413,7 +1424,7 @@ panel.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)
 panel.addEventListener("submit",e=>{e.preventDefault();sheetSubmit&&sheetSubmit(e.target)});
 let armT;
 panel.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;
-  if(b.dataset.act==="close")closeSheet();
+  if(b.dataset.act==="close"||b.dataset.act==="close-go")closeSheet();
   if(b.dataset.act==="del"){if(b.classList.contains("armed")){delHandler&&delHandler()}else{b.classList.add("armed");b.dataset.label=b.textContent;b.textContent="Click again to delete";clearTimeout(armT);armT=setTimeout(()=>{b.classList.remove("armed");b.textContent=b.dataset.label},3500)}}
 });
 sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet()});
@@ -1427,6 +1438,7 @@ app.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)re
   else if(a==="edit-subject")editSubject(subj(id));
   else if(a==="tab"){S.tab=b.dataset.tab;render()}
   else if(a==="rev"){const on=toggleReviewed(id);document.querySelectorAll(`.rev[data-id="${CSS.escape(id)}"]`).forEach(x=>x.outerHTML=revBtn(docById(id)));toast(on?"Marked as reviewed ✓":"Unmarked")}
+  else if(a==="pick-doc"){pickDoc(id)}
   else if(a==="open-doc"){if(!e.target.closest("a,button,.reacts,input"))location.hash="#d-"+id}
   else if(a==="up-toggle"){S.upAll=!S.upAll;render()}
   else if(a==="open-note"){S.noteId=id;render();if(innerWidth<=760)document.querySelector(".plate")?.scrollIntoView({behavior:"smooth",block:"start"})}
@@ -1519,10 +1531,30 @@ async function saveInApp(href,name,box,close){
 }
 function blobDownload(file,name){const u=URL.createObjectURL(file);startFileDownload(u,name);setTimeout(()=>URL.revokeObjectURL(u),30000)}
 function dlBtn(d,cls=""){return `<a class="btn ${cls}" href="${esc(d.file)}" download="${esc(d.title.replace(/[\\/:*?"<>|]/g,""))}.pdf" data-act="dl-doc" data-id="${esc(d.id)}"><span aria-hidden="true">⤓</span> Download${LIVE.on?` <span class="dl-n">${dlCount(d.id)}</span>`:""}</a>`}
+/* Two or more PDFs on the same topic share a "group" key in data.js.
+   They show as one card; tapping it asks which one to open. */
+function collapseGroups(list){const seen={},out=[];list.forEach(d=>{if(!d.group)return out.push(d);if(seen[d.group])return seen[d.group].__set.push(d);const c={__set:[d]};seen[d.group]=c;out.push(c)});return out.map(c=>c.__set&&c.__set.length===1?c.__set[0]:c)}
+const setTitle=set=>set.find(d=>d.groupTitle)?.groupTitle||set[0].title;
+const verLabel=d=>d.choice||d.title;
+function setCard(set,s,when){const d=set[0],g=d.group,fresh=set.some(isNewDoc),upd=!fresh&&set.some(isUpdatedDoc),latest=set.slice().sort((a,b)=>((b.updated||b.added||"")>(a.updated||a.added||"")?1:-1))[0];
+  return `<article class="nc nc-set" style="--c:${stainVar(s.stain)}" data-act="pick-doc" data-id="${esc(g)}" tabindex="0" aria-label="${esc(setTitle(set))}, ${set.length} versions">
+    <span class="nc-thumb nc-stack${d.thumb?"":" blank"}" aria-hidden="true">${set.slice(0,2).reverse().map(x=>x.thumb?`<img src="${esc(x.thumb)}" alt="" loading="lazy">`:`<i></i>`).join("")}</span>
+    <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(setTitle(set))}${fresh?`<span class="nc-new">new</span>`:upd?`<span class="upd-pill">Updated</span>`:""}</p></div>
+    <p class="nc-src">${set.map(x=>esc(verLabel(x))).join(" · ")}</p>
+    <div class="nc-meta">${when(latest)}${set.length} versions</div>
+    <div class="nc-foot"><span class="nc-hint" aria-hidden="true"></span></div></div></article>`}
+function pickDoc(g){const set=((window.STUDY_DATA||{}).docs||[]).filter(d=>d.group===g).sort(byOrder);if(!set.length)return;if(set.length===1){location.hash="#d-"+set[0].id;return}
+  const s=subj(set[0].subject);
+  openSheet(`<div class="pick" style="--c:${stainVar(s?.stain)}"><div class="sx-head"><div><span class="mono eyebrow">${esc(s?s.name:"")} · ${set.length} versions</span><h2>${esc(setTitle(set))}</h2></div><button type="button" class="sx-x" data-act="close" aria-label="Close">✕</button></div>
+    <p class="pick-q">There are ${set.length} PDFs for this topic.</p>
+    <div class="pick-list">${set.map(d=>`<a class="pick-opt" href="#d-${esc(d.id)}" data-act="close-go">
+      <span class="nc-thumb${d.thumb?"":" blank"}">${d.thumb?`<img src="${esc(d.thumb)}" alt="" loading="lazy">`:""}</span>
+      <span class="pick-txt"><b>${esc(verLabel(d))}${isNewDoc(d)?`<span class="nc-new">new</span>`:""}</b>${d.desc?`<span class="nc-src">${esc(d.desc)}</span>`:""}<span class="nc-meta">${d.pages?plural(d.pages,"page"):""}${d.size?" · "+mb(d.size):""}</span></span>
+      <span class="pick-go" aria-hidden="true">→</span></a>`).join("")}</div></div>`)}
 function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
   const when=d=>d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:"";
-  return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${list.map(d=>`<article class="nc" style="--c:${stainVar(s.stain)}" data-act="open-doc" data-id="${esc(d.id)}" tabindex="0" aria-label="Preview ${esc(d.title)}">
+  return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${collapseGroups(list).map(d=>d.__set?setCard(d.__set,s,when):`<article class="nc" style="--c:${stainVar(s.stain)}" data-act="open-doc" data-id="${esc(d.id)}" tabindex="0" aria-label="Preview ${esc(d.title)}">
     <a class="nc-thumb${d.thumb?"":" blank"}" href="#d-${esc(d.id)}" tabindex="-1" aria-hidden="true">${d.thumb?`<img src="${esc(d.thumb)}" alt="" loading="lazy">`:""}</a>
     <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(d.title)}${isNewDoc(d)?`<span class="nc-new">new</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</p>${reactBar(d)}</div>
     ${d.desc?`<p class="nc-src">${esc(d.desc)}</p>`:""}
@@ -1792,7 +1824,7 @@ function renderDoc(id){
   if(!d){app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<div class="empty" style="margin-top:30px"><h3>This PDF isn't here</h3><a class="btn" href="#">All subjects</a></div>`;return}
   if(PDF.id===id&&document.getElementById("pdf-pages")){const b=document.getElementById("dl-slot");if(b)b.innerHTML=dlBtn(d,"primary");return}
   closePdf();PDF.id=id;markSeen([id]);track("preview");if(isNewDoc(d))track("fresh");
-  const sib=docsOf(d.subject),nx=sib[sib.findIndex(x=>x.id===id)+1];
+  const sib=docsOf(d.subject),nx=sib.slice(sib.findIndex(x=>x.id===id)+1).find(x=>!d.group||x.group!==d.group);
   app.innerHTML=topbar(`<a class="back" href="#s-${esc(d.subject)}">← ${esc(s?s.name:"Back")}</a>`)+`<div class="viewer" style="--c:${stainVar(s?.stain)}">
     <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${reactBar(d)}${revBtn(d)}<div id="dl-slot">${dlBtn(d,"primary")}</div></div></div>
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div>
@@ -1923,7 +1955,7 @@ function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-
 document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho();
   const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search"){const t=g.querySelector(".sa-sx-txt"),qe=g.querySelector(".sa-sx-q");const q=t&&qe&&getComputedStyle(t).display!=="none"?qe.textContent.trim():"";openSearch();if(q)setTimeout(()=>{const i=document.getElementById("sx-q");if(i){i.value=q;i.focus();i.select();i.dispatchEvent(new Event("input",{bubbles:true}))}},0)}else if(g.dataset.g==="theme")toggleTheme()}
   const f=e.target.closest("[data-foot]");if(f){if(f.dataset.foot==="share")openShare();else openSuggest()}});
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList?.contains("nc")&&e.target.dataset.id){location.hash="#d-"+e.target.dataset.id}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList?.contains("nc")&&e.target.dataset.id){if(e.target.dataset.act==="pick-doc")pickDoc(e.target.dataset.id);else location.hash="#d-"+e.target.dataset.id}});
 document.addEventListener("keydown",e=>{if(false&&(e.ctrlKey||e.metaKey)&&(e.key==="k"||e.key==="K")){if(LIVE.on&&!LIVE.user)return;e.preventDefault();if(sheet.hidden||!document.getElementById("sx-q"))openSearch();else document.getElementById("sx-q").focus()}});
 let PRES_NODOC=false;
 function beat(){const u=LIVE.user;if(!LIVE.on||!u||!LIVE.adminKnown||document.visibilityState==="hidden")return;
