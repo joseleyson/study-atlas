@@ -180,7 +180,7 @@ const DATA=window.STUDY_DATA||{subjects:[],docs:[]};
 const EXTRA={genetics:"Genetics",tl1:"TL1",nhw:"NHW","human-dev":"Human Development",ethics:"Ethics",pe104:"PE 104",histopath:"Histopathology",psychiatry:"Psychiatry"};
 const subjName=id=>(DATA.subjects.find(s=>s.id===id)||{}).name||EXTRA[id]||id||"";
 const docById=id=>(DATA.docs||[]).find(d=>d.id===id);
-const ONLINE_MS=75*1000;
+const ONLINE_MS=5*60*1000;
 /* Lucky Roll dice designs (kept in step with LR_T in index.html) */
 const RAR={common:{n:"Common",c:"#9aa3b5"},rare:{n:"Rare",c:"#5ea8f0"},epic:{n:"Epic",c:"#b77cf2"},legendary:{n:"Legendary",c:"#f0b64f"},mythic:{n:"Mythic",c:"#f07fa6"}};
 const SKINS={default:["Default","common","🧠"],graph:["Graph Paper","common","📐"],chalk:["Chalkboard","common","✏️"],highlighter:["Highlighter","common","🖍️"],index:["Index Card","common","🗂️"],

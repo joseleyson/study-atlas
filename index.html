@@ -1831,8 +1831,8 @@ function renderUpdates(){
     const when=new Date(evAt(e)).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
     return `<button type="button" class="upd upd-ev${fresh?" unseen":""}" data-act="ev-open" data-id="${esc(e.id)}" style="--c:${e.subject?subjColor(e.subject):"var(--accent)"}"><span class="upd-cal" aria-hidden="true"><b>${esc(new Date(e.date+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short"}))}</b>${+e.date.slice(8)}</span>
       <span><h4>${esc(e.title)}${isNewCal(e)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(evLabel(e.type))}${s?" · "+esc(s.name):""} · ${esc(evRange(e,true))}</span><span class="mono upd-by">${e.byName?"Added by "+esc(e.byName.split(" ")[0])+" · ":""}${esc(when)}</span></span><span class="go">View →</span></button>`};
-  const body=Object.values(days).sort((x,y)=>x.k<y.k?1:-1).map(g=>`<h3 class="shelf-h upd-day">${esc(fmt(g.k))} · ${[g.docs.length?plural(g.docs.length,"PDF"):"",g.evs.length?plural(g.evs.length,"schedule change"):""].filter(Boolean).join(" · ")}</h3><div class="upd-list">${g.docs.map(docItem).join("")}${g.evs.map(evItem).join("")}</div>`).join("");
-  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs and schedule changes show up here with a New! tag on the day they're added. Tap one to open it.</p></section>
+  const body=Object.values(days).sort((x,y)=>x.k<y.k?1:-1).map(g=>`<h3 class="shelf-h upd-day">${esc(fmt(g.k))}</h3><div class="upd-list">${g.docs.map(docItem).join("")}${g.evs.map(evItem).join("")}</div>`).join("");
+  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs and schedule changes show up here.</p></section>
     ${body||`<div class="empty"><h3>Nothing new yet</h3><p>New PDFs will show up here the day they're uploaded.</p></div>`}`;
   markSeen([...list.filter(isNewDoc).map(d=>d.id),...cal.filter(isNewCal).map(calKey)]);
 }
@@ -1953,7 +1953,8 @@ const presName=p=>p.name||(LIVE.isAdmin?(LIVE.users.find(x=>x.id===p.id)?.name||
 const visiblePres=p=>LIVE.isAdmin||!p.hidden;
 /* fair trade: if you hide yourself, you only see how many are online, not who */
 const canSeeNames=()=>LIVE.isAdmin||shareActive();
-const ONLINE_MS=75*1000,BEAT_MS=30*1000;let beatTimer=null,tickTimer=null;
+/* people stay in the online count for 5 minutes after their last heartbeat (so leaving the site keeps them listed 5 more min); no last-seen time is shown */
+const ONLINE_MS=5*60*1000,BEAT_MS=30*1000;let beatTimer=null,tickTimer=null;
 function onlineCount(){const now=Date.now(),me=LIVE.user?.uid;
   const n=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS).length;
   return n+(LIVE.user?1:0)}
@@ -1965,12 +1966,11 @@ function onlineNow(){const now=Date.now(),me=LIVE.user?.uid;
   if(LIVE.user)list.unshift({id:me,name:LIVE.user.displayName||LIVE.user.email||"You",at:{toMillis:()=>now},you:true,hidden:iAmHidden()});
   return list}
 function whoRows(){const now=Date.now(),all=onlineNow(),shown=all.filter(p=>p.you||(canSeeNames()&&visiblePres(p))),hid=all.length-shown.length;
-  return shown.map(p=>{const s=Math.max(0,Math.round((now-p.at.toMillis())/1000));
-  const tap=!p.you;
-  return `<li${tap?` class="who-tap" data-who="${esc(p.id)}" tabindex="0" role="button"`:""}><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(niceName(p.you?p.name:presName(p))||"Someone")}${p.you?' <span class="mono">(you)</span>':""}${p.hidden&&(LIVE.isAdmin||p.you)?' <span class="who-hid">hidden</span>':""}</span><span class="mono">${p.you||s<20?"active now":s<60?s+"s ago":Math.round(s/60)+" min ago"}</span>${tap?'<span class="who-go" aria-hidden="true">›</span>':""}</li>`}).join("")
+  return shown.map(p=>{const tap=!p.you;
+  return `<li${tap?` class="who-tap" data-who="${esc(p.id)}" tabindex="0" role="button"`:""}><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(niceName(p.you?p.name:presName(p))||"Someone")}${p.you?' <span class="mono">(you)</span>':""}${p.hidden&&(LIVE.isAdmin||p.you)?' <span class="who-hid">hidden</span>':""}</span><span class="mono">online</span>${tap?'<span class="who-go" aria-hidden="true">›</span>':""}</li>`}).join("")
   +(hid?`<li class="who-more"><span class="dot off" aria-hidden="true"></span><span class="who-name">${hid} more ${hid===1?"person":"people"} online</span></li>`:"")
   +(canSeeNames()?"":`<li class="who-tip"><button type="button" class="btn small" data-act="share-active">Show me as online</button><span class="mono">to see who's here</span></li>`)}
-function openWho(){openSheet(`<h2>Online now</h2><p class="mono" style="margin:-4px 0 14px">${LIVE.isAdmin?"Everyone active in the last 2 minutes, including people who hid their status. You're always hidden from others.":shareActive()?"People active in the last 2 minutes who share their status.":"You're hidden, so you can only see how many people are online."}</p>
+function openWho(){openSheet(`<h2>Online now</h2>
   <ul class="who" id="who-list">${whoRows()}</ul><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Close</button></div></div>`)}
 document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho();
   const g=e.target.closest("[data-g]");if(g){if(g.dataset.g==="search"){const t=g.querySelector(".sa-sx-txt"),qe=g.querySelector(".sa-sx-q");const q=t&&qe&&getComputedStyle(t).display!=="none"?qe.textContent.trim():"";openSearch();if(q)setTimeout(()=>{const i=document.getElementById("sx-q");if(i){i.value=q;i.focus();i.select();i.dispatchEvent(new Event("input",{bubbles:true}))}},0)}else if(g.dataset.g==="theme")toggleTheme()}
@@ -2029,8 +2029,8 @@ function startPresence(u){stopPresence();beat();beatTimer=setInterval(beat,BEAT_
 function stopPresence(){clearInterval(beatTimer);clearInterval(tickTimer);beatTimer=tickTimer=null}
 function leavePresence(){const u=LIVE.user;if(LIVE.on&&u)LIVE.fs.collection("presence").doc(u.uid).delete().catch(()=>{})}
 /* leaving the tab, closing the app or switching apps removes you from "online" right away */
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")beat();else leavePresence()});
-addEventListener("pagehide",leavePresence);
+/* leaving or hiding the tab no longer removes you right away: you drop off once ONLINE_MS (5 min) passes with no heartbeat */
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")beat()});
 async function recordVisit(u){
   /* the owner is a mod: their own visits are never logged (only their saved name is read back) */
   if(LIVE.isAdmin){try{const d=await LIVE.fs.collection("users").doc(u.uid).get();if(d.exists&&typeof d.data().nick==="string"){LIVE.nick=d.data().nick;store("nick-"+u.uid,LIVE.nick);if(route().v==="home")render()}}catch(e){}return}
