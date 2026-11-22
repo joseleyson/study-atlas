@@ -303,6 +303,7 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 .upd-cal b{font:600 10px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--c);margin-bottom:3px}
 .upd-by{display:block;margin-top:2px;opacity:.8}
 @media (max-width:520px){.upd-cal{width:44px}}
+.upd-list+.upd-day{margin-top:28px}
 .upd-list{display:grid;gap:10px}
 .upd{--c:var(--accent);display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;text-decoration:none;transition:border-color .2s,transform .2s}
 .upd:hover{border-color:var(--c);transform:translateY(-1px)}
@@ -1802,18 +1803,22 @@ const calUpdates=()=>{if(!LIVE.events||!LIVE.events.length)return[];const c=calS
 const calKey=e=>"ev:"+e.id+":"+evAt(e),isNewCal=e=>Date.now()-evAt(e)<NEW_DAYS*864e5;
 const unseenUpdates=()=>{const s=seenSet();return [...datedDocs().filter(d=>isNewDoc(d)&&!s.has(d.id)),...calUpdates().filter(e=>isNewCal(e)&&!s.has(calKey(e)))]};
 function renderUpdates(){
-  const list=datedDocs(),seen=seenSet(),days=[];
-  list.forEach(d=>{const k=d.added;let g=days.find(x=>x[0]===k);if(!g)days.push(g=[k,[]]);g[1].push(d)});
+  /* one timeline: PDFs and schedule changes together, newest day first; PDFs lead each day so new notes never get buried */
+  const list=datedDocs(),cal=calUpdates(),seen=seenSet(),days={};
+  const day=k=>days[k]||(days[k]={k,docs:[],evs:[]});
+  list.forEach(d=>day(d.added).docs.push(d));
+  cal.forEach(e=>day(new Date(evAt(e)+8*36e5).toISOString().slice(0,10)).evs.push(e));
   const fmt=k=>new Date(k+"T12:00:00+08:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
-  const body=days.map(([k,ds])=>`<h3 class="shelf-h upd-day">${esc(fmt(k))} · ${plural(ds.length,"PDF")}</h3><div class="upd-list">${ds.map(d=>{const s=subj(d.subject),fresh=isNewDoc(d)&&!seen.has(d.id);
+  const docItem=d=>{const s=subj(d.subject),fresh=isNewDoc(d)&&!seen.has(d.id);
     return `<a class="upd${fresh?" unseen":""}" href="#d-${esc(d.id)}" style="--c:${stainVar(s?.stain)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"></span>`:`<span class="pdf-page"><span class="pdf-lines"></span></span>`}
-      <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span></span><span class="go">Open →</span></a>`}).join("")}</div>`).join("");
-  const cal=calUpdates(),calHtml=cal.length?`<h3 class="shelf-h upd-day">📅 Schedule · ${plural(cal.length,"change")}</h3><div class="upd-list">${cal.map(e=>{const s=e.subject?anySubj(e.subject):null,fresh=isNewCal(e)&&!seen.has(calKey(e));
+      <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span></span><span class="go">Open →</span></a>`};
+  const evItem=e=>{const s=e.subject?anySubj(e.subject):null,fresh=isNewCal(e)&&!seen.has(calKey(e));
     const when=new Date(evAt(e)).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
     return `<button type="button" class="upd upd-ev${fresh?" unseen":""}" data-act="ev-open" data-id="${esc(e.id)}" style="--c:${e.subject?subjColor(e.subject):"var(--accent)"}"><span class="upd-cal" aria-hidden="true"><b>${esc(new Date(e.date+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short"}))}</b>${+e.date.slice(8)}</span>
-      <span><h4>${esc(e.title)}${isNewCal(e)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(evLabel(e.type))}${s?" · "+esc(s.name):""} · ${esc(evRange(e,true))}</span><span class="mono upd-by">${e.byName?"Added by "+esc(e.byName.split(" ")[0])+" · ":""}${esc(when)}</span></span><span class="go">View →</span></button>`}).join("")}</div>`:"";
+      <span><h4>${esc(e.title)}${isNewCal(e)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(evLabel(e.type))}${s?" · "+esc(s.name):""} · ${esc(evRange(e,true))}</span><span class="mono upd-by">${e.byName?"Added by "+esc(e.byName.split(" ")[0])+" · ":""}${esc(when)}</span></span><span class="go">View →</span></button>`};
+  const body=Object.values(days).sort((x,y)=>x.k<y.k?1:-1).map(g=>`<h3 class="shelf-h upd-day">${esc(fmt(g.k))} · ${[g.docs.length?plural(g.docs.length,"PDF"):"",g.evs.length?plural(g.evs.length,"schedule change"):""].filter(Boolean).join(" · ")}</h3><div class="upd-list">${g.docs.map(docItem).join("")}${g.evs.map(evItem).join("")}</div>`).join("");
   app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs and schedule changes show up here with a New! tag on the day they're added. Tap one to open it.</p></section>
-    ${calHtml}${body||`<div class="empty"><h3>Nothing new yet</h3><p>New PDFs will show up here the day they're uploaded.</p></div>`}`;
+    ${body||`<div class="empty"><h3>Nothing new yet</h3><p>New PDFs will show up here the day they're uploaded.</p></div>`}`;
   markSeen([...list.filter(isNewDoc).map(d=>d.id),...cal.filter(isNewCal).map(calKey)]);
 }
 let PDF={task:null,doc:null,obs:null,id:null};
