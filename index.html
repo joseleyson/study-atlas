@@ -705,7 +705,7 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:64px}
 .subj-quiz{color:var(--c);text-decoration:none;font-weight:600}
 /* 5 · countdown chips */
 /* red so the next deadline stands out (jose, 2026-11-22) */
-/* calm red at rest; .lit glows for ~3s each time Home opens, then fades back (jose, 2026-11-22) */
+/* calm red at rest; .lit glows for ~3.5s each time Home opens, then fades back (jose, 2026-11-22) */
 .urgent{gap:10px;font-size:13.5px;border:1.5px solid color-mix(in srgb,var(--bad) 30%,var(--line));background:color-mix(in srgb,var(--bad) 5%,var(--surface));box-shadow:0 0 0 0 transparent;transition:border-color 1s ease,background 1s ease,box-shadow 1s ease,transform .2s}
 .urgent:hover{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface));transform:translateY(-1px)}
 .urgent .cd-ico{color:var(--bad)}
@@ -1252,8 +1252,8 @@ const canEdit=()=>false;
 
 const UG={v:"",start:0,t:0};
 function ugGlow(){const cs=document.querySelectorAll(".urgent[data-due]");if(!cs.length)return;
-  const now=Date.now();if(!UG.start)UG.start=now;const left=3000-(now-UG.start);clearTimeout(UG.t);
-  if(left<=0)return;const fresh=left>2900;
+  const now=Date.now();if(!UG.start)UG.start=now;const left=3500-(now-UG.start);clearTimeout(UG.t);
+  if(left<=0)return;const fresh=left>3400;
   if(fresh)requestAnimationFrame(()=>requestAnimationFrame(()=>cs.forEach(c=>c.classList.add("lit"))));else cs.forEach(c=>c.classList.add("lit"));
   UG.t=setTimeout(()=>document.querySelectorAll(".urgent.lit").forEach(c=>c.classList.remove("lit")),left)}
 function render(){
