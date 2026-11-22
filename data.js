@@ -40,8 +40,8 @@ window.STUDY_DATA = {
  "notes": [],
  "questions": [],
  "docs": [
-  {"id": "ga-ankle-foot", "subject": "gross-anatomy", "title": "Ankle & Foot", "desc": "Lecture slides + Snell + lecture audio · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-full.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-full.jpg", "pages": 6, "size": 2538321, "lab": false, "order": 8, "added": "2026-11-22", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Book + audio + slides"},
-  {"id": "ga-ankle-foot-slides", "subject": "gross-anatomy", "title": "Ankle & Foot (slides & audio)", "desc": "Lecture slides + lecture audio only · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-slides-audio.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-slides-audio.jpg", "pages": 5, "size": 1949178, "lab": false, "order": 8.1, "added": "2026-11-22", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Audio + slides only"},
+  {"id": "ga-ankle-foot", "subject": "gross-anatomy", "title": "Ankle & Foot", "desc": "Lecture slides + Snell + lecture audio · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-full.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-full.jpg", "pages": 6, "size": 2538321, "lab": false, "order": 8, "added": "2026-11-22", "addedAt": "2026-11-22T08:07+08:00", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Book + audio + slides"},
+  {"id": "ga-ankle-foot-slides", "subject": "gross-anatomy", "title": "Ankle & Foot (slides & audio)", "desc": "Lecture slides + lecture audio only · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-slides-audio.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-slides-audio.jpg", "pages": 5, "size": 1949178, "lab": false, "order": 8.1, "added": "2026-11-22", "addedAt": "2026-11-22T08:07+08:00", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Audio + slides only"},
   {
    "id": "ne-intellectual-functions",
    "subject": "neurophysiology",
@@ -144,7 +144,7 @@ window.STUDY_DATA = {
    "size": 8938150,
    "lab": false,
    "order": 6,
-   "added": "2026-11-19"
+   "added": "2026-11-19", "addedAt": "2026-11-19T21:41+08:00"
   },
   {
    "id": "ne-exp17-taste-sensations",
@@ -157,7 +157,7 @@ window.STUDY_DATA = {
    "size": 65627,
    "lab": true,
    "order": 9,
-   "added": "2026-11-19"
+   "added": "2026-11-19", "addedAt": "2026-11-19T21:41+08:00"
   },
   {
    "id": "ga-wrist-hand",
@@ -242,7 +242,7 @@ window.STUDY_DATA = {
    "size": 4256416,
    "lab": false,
    "order": 7,
-   "added": "2026-11-17",
+   "added": "2026-11-17", "addedAt": "2026-11-17T23:48+08:00",
    "updated": "2026-11-17"
   },
   {
@@ -316,7 +316,7 @@ window.STUDY_DATA = {
    "size": 545422,
    "lab": false,
    "order": 1,
-   "added": "2026-11-18"
+   "added": "2026-11-18", "addedAt": "2026-11-18T20:24+08:00"
   },
   {
    "id": "hd-late-adulthood",
@@ -329,7 +329,7 @@ window.STUDY_DATA = {
    "size": 1523009,
    "lab": false,
    "order": 1,
-   "added": "2026-11-18"
+   "added": "2026-11-18", "addedAt": "2026-11-18T20:24+08:00"
   }
  ]
 };

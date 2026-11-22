@@ -1554,7 +1554,7 @@ function pickDoc(g){const set=((window.STUDY_DATA||{}).docs||[]).filter(d=>d.gro
       <span class="pick-go" aria-hidden="true">→</span></a>`).join("")}</div></div>`)}
 function shelf(docs,s){
   const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
-  const when=d=>d.updated||d.added?`${d.updated?"Updated":"Added"} ${esc(new Date((d.updated||d.added)+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:"";
+  const when=d=>d.updated?`Updated ${esc(new Date(d.updated+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:d.added?`Added ${esc(addedLabel(d))} · `:"";
   return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${collapseGroups(list).map(d=>d.__set?setCard(d.__set,s,when):`<article class="nc" style="--c:${stainVar(s.stain)}" data-act="open-doc" data-id="${esc(d.id)}" tabindex="0" aria-label="Preview ${esc(d.title)}">
     <a class="nc-thumb${d.thumb?"":" blank"}" href="#d-${esc(d.id)}" tabindex="-1" aria-hidden="true">${d.thumb?`<img src="${esc(d.thumb)}" alt="" loading="lazy">`:""}</a>
     <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(d.title)}${isNewDoc(d)?`<span class="nc-new">new</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</p>${reactBar(d)}</div>
@@ -1787,6 +1787,9 @@ document.addEventListener("click",e=>{document.querySelectorAll("details.me[open
 const NEW_DAYS=1;
 const addedMs=d=>d&&d.added?Date.parse(d.added+"T00:00:00+08:00"):NaN;
 const datedDocs=()=>((window.STUDY_DATA||{}).docs||[]).filter(d=>!isNaN(addedMs(d))).sort((a,b)=>addedMs(b)-addedMs(a)||((subj(a.subject)?.order||0)-(subj(b.subject)?.order||0))||byOrder(a,b));
+/* optional "addedAt":"YYYY-MM-DDTHH:MM+08:00" in data.js gives the time a PDF was posted */
+const addedLabel=d=>{if(!d||!d.added)return"";const at=d.addedAt&&Date.parse(d.addedAt);const o={month:"short",day:"numeric"};
+  return at?new Date(at).toLocaleString(undefined,{...o,hour:"numeric",minute:"2-digit"}):new Date(d.added+"T12:00:00+08:00").toLocaleDateString(undefined,o)};
 const isNewDoc=d=>Date.now()-addedMs(d)<NEW_DAYS*864e5;
 /* set "updated":"YYYY-MM-DD" on a doc in data.js when its PDF is replaced */
 const UPD_DAYS=3,isUpdatedDoc=d=>!!(d&&d.updated)&&Date.now()-Date.parse(d.updated+"T00:00:00+08:00")<UPD_DAYS*864e5;
@@ -1806,12 +1809,12 @@ function renderUpdates(){
   /* one timeline: PDFs and schedule changes together, newest day first; PDFs lead each day so new notes never get buried */
   const list=datedDocs(),cal=calUpdates(),seen=seenSet(),days={};
   const day=k=>days[k]||(days[k]={k,docs:[],evs:[]});
-  list.forEach(d=>day(d.added).docs.push(d));
+  list.slice().sort((a,b)=>(Date.parse(b.addedAt||"")||0)-(Date.parse(a.addedAt||"")||0)).forEach(d=>day(d.added).docs.push(d));
   cal.forEach(e=>day(new Date(evAt(e)+8*36e5).toISOString().slice(0,10)).evs.push(e));
   const fmt=k=>new Date(k+"T12:00:00+08:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
   const docItem=d=>{const s=subj(d.subject),fresh=isNewDoc(d)&&!seen.has(d.id);
     return `<a class="upd${fresh?" unseen":""}" href="#d-${esc(d.id)}" style="--c:${stainVar(s?.stain)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"></span>`:`<span class="pdf-page"><span class="pdf-lines"></span></span>`}
-      <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span></span><span class="go">Open →</span></a>`};
+      <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span><span class="mono upd-by">Added ${esc(addedLabel(d))}</span></span><span class="go">Open →</span></a>`};
   const evItem=e=>{const s=e.subject?anySubj(e.subject):null,fresh=isNewCal(e)&&!seen.has(calKey(e));
     const when=new Date(evAt(e)).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
     return `<button type="button" class="upd upd-ev${fresh?" unseen":""}" data-act="ev-open" data-id="${esc(e.id)}" style="--c:${e.subject?subjColor(e.subject):"var(--accent)"}"><span class="upd-cal" aria-hidden="true"><b>${esc(new Date(e.date+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short"}))}</b>${+e.date.slice(8)}</span>
