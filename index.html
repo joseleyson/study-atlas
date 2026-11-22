@@ -26,7 +26,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap">
 <style>
 /* Layout: an atlas of stained slides. Home is a grid of subject "slides"; a subject opens a two-pane reader (note index | note plate); quizzes run one question per screen. Subject colors are histology stains. */
 :root{
@@ -297,19 +297,19 @@ code.uid{font-family:var(--f-mono);background:var(--soft);padding:2px 6px;border
 @keyframes newpop{0%,80%,100%{transform:scale(1)}88%{transform:scale(1.12)}}
 @media (prefers-reduced-motion: reduce){.updates-btn .new-pill{animation:none}}
 .card .new-pill{position:absolute;left:14px;top:14px;z-index:1}
-.upd-day{margin:22px 0 10px}
+.upd-day{margin:22px 0 10px;font:600 13px/1.3 Inter,var(--f-body);color:var(--muted);letter-spacing:0}
 .upd-ev{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .upd-cal{width:52px;aspect-ratio:1;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--c) 14%,var(--surface));display:grid;place-items:center;align-content:center;font:700 20px/1 var(--f-display);color:var(--ink)}
 .upd-cal b{font:600 10px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--c);margin-bottom:3px}
-.upd-by{display:block;margin-top:2px;opacity:.8}
+.upd-by{display:block;margin-top:3px;font:400 13px/1.35 Inter,var(--f-body);color:var(--muted)}
 @media (max-width:520px){.upd-cal{width:44px}}
 .upd-list+.upd-day{margin-top:28px}
 .upd-list{display:grid;gap:10px}
-.upd{--c:var(--accent);display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;text-decoration:none;transition:border-color .2s,transform .2s}
+.upd{--c:var(--accent);display:grid;grid-template-columns:52px minmax(0,1fr);gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;text-decoration:none;transition:border-color .2s,transform .2s}
 .upd:hover{border-color:var(--c);transform:translateY(-1px)}
 .upd.unseen{border-left:4px solid #e5484d}
 .upd .pdf-page{width:52px}
-.upd h4{margin:0 0 3px;font-family:var(--f-display);font-size:16px;line-height:1.25;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.upd h4{margin:0;font:600 15.5px/1.3 Inter,var(--f-body);letter-spacing:-.01em}
 .upd .go{color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
 .upd:hover .go{color:var(--c)}
 @media (max-width:520px){.upd{grid-template-columns:44px minmax(0,1fr)}.upd .pdf-page{width:44px}.upd .go{display:none}}
@@ -1831,13 +1831,13 @@ function renderUpdates(){
   const fmt=k=>new Date(k+"T12:00:00+08:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
   const docItem=d=>{const s=subj(d.subject),fresh=isNewDoc(d)&&!seen.has(d.id);
     return `<a class="upd${fresh?" unseen":""}" href="#d-${esc(d.id)}" style="--c:${stainVar(s?.stain)}">${d.thumb?`<span class="pdf-page img"><img src="${esc(d.thumb)}" alt="" loading="lazy"></span>`:`<span class="pdf-page"><span class="pdf-lines"></span></span>`}
-      <span><h4>${esc(d.title)}${isNewDoc(d)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(s?s.name:"")}${d.lab?" · lab":""}${d.pages?" · "+plural(d.pages,"page"):""}</span><span class="mono upd-by">Added ${esc(addedLabel(d))}</span></span><span class="go">Open →</span></a>`};
+      <span><h4>${esc(d.title)}</h4><span class="upd-by">Added ${esc(addedLabel(d))}</span></span></a>`};
   const evItem=e=>{const s=e.subject?anySubj(e.subject):null,fresh=isNewCal(e)&&!seen.has(calKey(e));
     const when=new Date(evAt(e)).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
     return `<button type="button" class="upd upd-ev${fresh?" unseen":""}" data-act="ev-open" data-id="${esc(e.id)}" style="--c:${e.subject?subjColor(e.subject):"var(--accent)"}"><span class="upd-cal" aria-hidden="true"><b>${esc(new Date(e.date+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short"}))}</b>${+e.date.slice(8)}</span>
-      <span><h4>${esc(e.title)}${isNewCal(e)?`<span class="new-pill">New!</span>`:""}</h4><span class="mono">${esc(evLabel(e.type))}${s?" · "+esc(s.name):""} · ${esc(evRange(e,true))}</span><span class="mono upd-by">${e.byName?"Added by "+esc(e.byName.split(" ")[0])+" · ":""}${esc(when)}</span></span><span class="go">View →</span></button>`};
-  const body=Object.values(days).sort((x,y)=>x.k<y.k?1:-1).map(g=>`<h3 class="shelf-h upd-day">${esc(fmt(g.k))}</h3><div class="upd-list">${g.items.sort((x,y)=>y.t-x.t).map(i=>i.d?docItem(i.d):evItem(i.e)).join("")}</div>`).join("");
-  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1><p>New PDFs and schedule changes show up here.</p></section>
+      <span><h4>${esc(e.title)}</h4><span class="upd-by">${e.byName?"Added by "+esc(e.byName.split(" ")[0])+" · ":""}${esc(when)}</span></span></button>`};
+  const body=Object.values(days).sort((x,y)=>x.k<y.k?1:-1).map(g=>`<h3 class="upd-day">${esc(fmt(g.k))}</h3><div class="upd-list">${g.items.sort((x,y)=>y.t-x.t).map(i=>i.d?docItem(i.d):evItem(i.e)).join("")}</div>`).join("");
+  app.innerHTML=topbar(`<a class="back" href="#">← All subjects</a>`)+`<section class="hero"><span class="mono eyebrow">What's new</span><h1>Recently added</h1></section>
     ${body||`<div class="empty"><h3>Nothing new yet</h3><p>New PDFs will show up here the day they're uploaded.</p></div>`}`;
   markSeen([...list.filter(isNewDoc).map(d=>d.id),...cal.filter(isNewCal).map(calKey)]);
 }
