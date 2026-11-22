@@ -40,6 +40,8 @@ window.STUDY_DATA = {
  "notes": [],
  "questions": [],
  "docs": [
+  {"id": "ga-ankle-foot", "subject": "gross-anatomy", "title": "Ankle & Foot", "desc": "Lecture slides + Snell + lecture audio · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-full.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-full.jpg", "pages": 6, "size": 2538321, "lab": false, "order": 8, "added": "2026-11-22", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Book + audio + slides"},
+  {"id": "ga-ankle-foot-slides", "subject": "gross-anatomy", "title": "Ankle & Foot (slides & audio)", "desc": "Lecture slides + lecture audio only · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-slides-audio.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-slides-audio.jpg", "pages": 5, "size": 1949178, "lab": false, "order": 8.1, "added": "2026-11-22", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Audio + slides only"},
   {
    "id": "ne-intellectual-functions",
    "subject": "neurophysiology",
