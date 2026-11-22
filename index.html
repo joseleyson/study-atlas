@@ -1180,7 +1180,6 @@ function topbar(right=""){const u=LIVE.user;
     <div class="me-menu"><div class="who"><b>${esc(u.displayName?niceName(u.displayName):"Signed in")}</b>${esc(u.email||"")}</div>
     <button data-act="my-progress"><span aria-hidden="true">🔥</span>My progress</button>
     <button data-lr="designs"><span aria-hidden="true">🎲</span>My designs</button>
-    ${LIVE.isAdmin?"":`<button data-act="share-active" role="switch" aria-checked="${shareActive()}" class="sw-row"><span aria-hidden="true">🟢</span>Show me as online<span class="mini-sw" aria-hidden="true"></span></button>`}
     <a href="#support" class="sup"><span class="heart" aria-hidden="true">♥</span>Support Study Atlas</a>
     <button data-act="edit-nick"><span aria-hidden="true">✏️</span>Change my name</button>
     <button data-act="suggest"><span aria-hidden="true">💡</span>Send a suggestion</button>
@@ -1947,7 +1946,8 @@ function toggleReact(id,e){const u=LIVE.user;if(!u||!LIVE.fs||!REACTS.includes(e
 /* ---------- who's online ---------- */
 /* Active status: everyone counts in the number; only people sharing their status are named to others.
    The owner is always hidden (name not even written), but the owner can see everyone. */
-const shareActive=()=>store("share-active")!=="0";
+/* the "Show me as online" choice was removed: everyone shows as online (owner stays hidden) */
+const shareActive=()=>true;
 const iAmHidden=()=>LIVE.isAdmin||!shareActive();
 const presName=p=>p.name||(LIVE.isAdmin?(LIVE.users.find(x=>x.id===p.id)?.name||""):"")||"";
 const visiblePres=p=>LIVE.isAdmin||!p.hidden;
@@ -1965,11 +1965,12 @@ function onlineNow(){const now=Date.now(),me=LIVE.user?.uid;
   const list=LIVE.presence.filter(p=>p.id!==me&&p.at&&now-p.at.toMillis()<ONLINE_MS);
   if(LIVE.user)list.unshift({id:me,name:LIVE.user.displayName||LIVE.user.email||"You",at:{toMillis:()=>now},you:true,hidden:iAmHidden()});
   return list}
-function whoRows(){const now=Date.now(),all=onlineNow(),shown=all.filter(p=>p.you||(canSeeNames()&&visiblePres(p))),hid=all.length-shown.length;
+function whoRows(){const now=Date.now(),all=onlineNow(),others=all.filter(p=>!p.you),shown=others.filter(p=>canSeeNames()&&visiblePres(p)),hid=others.length-shown.length;
+  /* you never see yourself in the list; alone, the list is just empty */
+  if(!others.length)return `<li class="who-more"><span class="who-name">No one else is online right now.</span></li>`;
   return shown.map(p=>{const tap=!p.you;
-  return `<li${tap?` class="who-tap" data-who="${esc(p.id)}" tabindex="0" role="button"`:""}><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(niceName(p.you?p.name:presName(p))||"Someone")}${p.you?' <span class="mono">(you)</span>':""}${p.hidden&&(LIVE.isAdmin||p.you)?' <span class="who-hid">hidden</span>':""}</span><span class="mono">online</span>${tap?'<span class="who-go" aria-hidden="true">›</span>':""}</li>`}).join("")
-  +(hid?`<li class="who-more"><span class="dot off" aria-hidden="true"></span><span class="who-name">${hid} more ${hid===1?"person":"people"} online</span></li>`:"")
-  +(canSeeNames()?"":`<li class="who-tip"><button type="button" class="btn small" data-act="share-active">Show me as online</button><span class="mono">to see who's here</span></li>`)}
+  return `<li${tap?` class="who-tap" data-who="${esc(p.id)}" tabindex="0" role="button"`:""}><span class="dot" aria-hidden="true"></span><span class="who-name">${esc(niceName(p.you?p.name:presName(p))||"Someone")}</span><span class="mono">online</span>${tap?'<span class="who-go" aria-hidden="true">›</span>':""}</li>`}).join("")
+  +(hid?`<li class="who-more"><span class="dot off" aria-hidden="true"></span><span class="who-name">${hid} more ${hid===1?"person":"people"} online</span></li>`:"")}
 function openWho(){openSheet(`<h2>Online now</h2>
   <ul class="who" id="who-list">${whoRows()}</ul><div class="form-foot"><div class="right"><button type="button" class="btn ghost" data-act="close">Close</button></div></div>`)}
 document.addEventListener("click",e=>{if(e.target.closest("#who-online"))openWho();
