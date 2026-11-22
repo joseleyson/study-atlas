@@ -1898,7 +1898,7 @@ function initLive(){const cfg=window.FIREBASE_CONFIG;if(!cfg||!cfg.projectId||!w
   try{firebase.initializeApp(cfg);LIVE.fs=firebase.firestore();LIVE.on=true}catch(e){LIVE.on=false;console.error(e);return}
   firebase.auth().onAuthStateChanged(async u=>{
     LIVE.unsubs.forEach(f=>f());LIVE.unsubs=[];LIVE.reacts=[];stopPresence();LIVE.presence=[];LIVE.events=[];LIVE.editors=[];LIVE.isEditor=false;LIVE.suggestions=[];LIVE.shares=[];LIVE.user=u;try{lrStart(u)}catch(e){console.warn(e)}LIVE.isAdmin=false;LIVE.adminKnown=false;LIVE.attempts=[];LIVE.downloads={};LIVE.users=[];LIVE.dlog=[];LIVE.authReady=true;
-    if(!u){render();return}
+    if(!u){render();setTimeout(maybeA2HS,6000);return}
     startPresence(u);try{startNudges(u)}catch(e){}track("visit");setTimeout(maybeA2HS,6000);setTimeout(dropPush,2500);setTimeout(()=>{try{maybeFeature()}catch(e){}},3500);setTimeout(()=>{try{lrWarm3D()}catch(e){}},2000);
     const fs=LIVE.fs;
     LIVE.unsubs.push(fs.collection("attempts").orderBy("at","desc").limit(400).onSnapshot(snap=>{
@@ -2061,7 +2061,7 @@ async function postAttempt(sid,score,total){if(!LIVE.on||!LIVE.user)return;
 if("serviceWorker" in navigator&&location.protocol==="https:")addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-let A2HS_EVT=null;
+let A2HS_EVT=null,A2HS_SHOWN=0;
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();A2HS_EVT=e;maybeA2HS()});
 addEventListener("appinstalled",()=>{store("a2hs",JSON.stringify({done:1}));document.getElementById("a2hs")?.remove()});
 /* show the tip at most 3 times, at least 3 days apart, never inside the installed app */
@@ -2071,14 +2071,14 @@ const SHARE_SVG=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" str
 const PLUSSQ_SVG=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>`;
 function iosSteps(){return `<ol class="a2-steps"><li><span class="a2-ic">${SHARE_SVG}</span><span>Tap <b>Share</b> in Safari${/iPad/.test(navigator.userAgent)?" (top right)":" (bottom of the screen, or under ••• )"}</span></li><li><span class="a2-ic">${PLUSSQ_SVG}</span><span>Scroll and tap <b>Add to Home Screen</b></span></li><li><span class="a2-ic a2-app"><img src="icons/icon-192.png" alt=""></span><span>Tap <b>Add</b>. Study Atlas is now on your Home Screen</span></li></ol>`}
 function maybeA2HS(force){try{
-  if(IS_STANDALONE||IN_APP||!LIVE.user||document.getElementById("a2hs"))return;
-  const st=a2hsState();if(!force&&(st.done||(st.at&&Date.now()-st.at<12*36e5)))return;
+  if(IS_STANDALONE||IN_APP||document.getElementById("a2hs"))return;
+  const st=a2hsState();if(!force&&(st.done||A2HS_SHOWN))return;
   if(!A2HS_EVT&&!IOS_SAFARI())return;
   const el=document.createElement("div");el.id="a2hs";el.setAttribute("role","dialog");el.setAttribute("aria-label","Add Study Atlas to your Home Screen");
   el.innerHTML=`<div class="a2-top"><img src="icons/icon-192.png" alt="" width="48" height="48"><div class="t"><b>Add it to your Home Screen</b><span>Open your notes in one tap, like an app.</span></div><button type="button" class="x" data-a2hs="close" aria-label="Not now">✕</button></div>
     ${A2HS_EVT?`<button type="button" class="btn primary a2-go" data-a2hs="install">Install the app</button>`:iosSteps()}
     <button type="button" class="a2-later" data-a2hs="close">Maybe later</button>`;
-  store("a2hs",JSON.stringify({n:(st.n||0)+1,at:Date.now()}));
+  A2HS_SHOWN=1;store("a2hs",JSON.stringify({n:(st.n||0)+1,at:Date.now()}));
   document.body.appendChild(el);requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("in")));
   el.addEventListener("click",async e=>{const b=e.target.closest("[data-a2hs]");if(!b)return;
     if(b.dataset.a2hs==="install"&&A2HS_EVT){A2HS_EVT.prompt();const r=await A2HS_EVT.userChoice.catch(()=>({}));A2HS_EVT=null;if(r.outcome==="accepted")store("a2hs",JSON.stringify({done:1}));else{const s2=a2hsState();store("a2hs",JSON.stringify({n:(s2.n||0)+1,at:Date.now()}))}}
