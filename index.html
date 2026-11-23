@@ -2070,6 +2070,9 @@ const IS_STANDALONE=matchMedia("(display-mode: standalone)").matches||navigator.
 const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 let A2HS_EVT=null,A2HS_SHOWN=0;
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();A2HS_EVT=e;maybeA2HS()});
+let A2HS_LEFT=0;function a2hsBack(){A2HS_SHOWN=0;setTimeout(maybeA2HS,2000)}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)A2HS_LEFT=1;else if(A2HS_LEFT){A2HS_LEFT=0;a2hsBack()}});
+addEventListener("pageshow",e=>{if(e.persisted)a2hsBack()});
 addEventListener("appinstalled",()=>{store("a2hs",JSON.stringify({done:1}));document.getElementById("a2hs")?.remove()});
 /* show the tip at most 3 times, at least 3 days apart, never inside the installed app */
 function a2hsState(){try{const v=store("a2hs");if(!v)return{n:0,at:0};if(v==="done")return{done:1};if(v==="dismissed")return{n:1,at:Date.now()};return JSON.parse(v)}catch(e){return{n:0,at:0}}}
