@@ -1571,7 +1571,8 @@ function pickDoc(g){const set=((window.STUDY_DATA||{}).docs||[]).filter(d=>d.gro
       <span class="pick-txt"><b>${esc(verLabel(d))}${isNewDoc(d)?`<span class="nc-new">new</span>`:""}</b>${d.desc?`<span class="nc-src">${esc(d.desc)}</span>`:""}<span class="nc-meta">${d.pages?plural(d.pages,"page"):""}${d.size?" · "+mb(d.size):""}</span></span>
       <span class="pick-go" aria-hidden="true">→</span></a>`).join("")}</div></div>`)}
 function shelf(docs,s){
-  const groups=[["Lecture & book notes",docs.filter(d=>!d.lab)],["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
+  const lec=docs.filter(d=>!d.lab),terms=[...new Set(lec.map(d=>d.term||""))];
+  const groups=[...(terms.some(Boolean)?terms.map(t=>[t||"Lecture & book notes",lec.filter(d=>(d.term||"")===t)]):[["Lecture & book notes",lec]]),["Lab practical sheets",docs.filter(d=>d.lab)]].filter(g=>g[1].length);
   const when=d=>d.updated?`Updated ${esc(new Date(d.updated+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:d.added?`Added ${esc(addedLabel(d))} · `:"";
   return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${collapseGroups(list).map(d=>d.__set?setCard(d.__set,s,when):`<article class="nc" style="--c:${stainVar(s.stain)}" data-act="open-doc" data-id="${esc(d.id)}" tabindex="0" aria-label="Preview ${esc(d.title)}">
     <a class="nc-thumb${d.thumb?"":" blank"}" href="#d-${esc(d.id)}" tabindex="-1" aria-hidden="true">${d.thumb?`<img src="${esc(d.thumb)}" alt="" loading="lazy">`:""}</a>
