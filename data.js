@@ -178,10 +178,12 @@ window.STUDY_DATA = {
    "desc": "Sir Jig’s lecture + Snell Ch. 12",
    "file": "pdfs/gross-anatomy/vertebral-column-back.pdf",
    "thumb": "pdfs/gross-anatomy/vertebral-column-back.jpg",
-   "pages": 16,
-   "size": 6183655,
+   "pages": 9,
+   "size": 1753167,
    "lab": false,
-   "order": 2
+   "order": 2,
+   "updated": "2026-11-24",
+   "revamped": true
   },
   {
    "id": "ga-abdomen-slides",
@@ -190,10 +192,12 @@ window.STUDY_DATA = {
    "desc": "PPT + audio · abdominal wall, GI tract, liver, kidneys",
    "file": "pdfs/gross-anatomy/abdomen-slides.pdf",
    "thumb": "pdfs/gross-anatomy/abdomen-slides.jpg",
-   "pages": 18,
-   "size": 11172822,
+   "pages": 10,
+   "size": 2295245,
    "lab": false,
-   "order": 3
+   "order": 3,
+   "updated": "2026-11-24",
+   "revamped": true
   },
   {
    "id": "ga-abdomen-snell",
@@ -214,10 +218,12 @@ window.STUDY_DATA = {
    "desc": "Sir Jig’s study guide · lecture audio + PPT slides",
    "file": "pdfs/gross-anatomy/pelvis-gluteal.pdf",
    "thumb": "pdfs/gross-anatomy/pelvis-gluteal.jpg",
-   "pages": 8,
-   "size": 6202346,
+   "pages": 9,
+   "size": 1202648,
    "lab": false,
-   "order": 5
+   "order": 5,
+   "updated": "2026-11-24",
+   "revamped": true
   },
   {
    "id": "ga-thigh",

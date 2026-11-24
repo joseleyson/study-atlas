@@ -485,6 +485,7 @@ body:has(.suggest-fab:not([hidden])){padding-bottom:76px}
 .urgent .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* badges */
 .new-pill{background:#8e4ec6}
+.rev-pill{display:inline-block;font:700 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:#e5484d;border:1px solid #e5484d;padding:3px 6px;border-radius:999px;vertical-align:middle;white-space:nowrap;margin-left:6px}
 .upd-pill{display:inline-block;font:700 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;background:transparent;color:#8e4ec6;border:1px solid #8e4ec6;padding:3px 6px;border-radius:999px;vertical-align:middle;white-space:nowrap;margin-left:6px}
 /* PDF viewer */
 .pdf-pages{gap:22px;padding-block:6px 10px}
@@ -1574,7 +1575,7 @@ function shelf(docs,s){
   const when=d=>d.updated?`Updated ${esc(new Date(d.updated+"T12:00:00+08:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}))} · `:d.added?`Added ${esc(addedLabel(d))} · `:"";
   return groups.map(([g,list])=>`<h3 class="shelf-h">${g}</h3><div class="shelf">${collapseGroups(list).map(d=>d.__set?setCard(d.__set,s,when):`<article class="nc" style="--c:${stainVar(s.stain)}" data-act="open-doc" data-id="${esc(d.id)}" tabindex="0" aria-label="Preview ${esc(d.title)}">
     <a class="nc-thumb${d.thumb?"":" blank"}" href="#d-${esc(d.id)}" tabindex="-1" aria-hidden="true">${d.thumb?`<img src="${esc(d.thumb)}" alt="" loading="lazy">`:""}</a>
-    <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(d.title)}${isNewDoc(d)?`<span class="nc-new">new</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</p>${reactBar(d)}</div>
+    <div class="nc-body"><div class="nc-top"><p class="nc-name">${esc(d.title)}${isNewDoc(d)?`<span class="nc-new">new</span>`:d.revamped?`<span class="rev-pill">Revamped</span>`:isUpdatedDoc(d)?`<span class="upd-pill">Updated</span>`:""}</p>${reactBar(d)}</div>
     ${d.desc?`<p class="nc-src">${esc(d.desc)}</p>`:""}
     <div class="nc-meta">${when(d)}${d.pages?plural(d.pages,"page"):""}${d.size?" · "+mb(d.size):""}</div>
     <div class="here${hereInner(d.id)?" on":""}" data-here="${esc(d.id)}">${hereInner(d.id)}</div>
@@ -1851,7 +1852,7 @@ function renderDoc(id){
   closePdf();PDF.id=id;markSeen([id]);track("preview");if(isNewDoc(d))track("fresh");
   const sib=docsOf(d.subject),nx=sib.slice(sib.findIndex(x=>x.id===id)+1).find(x=>!d.group||x.group!==d.group);
   app.innerHTML=topbar(`<a class="back" href="#s-${esc(d.subject)}">← ${esc(s?s.name:"Back")}</a>`)+`<div class="viewer" style="--c:${stainVar(s?.stain)}">
-    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${reactBar(d)}${revBtn(d)}</div></div>
+    <div class="viewer-bar"><div><span class="mono eyebrow">${esc(s?s.name:"")}</span><h1>${esc(d.title)}${d.revamped?`<span class="rev-pill">Revamped</span>`:""}</h1><span class="mono" id="pdf-status">${d.pages?plural(d.pages,"page"):""}</span></div><div class="vb-r">${reactBar(d)}${revBtn(d)}</div></div>
     <div id="pdf-pages" class="pdf-pages"><div class="loading">Opening the PDF…</div></div>
     <div class="dl-below"><div id="dl-slot">${dlBtn(d,"primary")}</div></div>
     <nav class="next-topic"><a class="btn small" href="#s-${esc(d.subject)}">← All ${esc(s?s.name:"")} topics</a>${revBtn(d)}${nx?`<a class="go" href="#d-${esc(nx.id)}"><span class="mono">Next topic →</span><b>${esc(nx.title)}</b></a>`:`<a class="go" href="#"><span class="mono">You've reached the end →</span><b>Back to all subjects</b></a>`}</nav></div>
