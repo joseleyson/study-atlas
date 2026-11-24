@@ -1,7 +1,7 @@
 /* Study Atlas service worker: lets the Home Screen app open fast and show the last
    loaded version when offline. Pages and notes always try the network first,
    so updates show up right away. PDFs and other sites are not touched. */
-const CACHE = "study-atlas-v3";
+const CACHE = "study-atlas-v4";
 const SHELL = ["./", "index.html", "data.js", "firebase-config.js", "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
