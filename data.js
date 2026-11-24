@@ -183,6 +183,7 @@ window.STUDY_DATA = {
    "lab": false,
    "order": 2,
    "updated": "2026-11-24",
+   "updatedAt": "2026-11-24T09:01+08:00",
    "revamped": true
   },
   {
@@ -197,6 +198,7 @@ window.STUDY_DATA = {
    "lab": false,
    "order": 3,
    "updated": "2026-11-24",
+   "updatedAt": "2026-11-24T09:01+08:00",
    "revamped": true
   },
   {
@@ -223,6 +225,7 @@ window.STUDY_DATA = {
    "lab": false,
    "order": 5,
    "updated": "2026-11-24",
+   "updatedAt": "2026-11-24T09:01+08:00",
    "revamped": true
   },
   {
