@@ -40,8 +40,8 @@ window.STUDY_DATA = {
  "notes": [],
  "questions": [],
  "docs": [
-  {"id": "ga-ankle-foot", "subject": "gross-anatomy", "title": "Ankle & Foot", "desc": "Lecture slides + Snell + lecture audio · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-full.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-full.jpg", "pages": 6, "size": 2538321, "lab": false, "order": 8, "term": "Finals", "added": "2026-11-22", "addedAt": "2026-11-22T08:07+08:00", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Book + audio + slides"},
-  {"id": "ga-ankle-foot-slides", "subject": "gross-anatomy", "title": "Ankle & Foot (slides & audio)", "desc": "Lecture slides + lecture audio only · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-slides-audio.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-slides-audio.jpg", "pages": 5, "size": 1949178, "lab": false, "order": 8.1, "term": "Finals", "added": "2026-11-22", "addedAt": "2026-11-22T08:07+08:00", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Audio + slides only"},
+  {"id": "ga-ankle-foot", "subject": "gross-anatomy", "title": "Ankle & Foot", "desc": "Lecture slides + Snell + lecture audio · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-full.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-full.jpg", "pages": 6, "size": 2538321, "lab": false, "order": 8, "term": "Post-Midterm", "added": "2026-11-22", "addedAt": "2026-11-22T08:07+08:00", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Book + audio + slides"},
+  {"id": "ga-ankle-foot-slides", "subject": "gross-anatomy", "title": "Ankle & Foot (slides & audio)", "desc": "Lecture slides + lecture audio only · Sir Paul Andrew Gutierrez", "file": "pdfs/gross-anatomy/ankle-foot-slides-audio.pdf", "thumb": "pdfs/gross-anatomy/ankle-foot-slides-audio.jpg", "pages": 5, "size": 1949178, "lab": false, "order": 8.1, "term": "Post-Midterm", "added": "2026-11-22", "addedAt": "2026-11-22T08:07+08:00", "group": "ga-ankle-foot", "groupTitle": "Ankle & Foot", "choice": "Audio + slides only"},
   {
    "id": "ne-intellectual-functions",
    "subject": "neurophysiology",
@@ -183,7 +183,7 @@ window.STUDY_DATA = {
    "size": 1753167,
    "lab": false,
    "order": 2,
-   "term": "Finals",
+   "term": "Post-Midterm",
    "updated": "2026-11-24",
    "updatedAt": "2026-11-24T09:01+08:00",
    "revamped": true
@@ -199,7 +199,7 @@ window.STUDY_DATA = {
    "size": 2295245,
    "lab": false,
    "order": 3,
-   "term": "Finals",
+   "term": "Post-Midterm",
    "updated": "2026-11-24",
    "updatedAt": "2026-11-24T09:01+08:00",
    "revamped": true
@@ -215,7 +215,7 @@ window.STUDY_DATA = {
    "size": 15597353,
    "lab": false,
    "order": 4,
-   "term": "Finals"
+   "term": "Post-Midterm"
   },
   {
    "id": "ga-pelvis-gluteal",
@@ -228,7 +228,7 @@ window.STUDY_DATA = {
    "size": 1202648,
    "lab": false,
    "order": 5,
-   "term": "Finals",
+   "term": "Post-Midterm",
    "updated": "2026-11-24",
    "updatedAt": "2026-11-24T09:01+08:00",
    "revamped": true
@@ -244,7 +244,7 @@ window.STUDY_DATA = {
    "size": 5009141,
    "lab": false,
    "order": 6,
-   "term": "Finals"
+   "term": "Post-Midterm"
   },
   {
    "id": "ga-leg",
@@ -257,7 +257,7 @@ window.STUDY_DATA = {
    "size": 4256416,
    "lab": false,
    "order": 7,
-   "term": "Finals",
+   "term": "Post-Midterm",
    "added": "2026-11-17", "addedAt": "2026-11-17T23:48+08:00",
    "updated": "2026-11-17"
   },
