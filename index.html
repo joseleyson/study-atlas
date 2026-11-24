@@ -635,8 +635,8 @@ button.sa-online{cursor:pointer}button.sa-online:hover{color:var(--sa-text-hi)}
 @media (prefers-reduced-motion: reduce){.fade{animation:none}.card:hover,.card:hover .sicon{transform:none}}
 
 /* pass 2 */
-.un-group.tmr{background:color-mix(in srgb,var(--accent) 9%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:14px;padding:0 6px 6px}
-.un-group.tmr .un-day{color:var(--accent)}
+.un-group.now{background:color-mix(in srgb,var(--accent) 9%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:14px;padding:0 6px 6px}
+.un-group.now .un-day{color:var(--accent)}
 .up-more{display:flex;justify-content:center;padding:6px 0 2px}
 .up-more button{background:none;border:0;font:500 13px/1 var(--f-mono);color:var(--accent);cursor:pointer;padding:8px 10px;border-radius:8px}
 .up-more button:hover{background:var(--soft)}
@@ -1693,7 +1693,7 @@ function comingUp(){if(!LIVE.on||!LIVE.user)return"";
   const dayLabel=k=>k===today?"Today":k===tmr?"Tomorrow":parseYmd(k).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
   const soon=e=>{if(e._ongoing)return"ongoing";if(e.type!=="exam"&&e.type!=="quiz"&&e.type!=="deadline")return"";const d=Math.round((parseYmd(e.date)-parseYmd(today))/864e5);return d<=1?"":`in ${d} days`};
   const groups=[];list.forEach(e=>{let g=groups.find(x=>x[0]===e.date);if(!g)groups.push(g=[e.date,[]]);g[1].push(e)});
-  const body=groups.length?groups.map(([k,es])=>`<div class="un-group${k===tmr?" tmr":""}"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?anySubj(e.subject):null,sn=soon(e);
+  const body=groups.length?groups.map(([k,es])=>`<div class="un-group${k===today?" now":""}"><div class="un-day${k===today?" today":""}">${esc(dayLabel(k))}</div><div class="un-list">${es.map(e=>{const s=e.subject?anySubj(e.subject):null,sn=soon(e);
     return `<button class="un ev-t t-${esc(e.type)}" data-act="ev-open" data-id="${esc(e.id)}" data-due="${dueMs(e)}" style="--sc:${e.subject?subjColor(e.subject):"var(--line)"}"><span class="un-dot" aria-hidden="true"></span><span class="bd"><span class="k">${esc(evLabel(e.type))}${evEnd(e)!==e.date||e._ongoing?" · "+esc(evRange(LIVE.events.find(x=>x.id===e.id)||e)):""}${e.time?" · "+esc(fmtTime(e.time)):""}${sn?`<span class="soon">${sn}</span>`:""}</span><span class="ti">${esc(e.title)}</span>${s?`<span class="su">${esc(s.name)}</span>`:""}</span></button>`}).join("")}</div></div>`).join("")
     :`<div class="upnext-empty"><span class="big" aria-hidden="true">🌿</span>Nothing due in the next 7 days.</div>`;
   return `<section class="upnext"><div class="upnext-h"><h3><span class="pulse" aria-hidden="true"></span>Coming up</h3><span class="mono">${S.upAll||!hidden?"next 7 days":"through "+esc(parseYmd(cut).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</span></div><div class="un-groups">${body}</div>${hidden||S.upAll?`<div class="up-more"><button data-act="up-toggle">${S.upAll?"Show less ↑":`Show full week ↓ <span style="opacity:.7">(${hidden} more)</span>`}</button></div>`:""}
